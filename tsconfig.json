@@ -18,13 +18,14 @@
     "outDir": "./dist",
     "rootDir": "./",
     "paths": {
-      "@routes/*": ["app/routes/*"],
+      "@controller/*": ["app/controllers/*"],
       "@interfaces/*": ["app/interfaces/*"],
+      "@models/*": ["app/models/*"],
+      "@routes/*": ["app/routes/*"],
       "@services/*": ["app/services/*"],
       "@external-services/*": ["app/services/external/*"],
-      "@controller/*": ["app/controllers/*"],
+      "@tests/*": ["app/tests/*"],
       "@utils/*": ["app/utils/*"],
-      "@models/*": ["app/models/*"],
       "@root/*": ["./*"]
     },
     "typeRoots": [
