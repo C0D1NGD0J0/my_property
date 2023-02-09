@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    "target": "es2017",
+    "types": ["node", "jest"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "useUnknownInCatchVariables": false,
+    "noFallthroughCasesInSwitch": true,
+    "outDir": "./dist",
+    "rootDir": "./",
+    "paths": {
+      "@routes/*": ["app/routes/*"],
+      "@interfaces/*": ["app/interfaces/*"],
+      "@services/*": ["app/services/*"],
+      "@external-services/*": ["app/services/external/*"],
+      "@controller/*": ["app/controllers/*"],
+      "@utils/*": ["app/utils/*"],
+      "@models/*": ["app/models/*"],
+      "@root/*": ["./*"]
+    },
+    "typeRoots": [
+      "./node_modules/@types",
+      "./app/interfaces/types.d.ts"
+    ],
+  },
+  "ts-node": {
+    "require": ["tsconfig-paths/register"]
+  },
+  "compileOnSave": true,
+  "include": ["./app/**/*.ts", "./app/**/*.js", "./server.ts", "./app/**/*.ejs"],
+  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.*", "**/mocks/*"],
+}

@@ -1,0 +1,21 @@
+<table width="100%">
+  <tr>
+    <td class="content">
+      <h3>Hello <%= fullname %>,</h3>
+      <p>
+        To complete your registration process please click on the link below:
+      </p>
+    </td>
+  </tr>
+  
+  <tr>
+    <td class="content cta">
+      <p style="padding-bottom: 9px;">
+        If you’re unable to click the button, copy and
+        paste the URL below into your web browser:
+      </p>
+      <a href="<%= activationUrl %>" class="btn">Click Here</a>
+      <p><%= activationUrl %></p>
+    </td>
+  </tr>
+</table>

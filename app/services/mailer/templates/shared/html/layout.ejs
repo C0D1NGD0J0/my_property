@@ -1,0 +1,123 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Property Management System: Welcome</title>
+<style type="text/css">
+	@import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700&display=swap');
+	body {
+		margin: 0;
+	}
+	table {
+		border-spacing: 0;
+	}
+	td {
+		padding: 0;
+	}
+	img {
+		border: 0;
+	}
+	.wrapper {
+		width: 100%;
+		table-layout: fixed;
+		padding-bottom: 5rem;
+		background-color: #ccc;
+	}
+
+	.main{
+		width: 100%;
+		color: #000;
+		max-width: 600px;
+		background-color: #fff;
+		box-shadow: 0 0 25px rgba(0,0,0.20);
+	}
+
+	.contact-info {
+		width: 100%;
+		padding: .5rem;
+	}
+	.contact-info ul{
+		margin: 0;
+		padding: 0;
+		text-align: center;
+		list-style-type: none;
+	}
+	.contact-info ul li{
+		padding: 0 10px;
+		display: inline-block;
+	}
+	.contact-info ul li a{
+		color: #000;
+		font-size: 16px;
+		line-height: 1.4;
+		text-decoration: none;
+		text-rendering: optimizeLegibility;
+	}
+	.content {
+		padding: 5px 15px;
+		line-height: 25px;
+	}
+	.content h3 {
+		margin: .5rem;
+		font-size: 1.4rem;
+	}
+
+	.cta {
+		padding-bottom: 30px;
+		margin: 0;
+	}
+
+	.signature {
+		text-align: center;
+		line-height: 15px
+	}
+
+	.btn {
+		background-color: #000;
+		text-decoration: none;
+		font-weight: 500;
+		font-size: 1.2rem;
+		border-radius: 5px;
+		padding: .7rem 2rem;
+		color: #fff;
+	}
+</style>
+</head>
+<body>
+
+	<center class="wrapper">
+		<table class="main" width="100%">
+			<tr>
+				<td height="9" style="background-color: #303030;"></td>
+			</tr>
+      <!-- LOGO & SOCIAL MEDIA SECTION -->
+			<tr>
+				<td class="contact-info">
+					<ul>
+						<li><a href="#!">Company Name</a></li>
+						<li><a href="tel:+2341234567890">+234-123-456-7890</a></li>
+						<li><a href="mailto:company@example.com">company@example.com</a></li>
+					</ul>
+				</td>
+			</tr>
+      <!-- BANNER IMAGE -->
+			<%- include("_header", {title: "Welcome to PMS"}) %>
+
+      <!-- TITLE, TEXT & BUTTON -->
+			<tr>
+				<td style="padding: 5px;">
+					<%- content; %>
+				</td>
+			</tr>	
+			
+      <%- include("_footer", {year: year, appName: "PMS"}) %>
+
+			<tr>
+				<td height="9" style="background-color: #303030;"></td>
+			</tr>
+		</table> <!-- End Main Class -->
+	</center> <!-- End Wrapper -->
+</body>
+</html>
