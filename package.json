@@ -104,7 +104,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm run format && npm run eslint:fix"
+      "pre-commit": "npm run format && npm run eslint:fix && git add -A ."
     }
   }
 }
