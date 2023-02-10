@@ -5,21 +5,21 @@ import express, { Application, Express, urlencoded } from 'express';
 import cors from 'cors';
 import logger from 'morgan';
 import cookieParser from 'cookie-parser';
-import { connectDB } from './app/database';
-import { errorHandler } from './app/utils/middlewares';
-import helmet from "helmet";
-import hpp from "hpp";
-import compression from "compression";
+import db from '@database/index';
+// import { errorHandler } from '@utils/middlewares';
+import helmet from 'helmet';
+import hpp from 'hpp';
+import compression from 'compression';
 
 // ROUTES
-import authRoutes from './app/routes/auth.route';
+// import authRoutes from '@routes/auth.route';
 
 export class App {
   protected app: Application;
-  
+
   constructor(app: Application) {
     this.app = app;
-  };
+  }
 
   setupConfig = (): Application => {
     this.databaseConnection();
@@ -28,12 +28,12 @@ export class App {
     this.routes(this.app);
     this.globalErroHandler(this.app);
 
-    return this.app
-  }
+    return this.app;
+  };
 
   private databaseConnection(): void {
     if (process.env.NODE_ENV !== 'test') {
-      connectDB();
+      db.connect();
     }
   }
   private securityMiddleware(app: Application): void {
@@ -50,17 +50,17 @@ export class App {
   private standardMiddleware(app: Application): void {
     if (process.env.NODE_ENV !== 'production') {
       app.use(logger('dev'));
-    };
-    app.use(express.json({limit: '50mb'}));
-    app.use(urlencoded({extended: true, limit: '50mb'}));
+    }
+    app.use(express.json({ limit: '50mb' }));
+    app.use(urlencoded({ extended: true, limit: '50mb' }));
     app.use(cookieParser());
     app.use(compression());
-  }  
+  }
   private routes(app: Application) {
-    app.use("/queues", serverAdapter.getRouter());
-    app.use('/api/auth', authRoutes);
+    // app.use("/queues", serverAdapter.getRouter());
+    // app.use('/api/auth', authRoutes);
   }
   private globalErroHandler(app: Application): void {
-    app.use(errorHandler);
+    // app.use(errorHandler);
   }
-};
+}

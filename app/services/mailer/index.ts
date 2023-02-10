@@ -1,11 +1,19 @@
 import nodemailer from 'nodemailer';
 import Mail from 'nodemailer/lib/mailer';
-import { USER_REGISTRATION, FORGOT_PASSWORD, RESET_PASSWORD_SUCCESS } from '../../utils/constants';
+import {
+  USER_REGISTRATION,
+  FORGOT_PASSWORD,
+  RESET_PASSWORD_SUCCESS,
+} from '../../utils/constants';
 import ejs from 'ejs';
 import fs from 'fs';
 
 interface IMailer {
-  sendMail: (options: CustomMailOption, mailType: string, emailData: any) => Promise<void | null>;
+  sendMail: (
+    options: CustomMailOption,
+    mailType: string,
+    emailData: any
+  ) => Promise<void | null>;
 }
 
 interface CustomMailOption extends Mail.Options {
@@ -29,16 +37,22 @@ export default class Mailer implements IMailer {
         subject: options.subject,
         to: options.to,
         from: process.env.APP_EMAIL_ADDRESS,
-        html: await ejs.renderFile(`${__dirname}/templates/shared/html/layout.ejs`, {
-          appName: process.env.APP_NAME,
-          content: res?.html,
-          year,
-        }),
-        text: await ejs.renderFile(`${__dirname}/templates/shared/text/layout.ejs`, {
-          appName: process.env.APP_NAME,
-          content: res?.text,
-          year,
-        }),
+        html: await ejs.renderFile(
+          `${__dirname}/templates/shared/html/layout.ejs`,
+          {
+            appName: process.env.APP_NAME,
+            content: res?.html,
+            year,
+          }
+        ),
+        text: await ejs.renderFile(
+          `${__dirname}/templates/shared/text/layout.ejs`,
+          {
+            appName: process.env.APP_NAME,
+            content: res?.text,
+            year,
+          }
+        ),
       });
     } catch (error) {
       throw error;
@@ -83,8 +97,14 @@ export default class Mailer implements IMailer {
   private async buildTemplate(filename: string, data: any) {
     //filename must directory and files names of the email you sending
     //e.g. forgotPassword/forgotPassword.ejs
-    let text = await ejs.renderFile(__dirname + `/templates/${filename}/${filename}.text.ejs`, data);
-    let html = await ejs.renderFile(__dirname + `/templates/${filename}/${filename}.ejs`, data);
+    let text = await ejs.renderFile(
+      __dirname + `/templates/${filename}/${filename}.text.ejs`,
+      data
+    );
+    let html = await ejs.renderFile(
+      __dirname + `/templates/${filename}/${filename}.ejs`,
+      data
+    );
     return { html, text };
   }
 }

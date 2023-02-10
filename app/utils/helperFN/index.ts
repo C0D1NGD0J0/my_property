@@ -44,32 +44,9 @@ export const paginateResult = (count: number, skip: number, limit: number) => {
   return result;
 };
 
-interface FormatterStream extends bunyan.Stream {
-  formatter: (record: unknown) => any;
-}
-
-export const createLogger = (name: string) => {
+export const createLogger = (name: string): bunyan => {
   return bunyan.createLogger({
-    name: 'MyApp',
-    streams: [
-      {
-        level: 'debug',
-        stream: process.stdout,
-        formatter: (record: { level: string; msg: any }) => {
-          const level = record.level.toUpperCase();
-          const msg = record.msg;
-          switch (level) {
-            case 'INFO':
-              return chalk.green(`[${level}] ${msg}`);
-            case 'ERROR':
-              return chalk.red(`[${level}] ${msg}`);
-            case 'WARNING':
-              return chalk.yellow(`[${level}] ${msg}`);
-            default:
-              return chalk.white(`[${level}] ${msg}`);
-          }
-        },
-      } as FormatterStream,
-    ],
+    name,
+    level: 'debug',
   });
 };

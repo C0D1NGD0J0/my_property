@@ -2,7 +2,7 @@ export interface IErrorResponse {
   message: string;
   statusCode: number;
   type: string;
-};
+}
 
 export default class ErrorResponse extends Error {
   statusCode: number;

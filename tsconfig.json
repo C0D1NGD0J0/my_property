@@ -22,20 +22,24 @@
       "@interfaces/*": ["app/interfaces/*"],
       "@models/*": ["app/models/*"],
       "@routes/*": ["app/routes/*"],
+      "@database/*": ["app/database/*"],
       "@services/*": ["app/services/*"],
       "@external-services/*": ["app/services/external/*"],
       "@tests/*": ["app/tests/*"],
       "@utils/*": ["app/utils/*"],
       "@root/*": ["./*"]
     },
-    "typeRoots": [
-      "./app/interfaces/types.d.ts"
-    ],
+    "typeRoots": ["./app/interfaces/types.d.ts"]
   },
   "ts-node": {
     "require": ["tsconfig-paths/register"]
   },
   "compileOnSave": true,
-  "include": ["./app/**/*.ts", "./app/**/*.js", "./server.ts", "./app/**/*.ejs"],
-  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.*", "**/mocks/*"],
+  "include": [
+    "./app/**/*.ts",
+    "./app/**/*.js",
+    "./server.ts",
+    "./app/**/*.ejs"
+  ],
+  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.*", "**/mocks/*"]
 }

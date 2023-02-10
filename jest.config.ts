@@ -21,13 +21,14 @@ const config: Config.InitialOptions = {
     '@controller/(.*)': ['<rootDir>/app/controller/$1'],
     '@interfaces/(.*)': ['<rootDir>/app/interfaces/$1'],
     '@models/(.*)': ['<rootDir>/app/models/$1'],
+    '@database/(.*)': ['<rootDir>/app/database/$1'],
     '@routes/(.*)': ['<rootDir>/app/routes/$1'],
     '@services/(.*)': ['<rootDir>/app/services/$1'],
     '@external-services/(.*)': ['<rootDir>/app/services/external/$1'],
     '@tests/(.*)': ['<rootDir>/app/tests/$1'],
     '@utils/(.*)': ['<rootDir>/app/utils/$1'],
     '@root/(.*)': ['<rootDir>/$1'],
-  }
+  },
 };
 
 export default config;
