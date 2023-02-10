@@ -75,21 +75,3 @@
 //   (fn: any) => (req: AppRequest, res: AppResponse, next: NextFunction) => {
 //     return Promise.resolve(fn(req, res, next)).catch(next);
 //   };
-
-// export const isCached = async (
-//   req: AppRequest,
-//   res: AppResponse,
-//   next: NextFunction
-// ) => {
-//   try {
-//     const { id } = req.currentuser as ICurrentUser;
-//     const user = await redisClient.getAsyncEntry(id);
-//     if (!user) {
-//       next();
-//     }
-
-//     res.status(200).json({ currentuser: user });
-//   } catch (error) {
-//     console.log(error, '----ErR');
-//   }
-// };

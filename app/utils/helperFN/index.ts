@@ -2,18 +2,24 @@ import crypto from 'crypto';
 import { Types } from 'mongoose';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { Response } from 'express';
+import bunyan from 'bunyan';
+import chalk from 'chalk';
 
-const hashGenerator = (): string => {
+export const hashGenerator = (): string => {
   const token = crypto.randomBytes(10).toString('hex');
   // Hashing of token
   return crypto.createHash('sha256').update(token).digest('hex');
 };
 
-const jwtGenerator = (userId: Types.ObjectId, secret = process.env.JWT_SECRET as string, opts: SignOptions) => {
+export const jwtGenerator = (
+  userId: Types.ObjectId,
+  secret = process.env.JWT_SECRET as string,
+  opts: SignOptions
+) => {
   return `Bearer ${jwt.sign({ id: userId }, secret, opts)}`;
 };
 
-const setCookieAuth = (refreshJWT: string, res: Response) => {
+export const setCookieAuth = (refreshJWT: string, res: Response) => {
   const options = {
     httpOnly: true,
     maxAge: 7200, // Expires after 2hr
@@ -25,7 +31,7 @@ const setCookieAuth = (refreshJWT: string, res: Response) => {
   return res;
 };
 
-const paginateResult = (count: number, skip: number, limit: number) => {
+export const paginateResult = (count: number, skip: number, limit: number) => {
   const result = {
     total: count,
     per_page: limit,
@@ -38,4 +44,32 @@ const paginateResult = (count: number, skip: number, limit: number) => {
   return result;
 };
 
-export { jwtGenerator, hashGenerator, setCookieAuth, paginateResult };
+interface FormatterStream extends bunyan.Stream {
+  formatter: (record: unknown) => any;
+}
+
+export const createLogger = (name: string) => {
+  return bunyan.createLogger({
+    name: 'MyApp',
+    streams: [
+      {
+        level: 'debug',
+        stream: process.stdout,
+        formatter: (record: { level: string; msg: any }) => {
+          const level = record.level.toUpperCase();
+          const msg = record.msg;
+          switch (level) {
+            case 'INFO':
+              return chalk.green(`[${level}] ${msg}`);
+            case 'ERROR':
+              return chalk.red(`[${level}] ${msg}`);
+            case 'WARNING':
+              return chalk.yellow(`[${level}] ${msg}`);
+            default:
+              return chalk.white(`[${level}] ${msg}`);
+          }
+        },
+      } as FormatterStream,
+    ],
+  });
+};

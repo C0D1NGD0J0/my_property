@@ -29,7 +29,6 @@
       "@root/*": ["./*"]
     },
     "typeRoots": [
-      "./node_modules/@types",
       "./app/interfaces/types.d.ts"
     ],
   },

@@ -17,16 +17,24 @@
     "typescript"
   ],
   "engines": {
-    "node": ">=14.0.0 <18.0.0"
+    "node": "^14 || ^18"
   },
   "author": "c0d1ngd0j0",
   "license": "MIT",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.231.0",
     "@aws-sdk/s3-request-presigner": "^3.231.0",
+    "@bull-board/express": "^4.10.2",
+    "@bull-board/ui": "^4.10.2",
+    "@socket.io/redis-adapter": "^8.0.1",
+    "@types/compression": "^1.7.2",
+    "@types/hpp": "^0.2.2",
     "aws-sdk": "^2.1277.0",
     "bcryptjs": "^2.4.3",
+    "bull": "^4.10.2",
+    "bunyan": "^1.8.15",
     "chalk": "^4.1.2",
+    "compression": "^1.7.4",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dayjs": "^1.11.5",
@@ -35,6 +43,8 @@
     "eslint-config-airbnb": "^19.0.4",
     "express": "^4.18.1",
     "express-validator": "^6.14.2",
+    "helmet": "^6.0.1",
+    "hpp": "^0.2.3",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.6.5",
     "mongoose-unique-validator": "^3.1.0",
@@ -45,16 +55,6 @@
     "nodemon": "^2.0.20",
     "redis": "^4.5.1",
     "slugify": "^1.6.5",
-    "@bull-board/express": "^4.10.2",
-    "@bull-board/ui": "^4.10.2",
-    "@socket.io/redis-adapter": "^8.0.1",
-    "@types/compression": "^1.7.2",
-    "@types/hpp": "^0.2.2",
-    "bull": "^4.10.2",
-    "bunyan": "^1.8.15",
-    "compression": "^1.7.4",
-    "helmet": "^6.0.1",
-    "hpp": "^0.2.3",
     "socket.io": "^4.5.4",
     "tscpaths": "^0.0.9",
     "ttypescript": "^1.5.15",
@@ -63,9 +63,9 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^7.5.0",
+    "@types/bcryptjs": "^2.4.2",
     "@types/bull": "^4.10.0",
     "@types/bunyan": "^1.8.8",
-    "@types/bcryptjs": "^2.4.2",
     "@types/cookie-parser": "^1.4.3",
     "@types/cors": "^2.8.12",
     "@types/csurf": "^1.11.2",
@@ -91,6 +91,7 @@
     "eslint-plugin-n": "^15.6.0",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-promise": "^6.1.1",
+    "husky": "^8.0.3",
     "jest": "^29.3.1",
     "rimraf": "^3.0.2",
     "supertest": "^6.3.3",
@@ -103,7 +104,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm run format && npm run eslint:fix && git add -A ."
+      "pre-commit": "npm run format && npm run eslint:fix"
     }
   }
 }
