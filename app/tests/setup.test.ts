@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
-dotenv.config();
 import mongoose from 'mongoose';
+dotenv.config();
 
 beforeAll((done) => {
   if (mongoose.connection.readyState === 1) {
@@ -11,7 +11,7 @@ beforeAll((done) => {
 });
 
 afterAll((done) => {
-  mongoose.connection.db.dropDatabase(() => {
+  mongoose.connection.dropDatabase(() => {
     mongoose.connection.close(() => done());
   });
 });
