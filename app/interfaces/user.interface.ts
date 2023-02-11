@@ -34,11 +34,34 @@ export interface IUser {
 
 export interface IUserDocument extends IUser, Document {
   id: string;
-  uuid: string;
   createdAt: Date;
   updatedAt: Date;
   _id: Types.ObjectId;
   validatePassword: (pwd1: string) => Promise<boolean>;
+}
+
+export interface ITenant extends IUser {
+  emergencyContact?: {
+    name: string;
+    email?: string;
+    phoneNumber: string;
+    relationship: IUserRelationshipsEnum;
+  };
+  landlords?: Types.ObjectId[];
+  occupation?: string;
+  activationCode?: string | undefined;
+  activatedAt: Date;
+  rentalHistory?: string[];
+  paymentRecords?: string[];
+  leaseAgreements?: string[];
+  activeLeaseAgreement?: string;
+  maintenanceRequests?: string[]; // refactor once models have been added
+}
+
+export interface ITenantDocument extends ITenant, Document {
+  _id: Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface IRefreshTokenDocument extends Document {
