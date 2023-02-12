@@ -1,4 +1,4 @@
-import { IUserDocument } from '@interfaces/user.interface';
+import { IUserDocument, IUserType } from '@interfaces/user.interface';
 import { Schema, model } from 'mongoose';
 import uniqueValidator from 'mongoose-unique-validator';
 import bcrypt from 'bcryptjs';
@@ -36,6 +36,12 @@ const userSchema = new Schema<IUserDocument>(
         /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{2,3})+$/,
         'Please add a valid email',
       ],
+    },
+    userType: {
+      type: String,
+      required: true,
+      default: IUserType.propertyManager,
+      enum: Object.values(IUserType),
     },
     phoneNumber: { type: String, default: '' },
     isActive: { type: Boolean, default: false },

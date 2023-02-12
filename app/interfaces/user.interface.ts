@@ -26,6 +26,7 @@ export interface IUser {
   password?: string;
   fullname?: string;
   isActive?: boolean;
+  userType: IUserType;
   phoneNumber?: string;
   activationToken?: string;
   passwordResetToken?: string;
