@@ -17,6 +17,7 @@ export enum IUserRelationshipsEnum {
   other = 'other',
 }
 
+// BASE-USER INTERFACE
 export interface IUser {
   uuid: string;
   email: string;
@@ -40,6 +41,7 @@ export interface IUserDocument extends IUser, Document {
   validatePassword: (pwd1: string) => Promise<boolean>;
 }
 
+// TENANT INTERFACE
 export interface ITenant extends IUser {
   emergencyContact?: {
     name: string;
@@ -59,6 +61,23 @@ export interface ITenant extends IUser {
 }
 
 export interface ITenantDocument extends ITenant, Document {
+  _id: Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// LANDLORD INTERFACE
+export interface ILandLord extends IUser {
+  name: string;
+  ownedPRoperties: [];
+  contactInfo: {
+    email: string;
+    address: string;
+    phoneNumber: string;
+  };
+}
+
+export interface ILandLordDocument extends ILandLord, Document {
   _id: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
