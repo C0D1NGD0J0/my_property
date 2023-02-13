@@ -18,7 +18,7 @@
     "outDir": "./dist",
     "rootDir": "./",
     "paths": {
-      "@controller/*": ["app/controllers/*"],
+      "@controllers/*": ["app/controllers/*"],
       "@interfaces/*": ["app/interfaces/*"],
       "@models/*": ["app/models/*"],
       "@routes/*": ["app/routes/*"],

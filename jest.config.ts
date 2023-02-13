@@ -20,7 +20,7 @@ const config: Config.InitialOptions = {
   ],
   setupFilesAfterEnv: ['./app/tests/setup.test.ts'],
   moduleNameMapper: {
-    '@controller/(.*)': ['<rootDir>/app/controller/$1'],
+    '@controllers/(.*)': ['<rootDir>/app/controller/$1'],
     '@interfaces/(.*)': ['<rootDir>/app/interfaces/$1'],
     '@models/(.*)': ['<rootDir>/app/models/$1'],
     '@database/(.*)': ['<rootDir>/app/database/$1'],
