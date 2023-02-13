@@ -6,15 +6,14 @@ import cors from 'cors';
 import logger from 'morgan';
 import cookieParser from 'cookie-parser';
 import db from '@database/index';
-// import { errorHandler } from '@utils/middlewares';
 import helmet from 'helmet';
 import hpp from 'hpp';
 import compression from 'compression';
 
-// ROUTES
 import authRoutes from '@routes/auth.route';
-import { dbErrorHandler } from '@utils/middlewares';
 import { createLogger } from '@utils/helperFN';
+import { dbErrorHandler } from '@utils/middlewares';
+import { serverAdapter } from '@services/queues/base.queue';
 
 export class App {
   protected app: Application;
@@ -61,7 +60,7 @@ export class App {
     app.use(compression());
   }
   private routes(app: Application) {
-    // app.use("/queues", serverAdapter.getRouter());
+    app.use('/queues', serverAdapter.getRouter());
     app.use('/api/auth', authRoutes);
   }
   private appErroHandler(app: Application): void {

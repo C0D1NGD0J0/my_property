@@ -8,11 +8,17 @@ export interface AppResponse extends Response {
   currentuser?: any;
 }
 
-export interface IEmailOptions {
+export interface IEmailOptions<T = unknown> {
   subject: string;
   to: string;
-  data: unknown;
+  data: T;
   emailType: string;
+}
+
+export interface ISuccessReturnData<T = unknown> {
+  success: boolean;
+  data: T;
+  msg: string;
 }
 
 export interface IAWSFileUploadResponse {

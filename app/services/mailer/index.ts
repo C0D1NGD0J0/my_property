@@ -27,7 +27,7 @@ export default class Mailer implements IMailer {
     this.transporter = this.buildMailTransporter()!;
   }
 
-  async sendMail(options: CustomMailOption, mailType: string) {
+  sendMail = async (options: CustomMailOption, mailType: string) => {
     const year = new Date().getFullYear();
     const emailData = options.data;
 
@@ -57,7 +57,7 @@ export default class Mailer implements IMailer {
     } catch (error) {
       throw error;
     }
-  }
+  };
 
   private buildMailTransporter() {
     return nodemailer.createTransport({
@@ -97,11 +97,11 @@ export default class Mailer implements IMailer {
   private async buildTemplate(filename: string, data: any) {
     //filename must directory and files names of the email you sending
     //e.g. forgotPassword/forgotPassword.ejs
-    let text = await ejs.renderFile(
+    const text = await ejs.renderFile(
       __dirname + `/templates/${filename}/${filename}.text.ejs`,
       data
     );
-    let html = await ejs.renderFile(
+    const html = await ejs.renderFile(
       __dirname + `/templates/${filename}/${filename}.ejs`,
       data
     );

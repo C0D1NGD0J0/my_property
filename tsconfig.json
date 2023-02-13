@@ -24,7 +24,6 @@
       "@routes/*": ["app/routes/*"],
       "@database/*": ["app/database/*"],
       "@services/*": ["app/services/*"],
-      "@external-services/*": ["app/services/external/*"],
       "@tests/*": ["app/tests/*"],
       "@utils/*": ["app/utils/*"],
       "@root/*": ["./*"]

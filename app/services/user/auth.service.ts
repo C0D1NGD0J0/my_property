@@ -3,12 +3,14 @@ import { v4 as uuid } from 'uuid';
 
 import { User } from '@models/index';
 import { hashGenerator } from '@utils/helperFN';
-import { IUser, IUserDocument, IUserType } from '@interfaces/user.interface';
-import { IEmailOptions } from '@interfaces/utils.interface';
 import { USER_REGISTRATION } from '@utils/constants';
+import { IUser, IUserDocument, IUserType } from '@interfaces/user.interface';
+import { IEmailOptions, ISuccessReturnData } from '@interfaces/utils.interface';
 
 class AuthService {
-  signup = async (data: Partial<IUser>) => {
+  signup = async (
+    data: Partial<IUser>
+  ): Promise<ISuccessReturnData<{ emailOptions: IEmailOptions }>> => {
     const user = new User({
       ...data,
       uuid: uuid(),
@@ -30,7 +32,11 @@ class AuthService {
     };
 
     await user.save();
-    return { success: true, user };
+    return {
+      success: true,
+      data: { emailOptions },
+      msg: `Account activation email has been sent to ${user.email}`,
+    };
   };
 }
 

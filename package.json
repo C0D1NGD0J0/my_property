@@ -25,8 +25,8 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.231.0",
     "@aws-sdk/s3-request-presigner": "^3.231.0",
-    "@bull-board/express": "^4.10.2",
-    "@bull-board/ui": "^4.10.2",
+    "@bull-board/express": "^4.11.1",
+    "@bull-board/ui": "^4.11.1",
     "@socket.io/redis-adapter": "^8.0.1",
     "@types/compression": "^1.7.2",
     "@types/hpp": "^0.2.2",

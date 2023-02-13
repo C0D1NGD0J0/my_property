@@ -23,9 +23,8 @@ export interface IUser {
   email: string;
   lastName: string;
   firstName: string;
-  password?: string;
+  password: string;
   fullname?: string;
-  isActive?: boolean;
   userType: IUserType;
   phoneNumber?: string;
   activationToken?: string;
@@ -38,6 +37,7 @@ export interface IUserDocument extends IUser, Document {
   id: string;
   createdAt: Date;
   updatedAt: Date;
+  isActive: boolean;
   _id: Types.ObjectId;
   validatePassword: (pwd1: string) => Promise<boolean>;
 }

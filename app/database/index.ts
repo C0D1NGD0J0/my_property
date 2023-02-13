@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { createLogger } from '@utils/helperFN';
+import { redisConnection } from '@services/redis';
 const isProduction = process.env.NODE_ENV === 'production';
 
 class ConnectDB {
@@ -24,18 +25,13 @@ class ConnectDB {
     }
 
     try {
-      if (isProduction) {
-        mongoose.connect(process.env.MONGODB_URI as string);
-        mongoose.set('strictQuery', true);
-        this.connected = true;
-        return this.log.info('Connected to remote database');
-      } else {
-        mongoose.set('strictQuery', true);
-        await mongoose.connect(process.env.LOCALDB_URI as string);
-        this.connected = true;
-        // redisConnection.connect();
-        return this.log.info('Connected to local database');
-      }
+      mongoose.set('strictQuery', true);
+      isProduction
+        ? mongoose.connect(process.env.MONGODB_URI as string)
+        : await mongoose.connect(process.env.LOCALDB_URI as string);
+      this.connected = true;
+      redisConnection.connect();
+      return this.log.info('Connected to database');
     } catch (err) {
       this.log.error('Database Connection Error: ', err);
       process.exit(1); //exit process with failure
