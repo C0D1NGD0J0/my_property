@@ -1,6 +1,7 @@
 import User from '../../models/user.model';
 import ErrorResponse from '../../utils/errorResponse';
 import { body, param } from 'express-validator';
+import { ISignupAccountType } from '@interfaces/user.interface';
 
 const signup = () => {
   return [
@@ -25,20 +26,16 @@ const signup = () => {
           );
         }
       }),
-    body('phoneNumber')
-      .exists()
-      .withMessage("Phone number can't be blank")
-      .isMobilePhone('any')
-      .withMessage('Phone number is invalid'),
-    body('userType', 'Please select a user type')
+    body('phoneNumber').exists().withMessage("Phone number can't be blank"),
+    // .isMobilePhone('any', { strictMode: true })
+    // .withMessage('Phone number is invalid')
+    body('accountType', 'Account type must be provided.')
       .exists()
       .bail()
       .custom(async (utype) => {
-        const utypes = ['business', 'individual'];
-
-        if (!utypes.includes(utype)) {
+        if (!Object.values(ISignupAccountType).includes(utype)) {
           throw new ErrorResponse(
-            `Invalid user type provided.`,
+            `Invalid account type provided.`,
             422,
             'authServiceError'
           );
@@ -49,6 +46,44 @@ const signup = () => {
       .exists({ checkFalsy: true })
       .withMessage("Password field can't be blank"),
   ];
+};
+
+const business_signup = () => {
+  return [
+    body('contactInfo.email', 'Business email address is required')
+      .if((_value: any, { req }: any) => req.body.acctType === 'business')
+      .exists()
+      .bail()
+      .isEmail()
+      .withMessage('Invalid email address format'),
+    body('contactInfo.address', 'Business address is required')
+      .if((_value: any, { req }: any) => req.body.acctType === 'business')
+      .exists(),
+    body('contactInfo.phoneNumber', 'Business phone number is required')
+      .if((_value: any, { req }: any) => req.body.acctType === 'business')
+      .exists()
+      .isMobilePhone('any', { strictMode: true })
+      .withMessage('Phone number is invalid'),
+    body('companyName', 'Company name is required')
+      .if((_value: any, { req }: any) => req.body.acctType === 'business')
+      .exists()
+      .isLength({ min: 2, max: 25 }),
+    body('legaEntityName', 'Legal entity name is required')
+      .if((_value: any, { req }: any) => req.body.acctType === 'business')
+      .exists()
+      .isLength({ min: 2, max: 25 }),
+    body(
+      'businessRegistrationNumber',
+      'Business registration number is required'
+    )
+      .if((_value: any, { req }: any) => req.body.acctType === 'business')
+      .exists()
+      .isLength({ min: 2, max: 25 }),
+  ];
+};
+
+const validateAllUserTypeSignup = () => {
+  return [...signup(), ...business_signup()];
 };
 
 const login = () => {
@@ -135,8 +170,8 @@ const accountActivation = () => {
 
 export default {
   login: login(),
-  signup: signup(),
   resetPassword: resetPassword(),
   forgotPassword: forgotPassword(),
+  signup: validateAllUserTypeSignup(),
   accountActivation: accountActivation(),
 };

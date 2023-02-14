@@ -34,10 +34,6 @@ export abstract class BaseQueue {
       this.log.info(`Job ${job.id} has completed.`);
     });
 
-    this.queue.on('global:completed', (jobId: Job) => {
-      this.log.info(`Job ${jobId} is completed.`);
-    });
-
     this.queue.on('global:stalled', (jobId: Job) => {
       this.log.info(`Job ${jobId} has stalled.`);
     });

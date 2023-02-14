@@ -1,9 +1,9 @@
 import {
   ITenantDocument,
-  IUserRelationshipsEnum,
+  IBaseUserRelationshipsEnum,
 } from '@interfaces/user.interface';
 import { Schema } from 'mongoose';
-import User from '@models/user.model';
+import { User } from '@models/index';
 
 const tenantSchema = new Schema<ITenantDocument>(
   {
@@ -30,8 +30,8 @@ const tenantSchema = new Schema<ITenantDocument>(
       relationship: {
         type: String,
         required: true,
-        default: IUserRelationshipsEnum.other,
-        enum: Object.values(IUserRelationshipsEnum),
+        default: IBaseUserRelationshipsEnum.other,
+        enum: Object.values(IBaseUserRelationshipsEnum),
       },
     },
     occupation: { type: String, default: '' },

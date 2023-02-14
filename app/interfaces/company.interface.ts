@@ -1,8 +1,9 @@
 import { Document, Types } from 'mongoose';
+import { IBaseUser } from '@interfaces/user.interface';
 
 // COMPANY INTERFACE
-export interface ICompany {
-  cid: string;
+export interface ICompany extends IBaseUser {
+  cuid: string;
   contactInfo: {
     email: string;
     address: string;

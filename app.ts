@@ -21,7 +21,7 @@ export class App {
 
   constructor(app: Application) {
     this.app = app;
-    this.log = createLogger('MainApp');
+    this.log = createLogger('MainApp', true);
   }
 
   setupConfig = (): Application => {
@@ -60,8 +60,9 @@ export class App {
     app.use(compression());
   }
   private routes(app: Application) {
+    const BASE_PATH = '/api/v1';
     app.use('/queues', serverAdapter.getRouter());
-    app.use('/api/auth', authRoutes);
+    app.use(`${BASE_PATH}/auth`, authRoutes);
   }
   private appErroHandler(app: Application): void {
     app.use(dbErrorHandler);

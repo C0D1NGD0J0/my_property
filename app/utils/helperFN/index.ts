@@ -44,9 +44,19 @@ export const paginateResult = (count: number, skip: number, limit: number) => {
   return result;
 };
 
-export const createLogger = (name: string): bunyan => {
+export const createLogger = (name: string, showsource = false): bunyan => {
   return bunyan.createLogger({
     name,
+    src: showsource && process.env.NODE_ENV !== 'production',
     level: 'debug',
   });
+};
+
+export const range = (start: number, end: number, step: number): number[] => {
+  if (!step) step = 1;
+  const array = [];
+  for (let i = start; i <= end; i += step) {
+    array.push(i);
+  }
+  return array;
 };

@@ -19,7 +19,7 @@ export abstract class BaseCache {
     this.client = createClient({
       url: process.env.REDIS_URL,
     });
-    this.log = createLogger(cacheName);
+    this.log = createLogger(cacheName, true);
     this.cacheError();
   }
 

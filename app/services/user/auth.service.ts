@@ -1,41 +1,73 @@
 import dayjs from 'dayjs';
 import { v4 as uuid } from 'uuid';
 
-import { User } from '@models/index';
+import {
+  IBaseUser,
+  IAccountType,
+  IPropertyManagerDocument,
+} from '@interfaces/user.interface';
 import { hashGenerator } from '@utils/helperFN';
 import { USER_REGISTRATION } from '@utils/constants';
-import { IUser, IUserDocument, IUserType } from '@interfaces/user.interface';
+import { PropertyManager, Company } from '@models/index';
+import { IPropertyManager } from '@interfaces/user.interface';
+import { ICompany, ICompanyDocument } from '@interfaces/company.interface';
 import { IEmailOptions, ISuccessReturnData } from '@interfaces/utils.interface';
+
+type ISignupData = Partial<IPropertyManager & IBaseUser> | ICompany;
 
 class AuthService {
   signup = async (
-    data: Partial<IUser>
+    data: ISignupData
   ): Promise<ISuccessReturnData<{ emailOptions: IEmailOptions }>> => {
-    const user = new User({
+    let user: ICompanyDocument | IPropertyManagerDocument;
+    const dataToSave = {
       ...data,
-      uuid: uuid(),
       isActive: false,
       activationToken: hashGenerator(),
-      userType: IUserType.propertyManager,
       activationTokenExpiresAt: dayjs().add(1, 'hour').toDate(),
-    }) as IUserDocument;
-
-    // SEND EMAIL WITH ACTIVATION LINK
-    const emailOptions: IEmailOptions = {
-      subject: 'Activate your account',
-      to: user.email,
-      data: {
-        fullname: user.fullname,
-        activationUrl: `${process.env.FRONTEND_URL}/account_activation/${user.activationToken}`,
-      },
-      emailType: USER_REGISTRATION,
     };
+    let emailOptions: IEmailOptions = {
+      to: '',
+      data: null,
+      emailType: USER_REGISTRATION,
+      subject: 'Activate your account',
+    };
+
+    if (data.accountType === IAccountType.business) {
+      user = new Company({
+        cuid: uuid(),
+        ...dataToSave,
+      }) as ICompanyDocument;
+      // EMAIL ACTIVATION LINK
+      emailOptions = {
+        ...emailOptions,
+        to: user?.contactInfo.email,
+        data: {
+          fullname: user?.companyName,
+          activationUrl: `${process.env.FRONTEND_URL}/account_activation/${user.activationToken}`,
+        },
+      };
+    } else {
+      user = new PropertyManager({
+        uuid: uuid(),
+        ...dataToSave,
+      }) as IPropertyManagerDocument;
+      // EMAIL ACTIVATION LINK
+      emailOptions = {
+        ...emailOptions,
+        to: user?.email,
+        data: {
+          fullname: user?.fullname,
+          activationUrl: `${process.env.FRONTEND_URL}/account_activation/${user.activationToken}`,
+        },
+      };
+    }
 
     await user.save();
     return {
       success: true,
       data: { emailOptions },
-      msg: `Account activation email has been sent to ${user.email}`,
+      msg: `Account activation email has been sent to ${emailOptions.to}`,
     };
   };
 }
