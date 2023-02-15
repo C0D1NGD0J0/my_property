@@ -18,18 +18,16 @@
     "outDir": "./dist",
     "rootDir": "./",
     "paths": {
-      "@controller/*": ["app/controllers/*"],
+      "@controllers/*": ["app/controllers/*"],
       "@interfaces/*": ["app/interfaces/*"],
       "@models/*": ["app/models/*"],
       "@routes/*": ["app/routes/*"],
       "@database/*": ["app/database/*"],
       "@services/*": ["app/services/*"],
-      "@external-services/*": ["app/services/external/*"],
       "@tests/*": ["app/tests/*"],
       "@utils/*": ["app/utils/*"],
       "@root/*": ["./*"]
-    },
-    "typeRoots": ["./app/interfaces/types.d.ts"]
+    }
   },
   "ts-node": {
     "require": ["tsconfig-paths/register"]

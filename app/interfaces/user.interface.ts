@@ -1,15 +1,19 @@
 import { Document, Types } from 'mongoose';
 
 // USER
-export enum IUserType {
-  employee = 'employee',
-  propertyManager = 'propertyManager',
-  landlord = 'landlord',
+export enum IAccountType {
+  individual = 'individual',
+  business = 'business',
   tenant = 'tenant',
   admin = 'admin',
 }
 
-export enum IUserRelationshipsEnum {
+export enum ISignupAccountType {
+  individual = 'individual',
+  business = 'business',
+}
+
+export enum IBaseUserRelationshipsEnum {
   parents = 'parents',
   sibling = 'sibling',
   spouse = 'spouse',
@@ -18,37 +22,48 @@ export enum IUserRelationshipsEnum {
 }
 
 // BASE-USER INTERFACE
-export interface IUser {
-  uuid: string;
-  email: string;
-  lastName: string;
-  firstName: string;
-  password?: string;
-  fullname?: string;
-  isActive?: boolean;
-  userType: IUserType;
-  phoneNumber?: string;
+export interface IBaseUser {
+  password: string;
+  accountType: IAccountType;
   activationToken?: string;
   passwordResetToken?: string;
   passwordResetTokenExpiresAt?: Date;
   activationTokenExpiresAt?: Date | number;
 }
 
-export interface IUserDocument extends IUser, Document {
+export interface IBaseUserDocument extends IBaseUser, Document {
   id: string;
   createdAt: Date;
   updatedAt: Date;
+  isActive: boolean;
   _id: Types.ObjectId;
   validatePassword: (pwd1: string) => Promise<boolean>;
 }
 
+// PROPERTYMANAGER
+export interface IPropertyManager extends IBaseUser {
+  uuid: string;
+  email: string;
+  lastName: string;
+  firstName: string;
+  fullname?: string;
+  location?: string;
+  phoneNumber?: string;
+}
+
+export interface IPropertyManagerDocument extends IPropertyManager, Document {
+  _id: Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // TENANT INTERFACE
-export interface ITenant extends IUser {
+export interface ITenant extends IBaseUser {
   emergencyContact?: {
     name: string;
     email?: string;
     phoneNumber: string;
-    relationship: IUserRelationshipsEnum;
+    relationship: IBaseUserRelationshipsEnum;
   };
   landlords?: Types.ObjectId[];
   occupation?: string;
@@ -62,23 +77,6 @@ export interface ITenant extends IUser {
 }
 
 export interface ITenantDocument extends ITenant, Document {
-  _id: Types.ObjectId;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-// LANDLORD INTERFACE
-export interface ILandLord extends IUser {
-  name: string;
-  ownedPRoperties: [];
-  contactInfo: {
-    email: string;
-    address: string;
-    phoneNumber: string;
-  };
-}
-
-export interface ILandLordDocument extends ILandLord, Document {
   _id: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;

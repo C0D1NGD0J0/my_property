@@ -6,29 +6,30 @@ import cors from 'cors';
 import logger from 'morgan';
 import cookieParser from 'cookie-parser';
 import db from '@database/index';
-// import { errorHandler } from '@utils/middlewares';
 import helmet from 'helmet';
 import hpp from 'hpp';
 import compression from 'compression';
 
-// ROUTES
-// import authRoutes from '@routes/auth.route';
+import authRoutes from '@routes/auth.route';
+import { createLogger } from '@utils/helperFN';
+import { dbErrorHandler } from '@utils/middlewares';
+import { serverAdapter } from '@services/queues/base.queue';
 
 export class App {
+  private log;
   protected app: Application;
 
   constructor(app: Application) {
     this.app = app;
+    this.log = createLogger('MainApp');
   }
 
-  setupConfig = (): Application => {
+  setupConfig = (): void => {
     this.databaseConnection();
     this.standardMiddleware(this.app);
     this.securityMiddleware(this.app);
     this.routes(this.app);
-    this.globalErroHandler(this.app);
-
-    return this.app;
+    this.appErroHandler(this.app);
   };
 
   private databaseConnection(): void {
@@ -36,6 +37,7 @@ export class App {
       db.connect();
     }
   }
+
   private securityMiddleware(app: Application): void {
     app.use(hpp());
     app.use(helmet());
@@ -47,6 +49,7 @@ export class App {
       })
     );
   }
+
   private standardMiddleware(app: Application): void {
     if (process.env.NODE_ENV !== 'production') {
       app.use(logger('dev'));
@@ -56,11 +59,39 @@ export class App {
     app.use(cookieParser());
     app.use(compression());
   }
+
   private routes(app: Application) {
-    // app.use("/queues", serverAdapter.getRouter());
-    // app.use('/api/auth', authRoutes);
+    const BASE_PATH = '/api/v1';
+    app.use('/queues', serverAdapter.getRouter());
+    app.use(`${BASE_PATH}/auth`, authRoutes);
   }
-  private globalErroHandler(app: Application): void {
-    // app.use(errorHandler);
+
+  private appErroHandler(app: Application): void {
+    app.use(dbErrorHandler);
+    process.on('uncaughtException', (err: Error) => {
+      this.log.error('There was an uncaught error exception: ', err.message);
+      this.serverShutdown(1);
+    });
+
+    process.on('unhandledRejection', (err: Error) => {
+      this.log.error('There was an unhandled rejection error: ', err.message);
+      this.serverShutdown(2);
+    });
+
+    process.on('SIGTERM', (err: Error) => {
+      this.log.error('There was a SIGTERM error: ', err.message);
+    });
+  }
+
+  private serverShutdown(exitCode: number): void {
+    Promise.resolve()
+      .then(() => {
+        this.log.info('Shutdown complete.');
+        process.exit(exitCode);
+      })
+      .catch((error: Error) => {
+        this.log.error('Error occured during shutdown: ', error.message);
+        process.exit(1);
+      });
   }
 }

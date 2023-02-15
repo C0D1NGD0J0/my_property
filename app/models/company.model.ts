@@ -1,6 +1,7 @@
 import { ICompanyDocument } from '@interfaces/company.interface';
-import { Schema, model } from 'mongoose';
+import { Schema } from 'mongoose';
 import uniqueValidator from 'mongoose-unique-validator';
+import { User } from '@models/index';
 
 const companySchema = new Schema<ICompanyDocument>(
   {
@@ -31,12 +32,12 @@ const companySchema = new Schema<ICompanyDocument>(
           /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{2,3})+$/,
           'Please add a valid email',
         ],
+        contactPerson: { type: String, default: '' },
       },
       address: { type: String, default: '' },
       phoneNumber: { type: String, default: '' },
     },
-    isActive: { type: Boolean, default: false },
-    cid: { type: String, required: true, index: true },
+    cuid: { type: String, required: true, index: true },
     businessRegistrationNumber: { type: String, trim: true, required: true },
   },
   {
@@ -49,4 +50,4 @@ const companySchema = new Schema<ICompanyDocument>(
 
 companySchema.plugin(uniqueValidator);
 
-export default model<ICompanyDocument>('Company', companySchema);
+export default User.discriminator<ICompanyDocument>('Company', companySchema);

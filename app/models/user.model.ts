@@ -1,53 +1,26 @@
-import { IUserDocument, IUserType } from '@interfaces/user.interface';
+import { IBaseUserDocument, IAccountType } from '@interfaces/user.interface';
 import { Schema, model } from 'mongoose';
 import uniqueValidator from 'mongoose-unique-validator';
 import bcrypt from 'bcryptjs';
 
-const userSchema = new Schema<IUserDocument>(
+const baseUserSchema = new Schema<IBaseUserDocument>(
   {
-    firstName: {
-      type: String,
-      required: true,
-      lowercase: true,
-      maxlength: 25,
-      minlength: 2,
-      trim: true,
-    },
-    lastName: {
-      type: String,
-      required: true,
-      lowercase: true,
-      maxlength: 25,
-      minlength: 2,
-      trim: true,
-    },
     password: {
       type: String,
       required: [true, 'Password is required.'],
       minlength: 6,
-      select: false,
+      maxlength: 12,
+      trim: true,
     },
-    email: {
-      type: String,
-      index: true,
-      required: [true, 'Please provide an email address.'],
-      unique: true,
-      match: [
-        /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{2,3})+$/,
-        'Please add a valid email',
-      ],
-    },
-    userType: {
+    accountType: {
       type: String,
       required: true,
-      default: IUserType.propertyManager,
-      enum: Object.values(IUserType),
+      default: IAccountType.individual,
+      enum: Object.values(IAccountType),
     },
-    phoneNumber: { type: String, default: '' },
     isActive: { type: Boolean, default: false },
     activationToken: { type: String, default: '' },
     passwordResetToken: { type: String, default: '' },
-    uuid: { type: String, required: true, index: true },
     activationTokenExpiresAt: { type: Date, default: '' },
     passwordResetTokenExpiresAt: { type: Number, default: '' },
   },
@@ -59,11 +32,7 @@ const userSchema = new Schema<IUserDocument>(
   }
 );
 
-userSchema.virtual('fullname').get(function (this: IUserDocument) {
-  return `${this.firstName} ${this.lastName}`;
-});
-
-userSchema.pre('save', async function (this: IUserDocument, next) {
+baseUserSchema.pre('save', async function (this: IBaseUserDocument, next) {
   if (!this.isModified('password')) {
     next();
   }
@@ -73,12 +42,12 @@ userSchema.pre('save', async function (this: IUserDocument, next) {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-userSchema.methods.validatePassword = async function (
+baseUserSchema.methods.validatePassword = async function (
   pwd: string
 ): Promise<boolean> {
   return await bcrypt.compare(pwd, this.password);
 };
 
-userSchema.plugin(uniqueValidator);
+baseUserSchema.plugin(uniqueValidator);
 
-export default model<IUserDocument>('User', userSchema);
+export default model<IBaseUserDocument>('User', baseUserSchema);
