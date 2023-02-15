@@ -8,6 +8,7 @@ export interface ICompany extends IBaseUser {
     email: string;
     address: string;
     phoneNumber: string;
+    contactPerson: string;
   };
   isActive: boolean;
   companyName: string;

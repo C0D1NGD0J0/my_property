@@ -16,11 +16,12 @@ const config: Config.InitialOptions = {
   detectOpenHandles: true,
   modulePathIgnorePatterns: [
     '<rootDir>/dist/',
-    '<rootDir>/app/tests/setup.test.ts',
+    '<rootDir>/app/tests/configs/*',
   ],
-  setupFilesAfterEnv: ['./app/tests/setup.test.ts'],
+  globalTeardown: './app/tests/configs/teardown.test.ts',
+  setupFilesAfterEnv: ['./app/tests/configs/setup.test.ts'],
   moduleNameMapper: {
-    '@controllers/(.*)': ['<rootDir>/app/controller/$1'],
+    '@controllers/(.*)': ['<rootDir>/app/controllers/$1'],
     '@interfaces/(.*)': ['<rootDir>/app/interfaces/$1'],
     '@models/(.*)': ['<rootDir>/app/models/$1'],
     '@database/(.*)': ['<rootDir>/app/database/$1'],

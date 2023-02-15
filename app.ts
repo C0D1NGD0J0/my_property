@@ -16,22 +16,20 @@ import { dbErrorHandler } from '@utils/middlewares';
 import { serverAdapter } from '@services/queues/base.queue';
 
 export class App {
-  protected app: Application;
   private log;
+  protected app: Application;
 
   constructor(app: Application) {
     this.app = app;
-    this.log = createLogger('MainApp', true);
+    this.log = createLogger('MainApp');
   }
 
-  setupConfig = (): Application => {
+  setupConfig = (): void => {
     this.databaseConnection();
     this.standardMiddleware(this.app);
     this.securityMiddleware(this.app);
     this.routes(this.app);
     this.appErroHandler(this.app);
-
-    return this.app;
   };
 
   private databaseConnection(): void {
@@ -39,6 +37,7 @@ export class App {
       db.connect();
     }
   }
+
   private securityMiddleware(app: Application): void {
     app.use(hpp());
     app.use(helmet());
@@ -50,6 +49,7 @@ export class App {
       })
     );
   }
+
   private standardMiddleware(app: Application): void {
     if (process.env.NODE_ENV !== 'production') {
       app.use(logger('dev'));
@@ -59,11 +59,13 @@ export class App {
     app.use(cookieParser());
     app.use(compression());
   }
+
   private routes(app: Application) {
     const BASE_PATH = '/api/v1';
     app.use('/queues', serverAdapter.getRouter());
     app.use(`${BASE_PATH}/auth`, authRoutes);
   }
+
   private appErroHandler(app: Application): void {
     app.use(dbErrorHandler);
     process.on('uncaughtException', (err: Error) => {

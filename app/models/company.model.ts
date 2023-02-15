@@ -32,6 +32,7 @@ const companySchema = new Schema<ICompanyDocument>(
           /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{2,3})+$/,
           'Please add a valid email',
         ],
+        contactPerson: { type: String, default: '' },
       },
       address: { type: String, default: '' },
       phoneNumber: { type: String, default: '' },

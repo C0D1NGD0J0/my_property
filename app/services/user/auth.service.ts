@@ -13,7 +13,7 @@ import { IPropertyManager } from '@interfaces/user.interface';
 import { ICompany, ICompanyDocument } from '@interfaces/company.interface';
 import { IEmailOptions, ISuccessReturnData } from '@interfaces/utils.interface';
 
-type ISignupData = Partial<IPropertyManager & IBaseUser> | ICompany;
+export type ISignupData = Partial<IPropertyManager & IBaseUser> | ICompany;
 
 class AuthService {
   signup = async (

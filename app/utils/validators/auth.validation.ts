@@ -6,12 +6,16 @@ import { ISignupAccountType } from '@interfaces/user.interface';
 const signup = () => {
   return [
     body('firstName', "First Name field can't be blank")
+      .if((_value: any, { req }: any) => req.body.acctType === 'individual')
       .exists()
       .isLength({ min: 2, max: 25 }),
     body('lastName', "Last Name field can't be blank")
+      .if((_value: any, { req }: any) => req.body.acctType === 'individual')
       .exists()
       .isLength({ min: 2, max: 25 }),
-    body('location', 'Please provide your country of residence.').exists(),
+    body('location', 'Please provide your country of residence.')
+      .if((_value: any, { req }: any) => req.body.acctType === 'individual')
+      .exists(),
     body('email', 'Invalid email address format')
       .isEmail()
       .exists()
@@ -26,7 +30,10 @@ const signup = () => {
           );
         }
       }),
-    body('phoneNumber').exists().withMessage("Phone number can't be blank"),
+    body('phoneNumber')
+      .if((_value: any, { req }: any) => req.body.acctType === 'individual')
+      .exists()
+      .withMessage("Phone number can't be blank"),
     // .isMobilePhone('any', { strictMode: true })
     // .withMessage('Phone number is invalid')
     body('accountType', 'Account type must be provided.')
