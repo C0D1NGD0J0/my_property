@@ -33,7 +33,6 @@ export const dbErrorHandler = (
       `${val.message}`.replace('Error, ', '')
     );
     error = new ErrorResponse(JSON.stringify(messages), 422, 'validationError');
-    error.message = JSON.parse(error.messages);
   }
 
   return res.status(error.statusCode || 500).json({

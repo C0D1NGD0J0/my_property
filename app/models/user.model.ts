@@ -9,7 +9,6 @@ const baseUserSchema = new Schema<IBaseUserDocument>(
       type: String,
       required: [true, 'Password is required.'],
       minlength: 6,
-      maxlength: 12,
       trim: true,
     },
     accountType: {
@@ -21,8 +20,8 @@ const baseUserSchema = new Schema<IBaseUserDocument>(
     isActive: { type: Boolean, default: false },
     activationToken: { type: String, default: '' },
     passwordResetToken: { type: String, default: '' },
-    activationTokenExpiresAt: { type: Date, default: '' },
-    passwordResetTokenExpiresAt: { type: Number, default: '' },
+    activationTokenExpiresAt: { type: Date, default: null },
+    passwordResetTokenExpiresAt: { type: Number, default: null },
   },
   {
     timestamps: true,

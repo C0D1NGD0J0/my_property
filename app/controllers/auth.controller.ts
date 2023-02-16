@@ -16,6 +16,7 @@ class AuthController {
   signup = async (req: Request, res: Response) => {
     const { data, ...rest } = await this.authService.signup(req.body);
     this.emailQueue.addEmailToQueue(AUTH_EMAIL_QUEUE, data!.emailOptions);
+    console.log('FUCK----');
     res.status(200).json(rest);
   };
 

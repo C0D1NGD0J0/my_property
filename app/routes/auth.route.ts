@@ -26,12 +26,12 @@ router.post(
   asyncHandler(AuthController.resendActivationLink)
 );
 
-router.post(
-  '/login',
-  AuthValidations.login,
-  validationRequestHandler,
-  asyncHandler(AuthController.login)
-);
+// router.post(
+//   '/login',
+//   AuthValidations.login,
+//   validationRequestHandler,
+//   asyncHandler(AuthController.login)
+// );
 
 // router.get('/refresh_token', asyncHandler(AuthController.refreshToken));
 
