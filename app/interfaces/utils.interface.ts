@@ -16,9 +16,9 @@ export interface IEmailOptions<T = unknown> {
 }
 
 export interface ISuccessReturnData<T = unknown> {
-  success: boolean;
-  data: T;
+  data?: T;
   msg: string;
+  success: boolean;
 }
 
 export interface IAWSFileUploadResponse {

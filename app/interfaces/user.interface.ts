@@ -1,4 +1,5 @@
 import { Document, Types } from 'mongoose';
+import { ICompanyDocument } from '@interfaces/company.interface';
 
 // USER
 export enum IAccountType {
@@ -23,12 +24,13 @@ export enum IBaseUserRelationshipsEnum {
 
 // BASE-USER INTERFACE
 export interface IBaseUser {
+  email: string;
   password: string;
   accountType: IAccountType;
   activationToken?: string;
   passwordResetToken?: string;
-  passwordResetTokenExpiresAt?: Date;
-  activationTokenExpiresAt?: Date | number;
+  activationTokenExpiresAt: Date | number | null;
+  passwordResetTokenExpiresAt: Date | number | null;
 }
 
 export interface IBaseUserDocument extends IBaseUser, Document {
@@ -43,7 +45,6 @@ export interface IBaseUserDocument extends IBaseUser, Document {
 // PROPERTYMANAGER
 export interface IPropertyManager extends IBaseUser {
   uuid: string;
-  email: string;
   lastName: string;
   firstName: string;
   fullname?: string;
@@ -88,3 +89,8 @@ interface IRefreshTokenDocument extends Document {
 }
 
 export type IRefreshToken = IRefreshTokenDocument;
+export type IUserType =
+  | IBaseUserDocument
+  | IPropertyManagerDocument
+  | ITenantDocument
+  | ICompanyDocument;

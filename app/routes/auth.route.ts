@@ -12,26 +12,26 @@ router.post(
   asyncHandler(AuthController.signup)
 );
 
-// router.post(
-//   '/login',
-//   AuthValidations.login,
-//   validationRequestHandler,
-//   asyncHandler(AuthController.login)
-// );
+router.get(
+  '/account_activation/:token',
+  AuthValidations.accountActivation,
+  validationRequestHandler,
+  asyncHandler(AuthController.accountActivation)
+);
 
-// router.get(
-//   '/account_activation/:token',
-//   AuthValidations.accountActivation,
-//   validationRequestHandler,
-//   asyncHandler(AuthController.activateAccount)
-// );
+router.post(
+  '/resend_activation_link',
+  AuthValidations.accountActivation,
+  validationRequestHandler,
+  asyncHandler(AuthController.resendActivationLink)
+);
 
-// router.post(
-//   '/resend_activation_link',
-//   AuthValidations.accountActivationEmail,
-//   validationRequestHandler,
-//   asyncHandler(AuthController.sendActivationLink)
-// );
+router.post(
+  '/login',
+  AuthValidations.login,
+  validationRequestHandler,
+  asyncHandler(AuthController.login)
+);
 
 // router.get('/refresh_token', asyncHandler(AuthController.refreshToken));
 
