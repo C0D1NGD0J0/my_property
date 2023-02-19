@@ -89,8 +89,10 @@ interface IRefreshTokenDocument extends Document {
 }
 
 export type IRefreshToken = IRefreshTokenDocument;
-export type IUserType =
-  | IBaseUserDocument
-  | IPropertyManagerDocument
-  | ITenantDocument
-  | ICompanyDocument;
+export interface IUserType
+  extends IBaseUserDocument,
+    IPropertyManagerDocument,
+    ITenantDocument,
+    ICompanyDocument {
+  id: string;
+}

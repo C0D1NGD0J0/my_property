@@ -36,7 +36,7 @@ export const isAuthenticated = asyncHandler(
 
       req.currentuser = user;
       next();
-    } catch (error: unknown | any) {
+    } catch (error: Error | any) {
       console.log(chalk.red.bold(error), '---middleware---');
       return next(error);
     }

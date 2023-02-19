@@ -10,6 +10,17 @@ const baseUserSchema = new Schema<IBaseUserDocument>(
       required: [true, 'Password is required.'],
       minlength: 6,
       trim: true,
+      select: false,
+    },
+    email: {
+      type: String,
+      index: true,
+      required: [true, 'Please provide an email address.'],
+      unique: true,
+      match: [
+        /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{2,3})+$/,
+        'Please add a valid email',
+      ],
     },
     accountType: {
       type: String,

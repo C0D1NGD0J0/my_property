@@ -15,7 +15,7 @@ export interface IEmailOptions<T = unknown> {
   emailType: string;
 }
 
-export interface ISuccessReturnData<T = unknown> {
+export interface ISuccessReturnData<T = object> {
   data?: T;
   msg: string;
   success: boolean;

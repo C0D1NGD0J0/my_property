@@ -8,13 +8,10 @@ import {
   IPropertyManagerDocument,
   IUserType,
 } from '@interfaces/user.interface';
-import { hashGenerator } from '@utils/helperFN';
+import { hashGenerator, jwtGenerator } from '@utils/helperFN';
 import { USER_REGISTRATION } from '@utils/constants';
 import { PropertyManager, Company, User } from '@models/index';
-import {
-  IPropertyManager,
-  ISignupAccountType,
-} from '@interfaces/user.interface';
+import { IPropertyManager } from '@interfaces/user.interface';
 import { ICompany, ICompanyDocument } from '@interfaces/company.interface';
 import { IEmailOptions, ISuccessReturnData } from '@interfaces/utils.interface';
 import ErrorResponse from '@utils/errorResponse';
@@ -107,7 +104,7 @@ class AuthService {
     email: string
   ): Promise<ISuccessReturnData<{ emailOptions: IEmailOptions }>> => {
     try {
-      let user = (await User.findOne({ email })) as IUserType;
+      const user = (await User.findOne({ email })) as IUserType;
       const emailOptions = {
         to: user?.email,
         data: {
@@ -119,11 +116,11 @@ class AuthService {
       };
 
       if (user.accountType === IAccountType.business) {
-        user = user as ICompanyDocument;
-        emailOptions.data.fullname = user.companyName;
+        const _user = user as ICompanyDocument;
+        emailOptions.data.fullname = _user.companyName;
       } else {
-        user = user as IPropertyManagerDocument;
-        emailOptions.data.fullname = user.firstName;
+        const _user = user as IPropertyManagerDocument;
+        emailOptions.data.fullname = _user.firstName;
       }
 
       user.activationToken = hashGenerator();
@@ -135,6 +132,47 @@ class AuthService {
         success: true,
         data: { emailOptions },
         msg: `Account activation link has been successfully to ${emailOptions.to}`,
+      };
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  login = async (
+    data: Pick<IBaseUser, 'email' | 'password'>
+  ): Promise<
+    ISuccessReturnData<{
+      jwtToken: string;
+      refreshJWT: string;
+      userid: string;
+    }>
+  > => {
+    try {
+      const user = (await User.findOne({ email: data.email }).select(
+        'password'
+      )) as IUserType;
+      const isMatch = await user.validatePassword(data.password);
+
+      if (!isMatch) {
+        const err = 'Invalid email/password credentials.';
+        throw new ErrorResponse(err, 401, 'authServiceError');
+      }
+
+      const jwt = jwtGenerator(user.id, process.env.JWT_SECRET, {
+        expiresIn: process.env.JWT_EXPIREIN,
+      });
+      const refreshJWT = jwtGenerator(user.id, process.env.JWT_REFRESH_SECRET, {
+        expiresIn: process.env.JWT_REFRESH_EXPIRESIN,
+      });
+
+      return {
+        success: true,
+        msg: 'Login was successful.',
+        data: {
+          refreshJWT,
+          jwtToken: jwt,
+          userid: user.id,
+        },
       };
     } catch (error) {
       throw error;
