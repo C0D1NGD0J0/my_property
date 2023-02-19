@@ -86,7 +86,7 @@ class AuthService {
 
       if (!user) {
         const msg = 'Activation code has exipred.';
-        throw new ErrorResponse(msg, 422, 'authServiceError');
+        throw new ErrorResponse(msg, 'authServiceError', 422);
       }
 
       user.isActive = true;
@@ -155,7 +155,7 @@ class AuthService {
 
       if (!isMatch) {
         const err = 'Invalid email/password credentials.';
-        throw new ErrorResponse(err, 401, 'authServiceError');
+        throw new ErrorResponse(err, 'authServiceError', 401);
       }
 
       const jwt = jwtGenerator(user.id, process.env.JWT_SECRET, {

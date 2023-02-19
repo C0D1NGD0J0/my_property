@@ -5,15 +5,9 @@ import { createLogger } from '@utils/helperFN';
 
 export type RedisClient = ReturnType<typeof createClient>;
 
-type ICacheReturnType = unknown | string | null;
-
-interface IObjectDataType {
-  [key: string]: any;
-}
-
-export interface ICacheResponse {
+export interface ICacheResponse<T = any> {
   success: boolean;
-  data?: ICacheReturnType;
+  data?: T;
 }
 
 export abstract class BaseCache {
@@ -65,14 +59,12 @@ export abstract class BaseCache {
 
   setObject = async (
     objName: string,
-    objData: IObjectDataType
+    data: object
   ): Promise<ICacheResponse> => {
     if (!objName) throw new Error('Error save to cache: objName is required');
     let resp;
 
-    for (let [key, value] of Object.entries(objData)) {
-      key = key as string;
-      value = JSON.stringify(value);
+    for (const [key, value] of Object.entries(data)) {
       resp = await this.client.HSET(objName, key, value);
     }
 
@@ -82,7 +74,7 @@ export abstract class BaseCache {
   getObjectField = async (
     objName: string,
     key: string
-  ): Promise<ICacheResponse | null> => {
+  ): Promise<ICacheResponse<any>> => {
     try {
       if (!objName || key)
         throw new Error(

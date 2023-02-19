@@ -16,17 +16,17 @@ const signup = () => {
     body('location', 'Please provide your country of residence.')
       .if((_value: any, { req }: any) => req.body.acctType === 'individual')
       .exists(),
-    body('email', 'Invalid email address format')
-      .isEmail()
+    body('email', "Email field can't be blank.")
       .exists()
+      .isEmail()
       .bail()
       .custom(async (email) => {
         const user = await User.findOne({ email });
         if (user) {
           throw new ErrorResponse(
             `The email(${email}) is already associated with an account.`,
-            422,
-            'authServiceError'
+            'authServiceError',
+            422
           );
         }
       }),
@@ -43,8 +43,8 @@ const signup = () => {
         if (!Object.values(ISignupAccountType).includes(utype)) {
           throw new ErrorResponse(
             `Invalid account type provided.`,
-            422,
-            'authServiceError'
+            'authServiceError',
+            422
           );
         }
       }),
@@ -95,17 +95,17 @@ const validateAllUserTypeSignup = () => {
 
 const login = () => {
   return [
-    body('email', 'Invalid email address format')
-      .isEmail()
+    body('email', "Email field can't be blank.")
       .exists()
+      .isEmail()
       .bail()
       .custom(async (email) => {
         const user = await User.findOne({ email });
         if (!user) {
           throw new ErrorResponse(
             `Invalid email/password combination`,
-            404,
-            'authServiceError'
+            'authServiceError',
+            401
           );
         }
       }),
@@ -130,8 +130,8 @@ const forgotPassword = () => {
         if (!user) {
           throw new ErrorResponse(
             "Email doesn't exist",
-            422,
-            'authServiceError'
+            'authServiceError',
+            422
           );
         }
       }),
@@ -153,8 +153,8 @@ const resetPassword = () => {
         if (!user) {
           throw new ErrorResponse(
             'Please generate a new token.',
-            422,
-            'authServiceError'
+            'authServiceError',
+            422
           );
         }
       }),

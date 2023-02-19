@@ -12,16 +12,18 @@ export default class AuthCache extends BaseCache {
     this.log = createLogger('authCache');
   }
 
-  setRefreshToken = async (
+  saveToken = async (
     userid: string,
-    refreshToken: string
+    token: string
   ): Promise<ICacheResponse> => {
     try {
       if (!this.client.isOpen) {
         await this.client.connect();
       }
 
-      return await this.setObject('refreshTokens', { [userid]: refreshToken });
+      return await this.setObject('authTokens', {
+        [userid]: token,
+      });
     } catch (error) {
       this.log.error('Auth cache error: ', error);
       throw {
@@ -31,13 +33,15 @@ export default class AuthCache extends BaseCache {
     }
   };
 
-  getRefreshToken = async (userid: string) => {
+  getToken = async (
+    userid: string
+  ): Promise<ICacheResponse<{ accessToken: string; jwtToken: string }>> => {
     try {
       if (!this.client.isOpen) {
         await this.client.connect();
       }
 
-      return await this.getObjectField('refreshTokens', userid);
+      return await this.getObjectField('authTokens', userid);
     } catch (error) {
       this.log.error('Auth cache error: ', error);
       throw {

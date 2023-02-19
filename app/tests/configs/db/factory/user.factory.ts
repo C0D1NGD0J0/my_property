@@ -5,12 +5,13 @@ import { ISignupData } from '@services/user/auth.service';
 import { hashGenerator } from '@utils/helperFN';
 
 class UserFactory {
-  create = async (data: ISignupData, type?: string) => {
+  create = async (data: ISignupData, type?: 'business' | 'individual') => {
     if (type == 'business') {
       return await Company.create({
         ...(await this.defaultCompany()),
         ...data,
         uuid: '1234-acde',
+        isActive: true,
         activationToken: hashGenerator(),
         activationTokenExpires: new Date(Date.now() + 3600000),
       });
@@ -18,9 +19,10 @@ class UserFactory {
       return await PropertyManager.create({
         ...(await this.default()),
         ...data,
-        uuid: '1234-acde',
-        activationToken: hashGenerator(),
-        activationTokenExpiresAt: new Date(Date.now() + 3600000),
+        isActive: true,
+        uuid: '5678-fghj',
+        activationToken: '',
+        activationTokenExpiresAt: '',
       });
     }
   };
@@ -30,11 +32,17 @@ class UserFactory {
       return new Company({
         ...(await this.default()),
         ...data,
+        uuid: '1234-abde',
+        activationToken: hashGenerator(),
+        activationTokenExpiresAt: new Date(Date.now() + 3600000),
       });
     } else {
       return new PropertyManager({
         ...(await this.default()),
         ...data,
+        uuid: '5678-fghj',
+        activationToken: hashGenerator(),
+        activationTokenExpiresAt: new Date(Date.now() + 3600000),
       });
     }
   };

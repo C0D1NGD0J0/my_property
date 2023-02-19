@@ -3,6 +3,7 @@ import { validationResult } from 'express-validator';
 
 import AuthValidations from '@utils/validators/auth.validation';
 import { AppRequest, AppResponse } from '@interfaces/utils.interface';
+import chalk from 'chalk';
 
 const validationRequestHandler = (
   req: AppRequest,
@@ -15,9 +16,13 @@ const validationRequestHandler = (
     return next();
   }
 
+  console.log(
+    chalk.bold.red(JSON.stringify(errors)),
+    '-----Validation errors----'
+  );
+
   const extractedErrors: any = [];
   errors.array().map((err) => extractedErrors.push({ [err.param]: err.msg }));
-
   return res.status(422).json({
     success: false,
     error: { data: extractedErrors },

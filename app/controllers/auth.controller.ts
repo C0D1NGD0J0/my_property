@@ -43,7 +43,7 @@ class AuthController {
       password,
     });
     data && setCookieAuth(data.refreshJWT, res);
-    data && this.cache.setRefreshToken(data.userid, data.refreshJWT);
+    data && this.cache.saveToken(data.userid, data.refreshJWT);
     res.status(200).json({ ...rest, accessToken: data?.jwtToken });
   };
 

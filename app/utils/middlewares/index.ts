@@ -13,18 +13,18 @@ export const dbErrorHandler = (
   error.message = err.message || 'Server Error...';
   error.type = err.type || 'apiError';
 
-  console.log(chalk.red.bold(err.message));
+  console.log(chalk.bold.red(JSON.stringify(err)), '-----Errors----');
 
   // Mongoose bad ObjectID
   if (err.name === 'CastError') {
     const message = `Resource with ID ${err.value} not found!`;
-    error = new ErrorResponse(message, 404, 'dbError');
+    error = new ErrorResponse(message, 'dbError', 404);
   }
 
   // Mongoose duplicate key
   if (err.code === 11000) {
     const message = `Duplicate fields value were provided!`;
-    error = new ErrorResponse(message, 400, 'dbError');
+    error = new ErrorResponse(message, 'dbError', 400);
   }
 
   // Mongoose Validation error
@@ -32,7 +32,7 @@ export const dbErrorHandler = (
     const messages = Object.values(err.errors).map((val: any) =>
       `${val.message}`.replace('Error, ', '')
     );
-    error = new ErrorResponse(JSON.stringify(messages), 422, 'validationError');
+    error = new ErrorResponse(JSON.stringify(messages), 'validationError', 422);
   }
 
   return res.status(error.statusCode || 500).json({

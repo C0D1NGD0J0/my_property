@@ -25,7 +25,7 @@ export const setCookieAuth = (token: string, res: Response) => {
     secure: process.env.NODE_ENV === 'production', //only works with https
   };
 
-  res.cookie('authToken', token, options);
+  res.cookie('access-token', token, options);
   return res;
 };
 

@@ -1,14 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { asyncHandler } from '.';
-import { NextFunction } from 'express';
-import ErrorResponse from '../errorResponse';
-import User from '../../models/user.model';
-import jwt from 'jsonwebtoken';
 import chalk from 'chalk';
+import jwt from 'jsonwebtoken';
+import { NextFunction } from 'express';
+
+import { asyncHandler } from '.';
+import User from '../../models/user.model';
+import { AuthCache } from '@services/redis';
+import ErrorResponse from '../errorResponse';
 import { AppRequest, AppResponse } from '../../interfaces/utils.interface';
+
+const authCache: AuthCache = new AuthCache();
 
 export const isAuthenticated = asyncHandler(
   async (req: AppRequest, res: AppResponse, next: NextFunction) => {
+    // let token = req.cookies['access-token'];
     let token = '';
 
     if (
@@ -19,7 +24,7 @@ export const isAuthenticated = asyncHandler(
     }
 
     if (!token) {
-      return next(new ErrorResponse('Access denied!', 403, 'jwtError'));
+      return next(new ErrorResponse('Access denied!', 'jwtError', 403));
     }
 
     try {
@@ -29,8 +34,8 @@ export const isAuthenticated = asyncHandler(
       if (!user || !user.isActive) {
         throw new ErrorResponse(
           'Please validate your email by clicking the link emailed during regitration process.',
-          422,
-          'authServiceError'
+          'authServiceError',
+          422
         );
       }
 
