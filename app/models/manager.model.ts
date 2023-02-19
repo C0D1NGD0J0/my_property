@@ -22,16 +22,6 @@ const propertyManagerSchema = new Schema<IPropertyManagerDocument>(
       minlength: 2,
       trim: true,
     },
-    email: {
-      type: String,
-      index: true,
-      required: [true, 'Please provide an email address.'],
-      unique: true,
-      match: [
-        /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{2,3})+$/,
-        'Please add a valid email',
-      ],
-    },
     location: {
       type: String,
       lowercase: true,

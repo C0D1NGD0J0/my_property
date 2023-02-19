@@ -7,9 +7,13 @@ const log = createLogger('TesetSetup');
 
 beforeAll(async () => {
   await connectDB();
-  log.info('Test Db connected...');
 });
 
-afterEach(async () => await clearDB());
+afterEach(async () => {
+  return await clearDB();
+});
 
-afterAll(async () => await disconnectDB());
+afterAll(async () => {
+  log.info('Disconnecting Test DB afterAll...');
+  return await disconnectDB();
+});

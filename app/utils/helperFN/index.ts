@@ -1,9 +1,7 @@
 import crypto from 'crypto';
-import { Types } from 'mongoose';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { Response } from 'express';
 import bunyan from 'bunyan';
-import chalk from 'chalk';
 
 export const hashGenerator = (): string => {
   const token = crypto.randomBytes(10).toString('hex');
@@ -12,14 +10,14 @@ export const hashGenerator = (): string => {
 };
 
 export const jwtGenerator = (
-  userId: Types.ObjectId,
+  id: string,
   secret = process.env.JWT_SECRET as string,
   opts: SignOptions
 ) => {
-  return `Bearer ${jwt.sign({ id: userId }, secret, opts)}`;
+  return `Bearer ${jwt.sign({ id }, secret, opts)}`;
 };
 
-export const setCookieAuth = (refreshJWT: string, res: Response) => {
+export const setCookieAuth = (token: string, res: Response) => {
   const options = {
     httpOnly: true,
     maxAge: 7200, // Expires after 2hr
@@ -27,7 +25,7 @@ export const setCookieAuth = (refreshJWT: string, res: Response) => {
     secure: process.env.NODE_ENV === 'production', //only works with https
   };
 
-  res.cookie('authToken', refreshJWT, options);
+  res.cookie('access-token', token, options);
   return res;
 };
 
@@ -59,4 +57,12 @@ export const range = (start: number, end: number, step: number): number[] => {
     array.push(i);
   }
   return array;
+};
+
+export const parseJSON = (value: string) => {
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    return value;
+  }
 };

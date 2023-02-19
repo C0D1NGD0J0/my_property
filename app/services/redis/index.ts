@@ -1,23 +1,4 @@
-import { createLogger } from '@utils/helperFN';
-import { BaseCache } from '@services/redis/base.cache';
+import AuthCache from '@services/redis/auth.cache';
+import { redisConnection } from '@services/redis/connection';
 
-const log = createLogger('redisConnection');
-
-class RedisConnection extends BaseCache {
-  constructor() {
-    super('redisConnection');
-  }
-
-  async connect(): Promise<void> {
-    try {
-      this.client.connect();
-      this.client.on('connect', () => {
-        log.info(`Redis connection established`);
-      });
-    } catch (error) {
-      this.log.error(error);
-    }
-  }
-}
-
-export const redisConnection: RedisConnection = new RedisConnection();
+export { AuthCache, redisConnection };

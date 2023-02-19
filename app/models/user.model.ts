@@ -9,8 +9,18 @@ const baseUserSchema = new Schema<IBaseUserDocument>(
       type: String,
       required: [true, 'Password is required.'],
       minlength: 6,
-      maxlength: 12,
       trim: true,
+      select: false,
+    },
+    email: {
+      type: String,
+      index: true,
+      required: [true, 'Please provide an email address.'],
+      unique: true,
+      match: [
+        /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{2,3})+$/,
+        'Please add a valid email',
+      ],
     },
     accountType: {
       type: String,
@@ -21,8 +31,8 @@ const baseUserSchema = new Schema<IBaseUserDocument>(
     isActive: { type: Boolean, default: false },
     activationToken: { type: String, default: '' },
     passwordResetToken: { type: String, default: '' },
-    activationTokenExpiresAt: { type: Date, default: '' },
-    passwordResetTokenExpiresAt: { type: Number, default: '' },
+    activationTokenExpiresAt: { type: Date, default: null },
+    passwordResetTokenExpiresAt: { type: Number, default: null },
   },
   {
     timestamps: true,
