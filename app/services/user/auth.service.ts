@@ -9,7 +9,11 @@ import {
   IUserType,
 } from '@interfaces/user.interface';
 import { hashGenerator, jwtGenerator } from '@utils/helperFN';
-import { USER_REGISTRATION } from '@utils/constants';
+import {
+  USER_REGISTRATION,
+  PASSWORD_RESET_SUCCESS,
+  PASSWORD_RESET_EMAIL,
+} from '@utils/constants';
 import { PropertyManager, Company, User } from '@models/index';
 import { IPropertyManager } from '@interfaces/user.interface';
 import { ICompany, ICompanyDocument } from '@interfaces/company.interface';
@@ -177,6 +181,121 @@ class AuthService {
     } catch (error) {
       throw error;
     }
+  };
+
+  forgotPassword = async (email: Pick<IUserType, 'email'>) => {
+    try {
+      const user = (await User.findOne({ email })) as IUserType;
+      const oneHour = dayjs().add(1, 'hour').toDate();
+
+      // SEND EMAIL
+      const emailOptions = {
+        subject: 'Account Password Reset',
+        to: user.email,
+        data: {
+          fullname: '',
+          resetPasswordUrl: `${process.env.FRONTEND_URL}/reset_password/${user.passwordResetToken}`,
+        },
+        emailType: PASSWORD_RESET_EMAIL,
+      };
+
+      if (user.accountType === IAccountType.business) {
+        const _user = user as ICompanyDocument;
+        emailOptions.data.fullname = _user.companyName;
+      } else {
+        const _user = user as IPropertyManagerDocument;
+        emailOptions.data.fullname = _user.firstName;
+      }
+
+      user.passwordResetToken = hashGenerator();
+      user.passwordResetTokenExpiresAt = oneHour;
+      await user.save();
+
+      return {
+        success: true,
+        data: { emailOptions },
+        msg: `Password reset email has been sent to your email ${user.email}`,
+      };
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  resetPassword = async (data: {
+    passwordResetToken: string;
+    password: string;
+  }): Promise<ISuccessReturnData<{ emailOptions: IEmailOptions }>> => {
+    try {
+      const user = (await User.findOne({
+        passwordResetToken: data.passwordResetToken,
+      })) as IUserType;
+
+      // SEND EMAIL
+      const emailOptions = {
+        subject: 'Password Reset Successful',
+        to: user.email,
+        data: {
+          fullname: '',
+          resetAt: dayjs().format('DD/MM/YYYY H:m:s'),
+        },
+        emailType: PASSWORD_RESET_SUCCESS,
+      };
+
+      if (user.accountType === IAccountType.business) {
+        const _user = user as ICompanyDocument;
+        emailOptions.data.fullname = _user.companyName;
+      } else {
+        const _user = user as IPropertyManagerDocument;
+        emailOptions.data.fullname = _user.firstName;
+      }
+
+      user.password = data.password;
+      user.passwordResetToken = '';
+      user.passwordResetTokenExpiresAt = null;
+      await user.save();
+
+      return {
+        success: true,
+        data: { emailOptions },
+        msg: 'Your password was successfully updated.',
+      };
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  getRefreshToken = async (token: string, res: Response) => {
+    // try {
+    //   const foundToken = await RefreshToken.findOne({ token }).populate('user');
+    //   if (!foundToken) {
+    //     const msg = 'Unauthorized, please login again.';
+    //     throw new ErrorResponse(msg, 401, 'authServiceError');
+    //   }
+    //   jwt.verify(
+    //     foundToken.token,
+    //     process.env.JWT_REFRESH_SECRET!,
+    //     async (err, decoded: any) => {
+    //       if (err || foundToken.user.id.toString() !== decoded.id.toString()) {
+    //         console.log(err, '===ERROR====jwt');
+    //         await foundToken.deleteOne();
+    //         res.clearCookie('authToken');
+    //         throw new ErrorResponse(
+    //           'Please login again.',
+    //           401,
+    //           'authServiceError'
+    //         );
+    //       }
+    //       const jwt = jwtGenerator(
+    //         foundToken.user._id,
+    //         process.env.JWT_REFRESH_SECRET,
+    //         { expiresIn: process.env.JWT_REFRESH_EXPIRESIN }
+    //       );
+    //       return { success: true, token: jwt };
+    //     }
+    //   );
+    // } catch (error) {
+    //   throw error;
+    // }
   };
 }
 
