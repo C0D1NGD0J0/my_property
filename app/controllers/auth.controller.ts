@@ -2,7 +2,11 @@ import { Request, Response } from 'express';
 import { AuthService } from '@services/user';
 import { EmailQueue } from '@services/queues';
 import { setCookieAuth } from '@utils/helperFN';
-import { AUTH_EMAIL_QUEUE } from '@utils/constants';
+import {
+  AUTH_EMAIL_QUEUE,
+  PASSWORD_RESET_EMAIL,
+  PASSWORD_RESET_SUCCESS,
+} from '@utils/constants';
 import { AuthCache } from '@services/redis';
 
 class AuthController {
@@ -46,26 +50,29 @@ class AuthController {
     data && this.cache.saveToken(data.userid, data.refreshJWT);
     res.status(200).json({ ...rest, accessToken: data?.jwtToken });
   };
+  // WIP
+  refreshToken = async (req: Request, res: Response) => {
+    const cookies = req.cookies;
+    if (!cookies['access-token']) {
+      return res.status(401).json({ success: false });
+    }
 
-  // refreshToken = async (req: Request, res: Response) => {
-  //   const cookies = req.cookies;
-  //   if (!cookies.authToken) return res.status(401).json({ success: false });
+    const data = await this.authService.getRefreshToken(cookies.authToken, res);
+    res.status(200).json(data);
+  };
 
-  //   const data = await this.authService.getRefreshToken(cookies.authToken, res);
-  //   res.status(200).json(data);
-  // };
+  forgotPassword = async (req: Request, res: Response) => {
+    const { email } = req.body;
+    const { data, ...rest } = await this.authService.forgotPassword(email);
+    this.emailQueue.addEmailToQueue(PASSWORD_RESET_EMAIL, data!.emailOptions);
+    res.status(200).json(rest);
+  };
 
-  // forgotPassword = async (req: Request, res: Response) => {
-  //   const { email } = req.body;
-  //   const data = await this.authService.forgotPassword(email);
-  //   emailQueue.addToQueue(AUTH_EMAIL_JOB, {data: data?.emailOptions});
-  //   res.status(200).json({success: true, message: data?.message });
-  // };
-
-  // resetPassword = async (req: Request, res: Response) => {
-  //   const data = await this.authService.resetPassword(req.body);
-  //   res.status(200).json(data);
-  // };
+  resetPassword = async (req: Request, res: Response) => {
+    const { data, ...rest } = await this.authService.resetPassword(req.body);
+    this.emailQueue.addEmailToQueue(PASSWORD_RESET_SUCCESS, data!.emailOptions);
+    res.status(200).json(rest);
+  };
 }
 
 export default new AuthController();

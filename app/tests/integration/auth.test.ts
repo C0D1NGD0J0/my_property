@@ -130,31 +130,31 @@ describe('AuthController', () => {
     });
   });
 
-  // xdescribe('PUT: forgot password', () => {
-  //   it('respond with a success message when a valid request is made', async () => {
-  //     const user = await UserFactory.create();
-  //     const response = await request(app)
-  //       .post(`${baseUrl}/forgot_password`)
-  //       .type('json')
-  //       .send({ email: user.email });
+  describe('PUT: forgot password', () => {
+    it('respond with a success message when a valid request is made', async () => {
+      const user = await UserFactory.create({}, 'individual');
+      const response = await request(app)
+        .post(`${baseUrl}/forgot_password`)
+        .type('json')
+        .send({ email: user.email });
 
-  //     expect(response.status).toEqual(200);
-  //     expect(response.body.success).toBeTruthy();
-  //   });
+      expect(response.status).toEqual(200);
+      expect(response.body.success).toBeTruthy();
+    });
 
-  //   it('responds with error when invalid email is provided', async () => {
-  //     const user = await UserFactory.getPlainUserObject();
-  //     const response = await request(app)
-  //       .post(`${baseUrl}/forgot_password`)
-  //       .type('json')
-  //       .send({ email: user.email });
+    it('responds with error when invalid email is provided', async () => {
+      const user = (await UserFactory.getPlainUserObject()).individual;
+      const response = await request(app)
+        .post(`${baseUrl}/forgot_password`)
+        .type('json')
+        .send({ email: user.email });
 
-  //     expect(response.status).toEqual(422);
-  //     expect(response.body.type).toBeDefined();
-  //     expect(response.body.type).toEqual('validationError');
-  //     expect(response.body.error.data).toEqual(
-  //       expect.arrayContaining([{ email: "Email doesn't exist" }])
-  //     );
-  //   });
-  // });
+      expect(response.status).toEqual(422);
+      expect(response.body.type).toBeDefined();
+      expect(response.body.type).toEqual('validationError');
+      expect(response.body.error.data).toEqual(
+        expect.arrayContaining([{ email: "Email doesn't exist" }])
+      );
+    });
+  });
 });

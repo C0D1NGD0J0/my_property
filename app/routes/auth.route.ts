@@ -33,20 +33,20 @@ router.post(
   asyncHandler(AuthController.login)
 );
 
-// router.get('/refresh_token', asyncHandler(AuthController.refreshToken));
+router.get('/refresh_token', asyncHandler(AuthController.refreshToken));
 
-// router.post(
-//   '/forgot_password',
-//   AuthValidations.forgotPassword,
-//   validationRequestHandler,
-//   asyncHandler(AuthController.forgotPassword)
-// );
+router.post(
+  '/forgot_password',
+  AuthValidations.forgotPassword,
+  validationRequestHandler,
+  asyncHandler(AuthController.forgotPassword)
+);
 
-// router.put(
-//   '/reset_password',
-//   AuthValidations.resetPassword,
-//   validationRequestHandler,
-//   asyncHandler(AuthController.resetPassword)
-// );
+router.put(
+  '/reset_password',
+  AuthValidations.resetPassword,
+  validationRequestHandler,
+  asyncHandler(AuthController.resetPassword)
+);
 
 export default router;
