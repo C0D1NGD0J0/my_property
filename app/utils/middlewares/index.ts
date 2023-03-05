@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import colors from 'colors/safe';
 import { NextFunction } from 'express';
 import ErrorResponse from '../errorResponse';
 import { AppRequest, AppResponse } from '@interfaces/utils.interface';
@@ -13,7 +13,7 @@ export const dbErrorHandler = (
   error.message = err.message || 'Server Error...';
   error.type = err.type || 'apiError';
 
-  console.log(chalk.bold.red(JSON.stringify(err)), '-----Errors----');
+  console.log(colors.red(err.message), '-----Errors----');
 
   // Mongoose bad ObjectID
   if (err.name === 'CastError') {
