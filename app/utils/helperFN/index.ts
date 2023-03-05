@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import jwt, { SignOptions } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { Response } from 'express';
 import bunyan from 'bunyan';
 
@@ -9,12 +9,20 @@ export const hashGenerator = (): string => {
   return crypto.createHash('sha256').update(token).digest('hex');
 };
 
-export const jwtGenerator = (
-  id: string,
-  secret = process.env.JWT_SECRET as string,
-  opts: SignOptions
-) => {
-  return `Bearer ${jwt.sign({ id }, secret, opts)}`;
+export const jwtGenerator = (id: string) => {
+  const secrets = [
+    process.env.JWT_SECRET as string,
+    process.env.JWT_REFRESH_SECRET as string,
+  ];
+
+  return {
+    refreshToken: `Bearer ${jwt.sign({ id }, secrets[1], {
+      expiresIn: process.env.JWT_REFRESH_EXPIRESIN,
+    })}`,
+    accessToken: `Bearer ${jwt.sign({ id }, secrets[0], {
+      expiresIn: process.env.JWT_EXPIREIN,
+    })}`,
+  };
 };
 
 export const setCookieAuth = (token: string, res: Response) => {
@@ -25,7 +33,7 @@ export const setCookieAuth = (token: string, res: Response) => {
     secure: process.env.NODE_ENV === 'production', //only works with https
   };
 
-  res.cookie('access-token', token, options);
+  res.cookie('refreshToken', token, options);
   return res;
 };
 
@@ -65,4 +73,14 @@ export const parseJSON = (value: string) => {
   } catch (error) {
     return value;
   }
+};
+
+export const httpStatusCodes = {
+  OK: 200,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  BAD_REQUEST: 400,
+  UNPROCESSABLE: 422,
+  UNAUTHORIZED: 401,
+  INTERNAL_SERVER: 500,
 };

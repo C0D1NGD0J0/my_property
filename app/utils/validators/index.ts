@@ -3,7 +3,7 @@ import { validationResult } from 'express-validator';
 
 import AuthValidations from '@utils/validators/auth.validation';
 import { AppRequest, AppResponse } from '@interfaces/utils.interface';
-import chalk from 'chalk';
+import colors from 'colors';
 
 const validationRequestHandler = (
   req: AppRequest,
@@ -17,7 +17,7 @@ const validationRequestHandler = (
   }
 
   console.log(
-    chalk.bold.red(JSON.stringify(errors)),
+    colors.bold.red(JSON.stringify(errors)),
     '-----Validation errors----'
   );
 

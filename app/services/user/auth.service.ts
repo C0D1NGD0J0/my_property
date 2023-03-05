@@ -146,8 +146,8 @@ class AuthService {
     data: Pick<IBaseUser, 'email' | 'password'>
   ): Promise<
     ISuccessReturnData<{
-      jwtToken: string;
-      refreshJWT: string;
+      refreshToken: string;
+      accessToken: string;
       userid: string;
     }>
   > => {
@@ -162,20 +162,15 @@ class AuthService {
         throw new ErrorResponse(err, 'authServiceError', 401);
       }
 
-      const jwt = jwtGenerator(user.id, process.env.JWT_SECRET, {
-        expiresIn: process.env.JWT_EXPIREIN,
-      });
-      const refreshJWT = jwtGenerator(user.id, process.env.JWT_REFRESH_SECRET, {
-        expiresIn: process.env.JWT_REFRESH_EXPIRESIN,
-      });
+      const { accessToken, refreshToken } = jwtGenerator(user.id);
 
       return {
         success: true,
         msg: 'Login was successful.',
         data: {
-          refreshJWT,
-          jwtToken: jwt,
+          accessToken,
           userid: user.id,
+          refreshToken: refreshToken as string,
         },
       };
     } catch (error) {
@@ -262,40 +257,6 @@ class AuthService {
     } catch (error) {
       throw error;
     }
-  };
-
-  getRefreshToken = async (token: string, res: Response) => {
-    // try {
-    //   const foundToken = await RefreshToken.findOne({ token }).populate('user');
-    //   if (!foundToken) {
-    //     const msg = 'Unauthorized, please login again.';
-    //     throw new ErrorResponse(msg, 401, 'authServiceError');
-    //   }
-    //   jwt.verify(
-    //     foundToken.token,
-    //     process.env.JWT_REFRESH_SECRET!,
-    //     async (err, decoded: any) => {
-    //       if (err || foundToken.user.id.toString() !== decoded.id.toString()) {
-    //         console.log(err, '===ERROR====jwt');
-    //         await foundToken.deleteOne();
-    //         res.clearCookie('authToken');
-    //         throw new ErrorResponse(
-    //           'Please login again.',
-    //           401,
-    //           'authServiceError'
-    //         );
-    //       }
-    //       const jwt = jwtGenerator(
-    //         foundToken.user._id,
-    //         process.env.JWT_REFRESH_SECRET,
-    //         { expiresIn: process.env.JWT_REFRESH_EXPIRESIN }
-    //       );
-    //       return { success: true, token: jwt };
-    //     }
-    //   );
-    // } catch (error) {
-    //   throw error;
-    // }
   };
 }
 

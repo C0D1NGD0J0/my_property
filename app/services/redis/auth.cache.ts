@@ -12,17 +12,24 @@ export default class AuthCache extends BaseCache {
     this.log = createLogger('authCache');
   }
 
-  saveToken = async (
+  saveAuthTokens = async (
     userid: string,
-    token: string
+    tokens: [string, string]
   ): Promise<ICacheResponse> => {
     try {
       if (!this.client.isOpen) {
         await this.client.connect();
       }
 
+      if (tokens.length !== 2) {
+        throw new Error('Error adding token to cache.');
+      }
+
+      // tokens is array of jwt-token
+      // tokens[0] = accessToken
+      // tokena[1] = refreshToken
       return await this.setObject('authTokens', {
-        [userid]: token,
+        [userid]: tokens,
       });
     } catch (error) {
       this.log.error('Auth cache error: ', error);
@@ -33,15 +40,31 @@ export default class AuthCache extends BaseCache {
     }
   };
 
-  getToken = async (
+  getAuthTokens = async (
     userid: string
-  ): Promise<ICacheResponse<{ accessToken: string; jwtToken: string }>> => {
+  ): Promise<ICacheResponse<[string, string]>> => {
     try {
       if (!this.client.isOpen) {
         await this.client.connect();
       }
 
       return await this.getObjectField('authTokens', userid);
+    } catch (error) {
+      this.log.error('Auth cache error: ', error);
+      throw {
+        msg: error.message,
+        errorType: 'authError',
+      };
+    }
+  };
+
+  delAuthTokens = async (userid: string): Promise<ICacheResponse> => {
+    try {
+      if (!this.client.isOpen) {
+        await this.client.connect();
+      }
+
+      return await this.delObjectField('authTokens', userid);
     } catch (error) {
       this.log.error('Auth cache error: ', error);
       throw {

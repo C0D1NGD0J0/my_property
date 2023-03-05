@@ -1,11 +1,11 @@
-import chalk from 'chalk';
+import colors from 'colors';
 import logger from 'bunyan';
 import { createClient } from 'redis';
 import { createLogger } from '@utils/helperFN';
 
 export type RedisClient = ReturnType<typeof createClient>;
 
-export interface ICacheResponse<T = any> {
+export interface ICacheResponse<T = undefined> {
   success: boolean;
   data?: T;
 }
@@ -47,10 +47,10 @@ export abstract class BaseCache {
     }
   };
 
-  getItem = async (key: string): Promise<ICacheResponse> => {
+  getItem = async (key: string): Promise<ICacheResponse<string | null>> => {
     try {
-      const data = await this.client.GET(key);
-      return { success: true, data };
+      const resp = await this.client.GET(key);
+      return { success: true, data: resp };
     } catch (error) {
       this.log.error(error.message);
       throw error;
@@ -61,14 +61,19 @@ export abstract class BaseCache {
     objName: string,
     data: object
   ): Promise<ICacheResponse> => {
-    if (!objName) throw new Error('Error save to cache: objName is required');
-    let resp;
+    try {
+      if (!objName) throw new Error('Error save to cache: objName is required');
+      let resp;
 
-    for (const [key, value] of Object.entries(data)) {
-      resp = await this.client.HSET(objName, key, value);
+      for (const [key, value] of Object.entries(data)) {
+        resp = await this.client.HSET(objName, key, JSON.stringify(value));
+      }
+
+      return { success: !!resp };
+    } catch (error) {
+      this.log.error(colors.red.bold(error));
+      throw error;
     }
-
-    return { success: !!resp };
   };
 
   getObjectField = async (
@@ -76,10 +81,11 @@ export abstract class BaseCache {
     key: string
   ): Promise<ICacheResponse<any>> => {
     try {
-      if (!objName || key)
+      if (!objName || !key) {
         throw new Error(
           'Error getting item from cache: check arguments provided.'
         );
+      }
 
       const resp = await this.client.HGET(objName, key);
       return {
@@ -87,7 +93,7 @@ export abstract class BaseCache {
         data: (resp && JSON.parse(resp as string)) || null,
       };
     } catch (error) {
-      this.log.error(chalk.red.bold(error));
+      this.log.error(colors.red.bold(error));
       throw error;
     }
   };
@@ -95,20 +101,20 @@ export abstract class BaseCache {
   delObjectField = async (
     objName: string,
     key: string
-  ): Promise<ICacheResponse | null> => {
+  ): Promise<ICacheResponse> => {
     try {
-      if (!objName || key) {
+      if (!objName || !key) {
         throw new Error(
           'Error deleting item from cache: check arguments provided.'
         );
       }
 
-      const resp = await this.client.HDEL(objName, key);
+      await this.client.HDEL(objName, key);
       return {
-        success: !!resp,
+        success: true,
       };
     } catch (error) {
-      this.log.error(chalk.red.bold(error));
+      this.log.error(colors.red.bold(error.message), '------');
       throw error;
     }
   };
