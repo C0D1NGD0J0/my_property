@@ -21,7 +21,7 @@ export class App {
 
   constructor(app: Application) {
     this.app = app;
-    this.log = createLogger('MainApp');
+    this.log = createLogger('MainApp', true);
   }
 
   setupConfig = (): void => {
@@ -69,6 +69,7 @@ export class App {
 
   private appErroHandler(app: Application): void {
     app.use(dbErrorHandler);
+
     process.on('uncaughtException', (err: Error) => {
       this.log.error('There was an uncaught error exception: ', err.message);
       this.serverShutdown(1);
