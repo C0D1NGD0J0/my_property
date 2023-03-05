@@ -2,6 +2,7 @@ import User from '../../models/user.model';
 import ErrorResponse from '../../utils/errorResponse';
 import { body, param } from 'express-validator';
 import { ISignupAccountType } from '@interfaces/user.interface';
+import { httpStatusCodes } from '@utils/helperFN';
 
 const signup = () => {
   return [
@@ -167,6 +168,40 @@ const resetPassword = () => {
 
 const accountActivation = () => {
   return [
+    body('email')
+      .exists({ checkFalsy: true })
+      .withMessage('Email address must be provided.')
+      .bail()
+      .custom(async (email) => {
+        const user = await User.findOne({
+          email,
+        });
+
+        if (!user) {
+          throw new ErrorResponse(
+            'No account matching the provided email.',
+            'authServiceError',
+            httpStatusCodes.UNPROCESSABLE
+          );
+        }
+
+        if (user.isActive) {
+          throw new ErrorResponse(
+            'Please login again.',
+            'authServiceError',
+            httpStatusCodes.UNPROCESSABLE
+          );
+        }
+      }),
+    body('password')
+      .isLength({ min: 6, max: 15 })
+      .exists({ checkFalsy: true })
+      .withMessage("Password field can't be blank"),
+  ];
+};
+
+const tokenValidation = () => {
+  return [
     param('token')
       .exists({ checkFalsy: true })
       .withMessage('Account activation is required.')
@@ -181,4 +216,5 @@ export default {
   forgotPassword: forgotPassword(),
   signup: validateAllUserTypeSignup(),
   accountActivation: accountActivation(),
+  tokenValidation: tokenValidation(),
 };
