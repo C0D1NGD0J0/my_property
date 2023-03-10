@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { IAccountType, ISignupAccountType } from '@interfaces/user.interface';
 import { Company, PropertyManager } from '@models/index';
-import { ISignupData } from '@services/user/auth.service';
+import { ISignupData } from '@services/auth/auth.service';
 import { hashGenerator } from '@utils/helperFN';
 
 class UserFactory {
@@ -62,9 +62,10 @@ class UserFactory {
       lastName,
       firstName,
       password: 'password',
+      deletedAt: '',
       location: faker.address.cityName(),
       phoneNumber: faker.phone.number(),
-      email: `${firstName}@yopmail.com`,
+      email: `${firstName + '_' + lastName}@yopmail.com`,
       accountType: IAccountType.individual,
     };
   };
@@ -85,6 +86,7 @@ class UserFactory {
         contactPerson: `${firstName} ${lastName}`,
       },
       password: 'password',
+      deletedAt: '',
       email: `${firstName.trim()}@example.com`,
       accountType: IAccountType.business,
       businessRegistrationNumber: faker.finance.account(),

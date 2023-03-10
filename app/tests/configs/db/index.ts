@@ -13,18 +13,17 @@ export const connectDB = async () => {
 
 export const disconnectDB = async () => {
   if (mongod) {
-    await mongoose.connection.dropDatabase();
-    await mongoose.connection.close();
     await mongod.stop();
+    // await mongoose.connection.db.dropDatabase();
+    await mongoose.connection.close();
   }
 };
 
 export const clearDB = async () => {
   if (mongod) {
-    const collections = mongoose.connection.collections;
-    for (const k in collections) {
-      const _collection = collections[k];
-      await _collection.deleteMany({});
+    const collections = await mongoose.connection.db.collections();
+    for (const k of collections) {
+      await k.deleteMany({});
     }
   }
 };

@@ -9,11 +9,11 @@ beforeAll(async () => {
   await connectDB();
 });
 
-afterEach(async () => {
-  return await clearDB();
+beforeEach(async () => {
+  await clearDB();
 });
 
 afterAll(async () => {
   log.info('Disconnecting Test DB afterAll...');
-  return await disconnectDB();
+  await disconnectDB();
 });

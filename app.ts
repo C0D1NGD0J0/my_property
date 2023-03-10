@@ -10,7 +10,7 @@ import helmet from 'helmet';
 import hpp from 'hpp';
 import compression from 'compression';
 
-import authRoutes from '@routes/auth.route';
+import { authRoutes, userRoutes } from '@routes/index';
 import { createLogger } from '@utils/helperFN';
 import { dbErrorHandler } from '@utils/middlewares';
 import { serverAdapter } from '@services/queues/base.queue';
@@ -65,6 +65,7 @@ export class App {
 
     app.use('/queues', serverAdapter.getRouter());
     app.use(`${BASE_PATH}/auth`, authRoutes);
+    app.use(`${BASE_PATH}/users`, userRoutes);
   }
 
   private appErroHandler(app: Application): void {

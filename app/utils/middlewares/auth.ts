@@ -35,9 +35,11 @@ export const isAuthenticated = asyncHandler(
 
     try {
       const decoded = <any>jwt.verify(token, process.env.JWT_SECRET as string);
-      const redisToken = await authCache.getAuthTokens(decoded.id);
-
-      if (!redisToken?.data || redisToken.data[0] !== token) {
+      const redisTokens = await (
+        await authCache.getAuthTokens(decoded.id)
+      ).data;
+      const accessToken = redisTokens && redisTokens[0].split(' ')[1];
+      if (!accessToken || accessToken !== token) {
         return next(
           new ErrorResponse(
             'Access denied!',

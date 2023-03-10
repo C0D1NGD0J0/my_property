@@ -26,8 +26,8 @@ const signup = () => {
         if (user) {
           throw new ErrorResponse(
             `The email(${email}) is already associated with an account.`,
-            'authServiceError',
-            422
+            'validationError',
+            httpStatusCodes.UNPROCESSABLE
           );
         }
       }),
@@ -44,8 +44,8 @@ const signup = () => {
         if (!Object.values(ISignupAccountType).includes(utype)) {
           throw new ErrorResponse(
             `Invalid account type provided.`,
-            'authServiceError',
-            422
+            'validationError',
+            httpStatusCodes.UNPROCESSABLE
           );
         }
       }),
@@ -105,8 +105,8 @@ const login = () => {
         if (!user) {
           throw new ErrorResponse(
             `Invalid email/password combination`,
-            'authServiceError',
-            401
+            'validationError',
+            httpStatusCodes.UNAUTHORIZED
           );
         }
       }),
@@ -131,8 +131,8 @@ const forgotPassword = () => {
         if (!user) {
           throw new ErrorResponse(
             "Email doesn't exist",
-            'authServiceError',
-            422
+            'validationError',
+            httpStatusCodes.UNPROCESSABLE
           );
         }
       }),
@@ -154,8 +154,8 @@ const resetPassword = () => {
         if (!user) {
           throw new ErrorResponse(
             'Please generate a new token.',
-            'authServiceError',
-            422
+            'validationError',
+            httpStatusCodes.UNPROCESSABLE
           );
         }
       }),
@@ -180,7 +180,7 @@ const accountActivation = () => {
         if (!user) {
           throw new ErrorResponse(
             'No account matching the provided email.',
-            'authServiceError',
+            'validationError',
             httpStatusCodes.UNPROCESSABLE
           );
         }
@@ -188,7 +188,7 @@ const accountActivation = () => {
         if (user.isActive) {
           throw new ErrorResponse(
             'Please login again.',
-            'authServiceError',
+            'validationError',
             httpStatusCodes.UNPROCESSABLE
           );
         }

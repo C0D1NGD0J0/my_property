@@ -12,7 +12,7 @@ import { hashGenerator, jwtGenerator } from '@utils/helperFN';
 import {
   USER_REGISTRATION,
   PASSWORD_RESET_SUCCESS,
-  PASSWORD_RESET_EMAIL,
+  FORGOT_PASSWORD,
 } from '@utils/constants';
 import { PropertyManager, Company, User } from '@models/index';
 import { IPropertyManager } from '@interfaces/user.interface';
@@ -191,7 +191,7 @@ class AuthService {
           fullname: '',
           resetPasswordUrl: `${process.env.FRONTEND_URL}/reset_password/${user.passwordResetToken}`,
         },
-        emailType: PASSWORD_RESET_EMAIL,
+        emailType: FORGOT_PASSWORD,
       };
 
       if (user.accountType === IAccountType.business) {

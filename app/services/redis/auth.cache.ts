@@ -2,11 +2,6 @@ import { createLogger } from '@utils/helperFN';
 import { BaseCache, ICacheResponse } from '@services/redis/base.cache';
 
 export default class AuthCache extends BaseCache {
-  private ttl = 3000;
-  private authPrefix = {
-    refreshToken: 'refreshToken',
-  };
-
   constructor() {
     super('authCache');
     this.log = createLogger('authCache');
