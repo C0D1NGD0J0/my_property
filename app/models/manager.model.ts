@@ -29,7 +29,6 @@ const propertyManagerSchema = new Schema<IPropertyManagerDocument>(
       trim: true,
     },
     phoneNumber: { type: String, default: '' },
-    uuid: { type: String, required: true, index: true },
   },
   {
     timestamps: true,

@@ -60,7 +60,7 @@ class AuthController {
 
   logout = async (req: AppRequest, res: AppResponse) => {
     res.clearCookie('refreshToken');
-    this.cache.delAuthTokens(req.currentuser.id);
+    await this.cache.logoutUser(req.currentuser.id);
     res
       .status(httpStatusCodes.OK)
       .json({ success: true, msg: 'Logout was successful.' });

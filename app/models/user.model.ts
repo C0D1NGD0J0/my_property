@@ -30,6 +30,7 @@ const baseUserSchema = new Schema<IBaseUserDocument>(
     isActive: { type: Boolean, default: false },
     activationToken: { type: String, default: '' },
     passwordResetToken: { type: String, default: '' },
+    uuid: { type: String, required: true, index: true },
     deletedAt: { type: Date, default: null, select: false },
     activationTokenExpiresAt: { type: Date, default: null },
     passwordResetTokenExpiresAt: { type: Number, default: null },

@@ -9,16 +9,33 @@ import {
   IBaseUser,
   IBaseUserDocument,
   IPropertyManagerDocument,
+  IUserType,
 } from '@interfaces/user.interface';
 import { ICompany, ICompanyDocument } from '@interfaces/company.interface';
 import { ACCOUNT_UPDATE_NOTIFICATION } from '@utils/constants';
 import { IPropertyManager } from '@interfaces/user.interface';
 import { IEmailOptions, ISuccessReturnData } from '@interfaces/utils.interface';
 import { httpStatusCodes } from '@utils/helperFN';
+import { ICurrentUser, mapCurrentUserObject } from '@services/user/utils';
 
 export type ISignupData = Partial<IPropertyManager & IBaseUser & ICompany>;
 
 class UserService {
+  getCurrentUser = async (
+    userId: string
+  ): Promise<ISuccessReturnData<ICurrentUser>> => {
+    const user = (await User.findOne({ id: userId })) as IUserType;
+
+    if (!user) {
+      const err = 'Something went wrong, please try again.';
+      throw new ErrorResponse(err, 'authError', httpStatusCodes.UNPROCESSABLE);
+    }
+
+    const currentuser = mapCurrentUserObject(user);
+
+    return { success: true, data: currentuser };
+  };
+
   updateAccount = async (
     data: ISignupData & { userId: Types.ObjectId }
   ): Promise<ISuccessReturnData<{ emailOptions: IEmailOptions }>> => {
@@ -31,11 +48,7 @@ class UserService {
 
     if (!isMatch) {
       const err = 'Valid account password must be provided to update account.';
-      throw new ErrorResponse(
-        err,
-        'validationError',
-        httpStatusCodes.UNPROCESSABLE
-      );
+      throw new ErrorResponse(err, 'authError', httpStatusCodes.UNPROCESSABLE);
     }
 
     user = (await User.findOneAndUpdate(

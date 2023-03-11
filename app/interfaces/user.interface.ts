@@ -24,6 +24,7 @@ export enum IBaseUserRelationshipsEnum {
 
 // BASE-USER INTERFACE
 export interface IBaseUser {
+  uuid: string;
   email: string;
   password: string;
   activationToken?: string;
@@ -97,3 +98,5 @@ export interface IUserType
     ICompanyDocument {
   id: string;
 }
+
+// CURRENTUSER INTERFACE

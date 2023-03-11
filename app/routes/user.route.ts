@@ -8,6 +8,8 @@ import { UserValidations, validationRequestHandler } from '@utils/validators';
 
 router.use(isAuthenticated);
 
+router.get('/currentuser', asyncHandler(UserController.getCurrentUser));
+
 router.put(
   '/update_account',
   UserValidations.updateAccount,

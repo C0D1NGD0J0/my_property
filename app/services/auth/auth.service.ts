@@ -8,7 +8,7 @@ import {
   IPropertyManagerDocument,
   IUserType,
 } from '@interfaces/user.interface';
-import { hashGenerator, jwtGenerator } from '@utils/helperFN';
+import { hashGenerator, httpStatusCodes, jwtGenerator } from '@utils/helperFN';
 import {
   USER_REGISTRATION,
   PASSWORD_RESET_SUCCESS,
@@ -29,6 +29,7 @@ class AuthService {
     let user: ICompanyDocument | IPropertyManagerDocument;
     const dataToSave = {
       ...data,
+      uuid: uuid(),
       isActive: false,
       activationToken: hashGenerator(),
       activationTokenExpiresAt: dayjs().add(1, 'hour').toDate(),
@@ -41,10 +42,7 @@ class AuthService {
     };
 
     if (data.accountType === IAccountType.business) {
-      user = new Company({
-        cuid: uuid(),
-        ...dataToSave,
-      }) as ICompanyDocument;
+      user = new Company(dataToSave) as ICompanyDocument;
 
       // EMAIL ACTIVATION LINK
       emailOptions = {
@@ -56,10 +54,7 @@ class AuthService {
         },
       };
     } else {
-      user = new PropertyManager({
-        uuid: uuid(),
-        ...dataToSave,
-      }) as IPropertyManagerDocument;
+      user = new PropertyManager(dataToSave) as IPropertyManagerDocument;
 
       // EMAIL ACTIVATION LINK
       emailOptions = {
@@ -159,7 +154,19 @@ class AuthService {
 
       if (!isMatch) {
         const err = 'Invalid email/password credentials.';
-        throw new ErrorResponse(err, 'authServiceError', 401);
+        throw new ErrorResponse(
+          err,
+          'authServiceError',
+          httpStatusCodes.UNAUTHORIZED
+        );
+      }
+
+      if (!user.isActive) {
+        throw new ErrorResponse(
+          'Please validate your email by clicking the link emailed during regitration process.',
+          'authServiceError',
+          httpStatusCodes.UNPROCESSABLE
+        );
       }
 
       const { accessToken, refreshToken } = jwtGenerator(user.id);

@@ -18,6 +18,12 @@ class UserController {
     this.emailQueue = new EmailQueue();
   }
 
+  getCurrentUser = async (req: AppRequest, res: AppResponse) => {
+    const resp = await this.userService.getCurrentUser(req.currentuser.id);
+    resp.data && (await this.cache.saveCurrentUser(resp.data));
+    res.status(httpStatusCodes.OK).json(resp);
+  };
+
   updateAccount = async (req: AppRequest, res: AppResponse) => {
     const { data, ...rest } = await this.userService.updateAccount({
       ...req.body,

@@ -3,7 +3,6 @@ import { IBaseUser } from '@interfaces/user.interface';
 
 // COMPANY INTERFACE
 export interface ICompany extends IBaseUser {
-  cuid: string;
   contactInfo: {
     email: string;
     address: string;

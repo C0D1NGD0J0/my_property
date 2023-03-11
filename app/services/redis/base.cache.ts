@@ -5,7 +5,7 @@ import { createLogger } from '@utils/helperFN';
 
 export type RedisClient = ReturnType<typeof createClient>;
 
-export interface ICacheResponse<T = undefined> {
+export interface ICacheResponse<T = any> {
   success: boolean;
   data?: T;
 }
