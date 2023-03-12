@@ -24,10 +24,11 @@ export enum IBaseUserRelationshipsEnum {
 
 // BASE-USER INTERFACE
 export interface IBaseUser {
+  uuid: string;
   email: string;
   password: string;
-  accountType: IAccountType;
   activationToken?: string;
+  accountType: IAccountType;
   passwordResetToken?: string;
   activationTokenExpiresAt: Date | number | null;
   passwordResetTokenExpiresAt: Date | number | null;
@@ -39,6 +40,7 @@ export interface IBaseUserDocument extends IBaseUser, Document {
   updatedAt: Date;
   isActive: boolean;
   _id: Types.ObjectId;
+  deletedAt: Date | null;
   validatePassword: (pwd1: string) => Promise<boolean>;
 }
 
@@ -96,3 +98,5 @@ export interface IUserType
     ICompanyDocument {
   id: string;
 }
+
+// CURRENTUSER INTERFACE

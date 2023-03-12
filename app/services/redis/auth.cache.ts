@@ -1,12 +1,9 @@
 import { createLogger } from '@utils/helperFN';
 import { BaseCache, ICacheResponse } from '@services/redis/base.cache';
+import { ICurrentUser } from '@services/user/utils';
+import { NullAttributeValue } from 'aws-sdk/clients/dynamodbstreams';
 
 export default class AuthCache extends BaseCache {
-  private ttl = 3000;
-  private authPrefix = {
-    refreshToken: 'refreshToken',
-  };
-
   constructor() {
     super('authCache');
     this.log = createLogger('authCache');
@@ -70,6 +67,68 @@ export default class AuthCache extends BaseCache {
       throw {
         msg: error.message,
         errorType: 'authError',
+      };
+    }
+  };
+
+  saveCurrentUser = async (data: ICurrentUser): Promise<ICacheResponse> => {
+    try {
+      if (!this.client.isOpen) {
+        await this.client.connect();
+      }
+
+      const key = this.generateKey('currentuser', data.id);
+      return await this.setItem(key, JSON.stringify(data), 120);
+    } catch (error) {
+      this.log.error('Auth cache error: ', error);
+      throw {
+        msg: error.message,
+        errorType: 'cacheError',
+      };
+    }
+  };
+
+  getCurrentUser = async (
+    userId: string
+  ): Promise<ICacheResponse<ICurrentUser | null>> => {
+    try {
+      if (!this.client.isOpen) {
+        await this.client.connect();
+      }
+
+      const key = this.generateKey('currentuser', userId);
+      const resp = await this.getItem(key);
+
+      let parsedData: ICurrentUser | null = null;
+      if (resp.data) {
+        parsedData = JSON.parse(resp.data);
+      }
+
+      return { success: true, data: parsedData };
+    } catch (error) {
+      this.log.error('Auth cache error: ', error);
+      throw {
+        msg: error.message,
+        errorType: 'cacheError',
+      };
+    }
+  };
+
+  logoutUser = async (userId: string): Promise<ICacheResponse> => {
+    try {
+      if (!this.client.isOpen) {
+        await this.client.connect();
+      }
+
+      await this.removeItem(this.generateKey('currentuser', userId));
+      await this.delObjectField('authTokens', userId);
+
+      return { success: true };
+    } catch (error) {
+      this.log.error('Auth cache error: ', error);
+      throw {
+        msg: error.message,
+        errorType: 'cacheError',
       };
     }
   };

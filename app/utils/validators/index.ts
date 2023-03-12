@@ -2,6 +2,7 @@ import { NextFunction } from 'express';
 import { validationResult } from 'express-validator';
 
 import AuthValidations from '@utils/validators/auth.validation';
+import UserValidations from '@utils/validators/user.validation';
 import { AppRequest, AppResponse } from '@interfaces/utils.interface';
 import colors from 'colors';
 
@@ -30,4 +31,4 @@ const validationRequestHandler = (
   });
 };
 
-export { validationRequestHandler, AuthValidations };
+export { validationRequestHandler, AuthValidations, UserValidations };

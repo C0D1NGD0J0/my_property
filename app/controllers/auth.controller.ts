@@ -1,16 +1,18 @@
 import jwt from 'jsonwebtoken';
 import jwt_decode from 'jwt-decode';
-import { Request, Response, NextFunction } from 'express';
-import { AuthService } from '@services/user';
-import { EmailQueue } from '@services/queues';
-import { httpStatusCodes, jwtGenerator, setCookieAuth } from '@utils/helperFN';
-import {
-  AUTH_EMAIL_QUEUE,
-  PASSWORD_RESET_EMAIL,
-  PASSWORD_RESET_SUCCESS,
-} from '@utils/constants';
+import { NextFunction } from 'express';
+
 import { AuthCache } from '@services/redis';
+import { AuthService } from '@services/auth';
+import { EmailQueue } from '@services/queues';
 import ErrorResponse from '@utils/errorResponse';
+import { AUTH_EMAIL_QUEUE } from '@utils/constants';
+import {
+  AppRequest,
+  AppResponse,
+  IEmailOptions,
+} from '@interfaces/utils.interface';
+import { httpStatusCodes, jwtGenerator, setCookieAuth } from '@utils/helperFN';
 
 class AuthController {
   private authService: AuthService;
@@ -23,27 +25,29 @@ class AuthController {
     this.emailQueue = new EmailQueue();
   }
 
-  signup = async (req: Request, res: Response) => {
+  signup = async (req: AppRequest, res: AppResponse) => {
     const { data, ...rest } = await this.authService.signup(req.body);
-    this.emailQueue.addEmailToQueue(AUTH_EMAIL_QUEUE, data!.emailOptions);
+    data &&
+      this.emailQueue.addEmailToQueue(AUTH_EMAIL_QUEUE, data.emailOptions);
     res.status(httpStatusCodes.OK).json(rest);
   };
 
-  accountActivation = async (req: Request, res: Response) => {
+  accountActivation = async (req: AppRequest, res: AppResponse) => {
     const { token } = req.params;
     const data = await this.authService.accountActivation(token);
     res.status(httpStatusCodes.OK).json(data);
   };
 
-  resendActivationLink = async (req: Request, res: Response) => {
+  resendActivationLink = async (req: AppRequest, res: AppResponse) => {
     const { data, ...rest } = await this.authService.resendActivationLink(
       req.body.email
     );
-    this.emailQueue.addEmailToQueue(AUTH_EMAIL_QUEUE, data!.emailOptions);
+    data &&
+      this.emailQueue.addEmailToQueue(AUTH_EMAIL_QUEUE, data.emailOptions);
     res.status(httpStatusCodes.OK).json(rest);
   };
 
-  login = async (req: Request, res: Response) => {
+  login = async (req: AppRequest, res: AppResponse) => {
     const { email, password } = req.body;
     const { data, ...rest } = await this.authService.login({
       email,
@@ -60,7 +64,19 @@ class AuthController {
       .json({ ...rest, accessToken: data?.accessToken });
   };
 
-  refreshToken = async (req: Request, res: Response, next: NextFunction) => {
+  logout = async (req: AppRequest, res: AppResponse) => {
+    res.clearCookie('refreshToken');
+    await this.cache.logoutUser(req.currentuser.id);
+    res
+      .status(httpStatusCodes.OK)
+      .json({ success: true, msg: 'Logout was successful.' });
+  };
+
+  refreshToken = async (
+    req: AppRequest,
+    res: AppResponse,
+    next: NextFunction
+  ) => {
     const cookies = req.cookies;
     if (!cookies['refresh-token']) {
       return next(
@@ -77,8 +93,8 @@ class AuthController {
     const _decoded: any = jwt_decode(token);
     const resp = jwt.verify(
       token,
-      process.env.JWT_REFRESH_SECRET!,
-      async (err: any, _tk: any) => {
+      process.env.JWT_REFRESH_SECRET as string,
+      async (err: any, _: any) => {
         if (err) {
           console.log(err.message, '===ERROR====jwt');
           await this.cache.delAuthTokens(_decoded.id);
@@ -105,16 +121,17 @@ class AuthController {
     res.status(httpStatusCodes.OK).json(resp);
   };
 
-  forgotPassword = async (req: Request, res: Response) => {
+  forgotPassword = async (req: AppRequest, res: AppResponse) => {
     const { email } = req.body;
     const { data, ...rest } = await this.authService.forgotPassword(email);
-    this.emailQueue.addEmailToQueue(PASSWORD_RESET_EMAIL, data!.emailOptions);
+    data &&
+      this.emailQueue.addEmailToQueue(AUTH_EMAIL_QUEUE, data.emailOptions);
     res.status(httpStatusCodes.OK).json(rest);
   };
 
-  resetPassword = async (req: Request, res: Response) => {
+  resetPassword = async (req: AppRequest, res: AppResponse) => {
     const { data, ...rest } = await this.authService.resetPassword(req.body);
-    this.emailQueue.addEmailToQueue(PASSWORD_RESET_SUCCESS, data!.emailOptions);
+    this.emailQueue.addEmailToQueue(AUTH_EMAIL_QUEUE, data!.emailOptions);
     res.status(httpStatusCodes.OK).json(rest);
   };
 }

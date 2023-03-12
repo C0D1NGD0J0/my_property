@@ -37,7 +37,6 @@ const companySchema = new Schema<ICompanyDocument>(
       address: { type: String, default: '' },
       phoneNumber: { type: String, default: '' },
     },
-    cuid: { type: String, required: true, index: true },
     businessRegistrationNumber: { type: String, trim: true, required: true },
   },
   {

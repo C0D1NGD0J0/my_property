@@ -1,3 +1,3 @@
-import AuthService from '@services/user/auth.service';
+import UserService from '@services/user/user.service';
 
-export { AuthService };
+export { UserService };

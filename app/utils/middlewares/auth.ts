@@ -35,28 +35,23 @@ export const isAuthenticated = asyncHandler(
 
     try {
       const decoded = <any>jwt.verify(token, process.env.JWT_SECRET as string);
-      const redisToken = await authCache.getAuthTokens(decoded.id);
+      const resp = await authCache.getCurrentUser(decoded.id);
 
-      if (!redisToken?.data || redisToken.data[0] !== token) {
-        return next(
-          new ErrorResponse(
-            'Access denied!',
-            'jwtError',
-            httpStatusCodes.UNAUTHORIZED
-          )
-        );
+      if (!resp.data) {
+        const user = await User.findById(decoded.id);
+        if (!user || !user.isActive) {
+          throw new ErrorResponse(
+            'Please validate your email by clicking the link emailed during regitration process.',
+            'authServiceError',
+            httpStatusCodes.UNPROCESSABLE
+          );
+        }
+
+        req.currentuser = user;
+        return next();
       }
 
-      const user = await User.findById(decoded.id);
-      if (!user || !user.isActive) {
-        throw new ErrorResponse(
-          'Please validate your email by clicking the link emailed during regitration process.',
-          'authServiceError',
-          httpStatusCodes.UNPROCESSABLE
-        );
-      }
-
-      req.currentuser = user;
+      req.currentuser = resp.data;
       next();
     } catch (error: Error | any) {
       console.log(colors.red.bold(error), '---middleware---');

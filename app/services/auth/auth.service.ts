@@ -8,11 +8,11 @@ import {
   IPropertyManagerDocument,
   IUserType,
 } from '@interfaces/user.interface';
-import { hashGenerator, jwtGenerator } from '@utils/helperFN';
+import { hashGenerator, httpStatusCodes, jwtGenerator } from '@utils/helperFN';
 import {
   USER_REGISTRATION,
   PASSWORD_RESET_SUCCESS,
-  PASSWORD_RESET_EMAIL,
+  FORGOT_PASSWORD,
 } from '@utils/constants';
 import { PropertyManager, Company, User } from '@models/index';
 import { IPropertyManager } from '@interfaces/user.interface';
@@ -29,6 +29,7 @@ class AuthService {
     let user: ICompanyDocument | IPropertyManagerDocument;
     const dataToSave = {
       ...data,
+      uuid: uuid(),
       isActive: false,
       activationToken: hashGenerator(),
       activationTokenExpiresAt: dayjs().add(1, 'hour').toDate(),
@@ -41,10 +42,7 @@ class AuthService {
     };
 
     if (data.accountType === IAccountType.business) {
-      user = new Company({
-        cuid: uuid(),
-        ...dataToSave,
-      }) as ICompanyDocument;
+      user = new Company(dataToSave) as ICompanyDocument;
 
       // EMAIL ACTIVATION LINK
       emailOptions = {
@@ -56,10 +54,7 @@ class AuthService {
         },
       };
     } else {
-      user = new PropertyManager({
-        uuid: uuid(),
-        ...dataToSave,
-      }) as IPropertyManagerDocument;
+      user = new PropertyManager(dataToSave) as IPropertyManagerDocument;
 
       // EMAIL ACTIVATION LINK
       emailOptions = {
@@ -152,14 +147,27 @@ class AuthService {
     }>
   > => {
     try {
-      const user = (await User.findOne({ email: data.email }).select(
-        'password'
-      )) as IUserType;
+      const user = (await User.findOne({
+        email: data.email,
+        isActive: true,
+      })) as IUserType;
       const isMatch = await user.validatePassword(data.password);
 
       if (!isMatch) {
         const err = 'Invalid email/password credentials.';
-        throw new ErrorResponse(err, 'authServiceError', 401);
+        throw new ErrorResponse(
+          err,
+          'authServiceError',
+          httpStatusCodes.UNAUTHORIZED
+        );
+      }
+
+      if (!user.isActive) {
+        throw new ErrorResponse(
+          'Please validate your email by clicking the link emailed during regitration process.',
+          'authError',
+          httpStatusCodes.UNPROCESSABLE
+        );
       }
 
       const { accessToken, refreshToken } = jwtGenerator(user.id);
@@ -191,7 +199,7 @@ class AuthService {
           fullname: '',
           resetPasswordUrl: `${process.env.FRONTEND_URL}/reset_password/${user.passwordResetToken}`,
         },
-        emailType: PASSWORD_RESET_EMAIL,
+        emailType: FORGOT_PASSWORD,
       };
 
       if (user.accountType === IAccountType.business) {

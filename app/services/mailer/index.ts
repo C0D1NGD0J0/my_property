@@ -3,7 +3,8 @@ import Mail from 'nodemailer/lib/mailer';
 import {
   USER_REGISTRATION,
   FORGOT_PASSWORD,
-  RESET_PASSWORD_SUCCESS,
+  PASSWORD_RESET_SUCCESS,
+  ACCOUNT_UPDATE_NOTIFICATION,
 } from '../../utils/constants';
 import ejs from 'ejs';
 import fs from 'fs';
@@ -86,8 +87,11 @@ export default class Mailer implements IMailer {
       case FORGOT_PASSWORD:
         result = await this.buildTemplate('forgotPassword', emailData);
         break;
-      case RESET_PASSWORD_SUCCESS:
+      case PASSWORD_RESET_SUCCESS:
         result = await this.buildTemplate('resetPassword', emailData);
+        break;
+      case ACCOUNT_UPDATE_NOTIFICATION:
+        result = await this.buildTemplate('accountUpdate', emailData);
         break;
     }
 
@@ -95,7 +99,7 @@ export default class Mailer implements IMailer {
   }
 
   private async buildTemplate(filename: string, data: any) {
-    //filename must directory and files names of the email you sending
+    //filename must match directory and files names of the email you sending
     //e.g. forgotPassword/forgotPassword.ejs
     const text = await ejs.renderFile(
       __dirname + `/templates/${filename}/${filename}.text.ejs`,

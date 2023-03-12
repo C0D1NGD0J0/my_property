@@ -13,7 +13,7 @@ export const dbErrorHandler = (
   error.message = err.message || 'Server Error...';
   error.type = err.type || 'apiError';
 
-  console.log(colors.red(err.message), '-----Errors----');
+  console.log(colors.red(err.message), '-----Errors----', err);
 
   // Mongoose bad ObjectID
   if (err.name === 'CastError') {
