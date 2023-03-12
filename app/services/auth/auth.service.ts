@@ -147,9 +147,10 @@ class AuthService {
     }>
   > => {
     try {
-      const user = (await User.findOne({ email: data.email }).select(
-        'password'
-      )) as IUserType;
+      const user = (await User.findOne({
+        email: data.email,
+        isActive: true,
+      })) as IUserType;
       const isMatch = await user.validatePassword(data.password);
 
       if (!isMatch) {
@@ -164,7 +165,7 @@ class AuthService {
       if (!user.isActive) {
         throw new ErrorResponse(
           'Please validate your email by clicking the link emailed during regitration process.',
-          'authServiceError',
+          'authError',
           httpStatusCodes.UNPROCESSABLE
         );
       }

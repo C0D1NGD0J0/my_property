@@ -1,10 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
 import { UserService } from '@services/user';
 import { EmailQueue } from '@services/queues';
 import { httpStatusCodes } from '@utils/helperFN';
 import { USER_EMAIL_QUEUE } from '@utils/constants';
 import { AuthCache } from '@services/redis';
-import ErrorResponse from '@utils/errorResponse';
 import { AppRequest, AppResponse } from '@interfaces/utils.interface';
 
 class UserController {
@@ -24,13 +22,22 @@ class UserController {
     res.status(httpStatusCodes.OK).json(resp);
   };
 
+  getAccountInfo = async (req: AppRequest, res: AppResponse) => {
+    const resp = await this.userService.getAccountInfo(req.currentuser.id);
+    res.status(httpStatusCodes.OK).json(resp);
+  };
+
   updateAccount = async (req: AppRequest, res: AppResponse) => {
     const { data, ...rest } = await this.userService.updateAccount({
       ...req.body,
       userId: req.currentuser.id,
     });
 
-    this.emailQueue.addEmailToQueue(USER_EMAIL_QUEUE, data!.emailOptions);
+    if (data) {
+      await this.cache.saveCurrentUser(data.user);
+      this.emailQueue.addEmailToQueue(USER_EMAIL_QUEUE, data.emailOptions);
+    }
+
     res.status(httpStatusCodes.OK).json(rest);
   };
 

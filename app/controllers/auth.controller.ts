@@ -7,7 +7,11 @@ import { AuthService } from '@services/auth';
 import { EmailQueue } from '@services/queues';
 import ErrorResponse from '@utils/errorResponse';
 import { AUTH_EMAIL_QUEUE } from '@utils/constants';
-import { AppRequest, AppResponse } from '@interfaces/utils.interface';
+import {
+  AppRequest,
+  AppResponse,
+  IEmailOptions,
+} from '@interfaces/utils.interface';
 import { httpStatusCodes, jwtGenerator, setCookieAuth } from '@utils/helperFN';
 
 class AuthController {
@@ -23,7 +27,8 @@ class AuthController {
 
   signup = async (req: AppRequest, res: AppResponse) => {
     const { data, ...rest } = await this.authService.signup(req.body);
-    this.emailQueue.addEmailToQueue(AUTH_EMAIL_QUEUE, data!.emailOptions);
+    data &&
+      this.emailQueue.addEmailToQueue(AUTH_EMAIL_QUEUE, data.emailOptions);
     res.status(httpStatusCodes.OK).json(rest);
   };
 
@@ -37,7 +42,8 @@ class AuthController {
     const { data, ...rest } = await this.authService.resendActivationLink(
       req.body.email
     );
-    this.emailQueue.addEmailToQueue(AUTH_EMAIL_QUEUE, data!.emailOptions);
+    data &&
+      this.emailQueue.addEmailToQueue(AUTH_EMAIL_QUEUE, data.emailOptions);
     res.status(httpStatusCodes.OK).json(rest);
   };
 
@@ -87,8 +93,8 @@ class AuthController {
     const _decoded: any = jwt_decode(token);
     const resp = jwt.verify(
       token,
-      process.env.JWT_REFRESH_SECRET!,
-      async (err: any, _tk: any) => {
+      process.env.JWT_REFRESH_SECRET as string,
+      async (err: any, _: any) => {
         if (err) {
           console.log(err.message, '===ERROR====jwt');
           await this.cache.delAuthTokens(_decoded.id);
@@ -118,7 +124,8 @@ class AuthController {
   forgotPassword = async (req: AppRequest, res: AppResponse) => {
     const { email } = req.body;
     const { data, ...rest } = await this.authService.forgotPassword(email);
-    this.emailQueue.addEmailToQueue(AUTH_EMAIL_QUEUE, data!.emailOptions);
+    data &&
+      this.emailQueue.addEmailToQueue(AUTH_EMAIL_QUEUE, data.emailOptions);
     res.status(httpStatusCodes.OK).json(rest);
   };
 

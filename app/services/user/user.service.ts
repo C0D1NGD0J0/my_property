@@ -1,5 +1,3 @@
-import dayjs from 'dayjs';
-import { v4 as uuid } from 'uuid';
 import { Types } from 'mongoose';
 
 import { User } from '@models/index';
@@ -8,15 +6,14 @@ import {
   IAccountType,
   IBaseUser,
   IBaseUserDocument,
-  IPropertyManagerDocument,
   IUserType,
 } from '@interfaces/user.interface';
-import { ICompany, ICompanyDocument } from '@interfaces/company.interface';
-import { ACCOUNT_UPDATE_NOTIFICATION } from '@utils/constants';
-import { IPropertyManager } from '@interfaces/user.interface';
-import { IEmailOptions, ISuccessReturnData } from '@interfaces/utils.interface';
 import { httpStatusCodes } from '@utils/helperFN';
+import { IPropertyManager } from '@interfaces/user.interface';
+import { ACCOUNT_UPDATE_NOTIFICATION } from '@utils/constants';
 import { ICurrentUser, mapCurrentUserObject } from '@services/user/utils';
+import { ICompany } from '@interfaces/company.interface';
+import { IEmailOptions, ISuccessReturnData } from '@interfaces/utils.interface';
 
 export type ISignupData = Partial<IPropertyManager & IBaseUser & ICompany>;
 
@@ -36,14 +33,39 @@ class UserService {
     return { success: true, data: currentuser };
   };
 
+  getAccountInfo = async (
+    userId: string
+  ): Promise<ISuccessReturnData<IUserType>> => {
+    const excludeFields = {
+      activationToken: 0,
+      passwordResetToken: 0,
+      deletedAt: 0,
+      activationTokenExpiresAt: 0,
+      passwordResetTokenExpiresAt: 0,
+    };
+
+    const user = (await User.findOne({ id: userId }).select(
+      excludeFields
+    )) as IUserType;
+
+    if (!user) {
+      const err = 'Something went wrong, please try again.';
+      throw new ErrorResponse(err, 'authError', httpStatusCodes.UNPROCESSABLE);
+    }
+
+    return { success: true, data: user };
+  };
+
   updateAccount = async (
     data: ISignupData & { userId: Types.ObjectId }
-  ): Promise<ISuccessReturnData<{ emailOptions: IEmailOptions }>> => {
+  ): Promise<
+    ISuccessReturnData<{ emailOptions: IEmailOptions; user: ICurrentUser }>
+  > => {
     let userEmail = '';
     let fullname = '';
     const { accountType, ...dataToSave } = data;
 
-    let user = (await User.findOne({ id: data.userId })) as IBaseUserDocument;
+    let user = (await User.findOne({ id: data.userId })) as IUserType;
     const isMatch = await user.validatePassword(data.password as string);
 
     if (!isMatch) {
@@ -55,14 +77,13 @@ class UserService {
       { _id: data.userId },
       { $set: dataToSave },
       { new: true }
-    )) as IBaseUserDocument;
+    )) as IUserType;
 
-    if (user.accountType === IAccountType.business) {
-      fullname = (user as unknown as ICompanyDocument)?.companyName;
-      userEmail = (user as unknown as ICompanyDocument)?.contactInfo.email;
+    if (accountType === IAccountType.business) {
+      fullname = user?.companyName;
+      userEmail = user?.contactInfo.email;
     } else {
-      fullname = (user as unknown as IPropertyManagerDocument)
-        .fullname as string;
+      fullname = user.fullname as string;
       userEmail = user.email;
     }
 
@@ -78,7 +99,7 @@ class UserService {
 
     return {
       success: true,
-      data: { emailOptions },
+      data: { emailOptions, user: mapCurrentUserObject(user) },
       msg: `Account was successfully updated.`,
     };
   };
