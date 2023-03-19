@@ -6,12 +6,12 @@ import {
   IAccountType,
   IBaseUser,
   IBaseUserDocument,
+  ICurrentUser,
   IUserType,
 } from '@interfaces/user.interface';
-import { httpStatusCodes } from '@utils/helperFN';
 import { IPropertyManager } from '@interfaces/user.interface';
-import { ACCOUNT_UPDATE_NOTIFICATION } from '@utils/constants';
-import { ICurrentUser, mapCurrentUserObject } from '@services/user/utils';
+import { httpStatusCodes, ACCOUNT_UPDATE_NOTIFICATION } from '@utils/constants';
+import { mapCurrentUserObject } from '@services/user/utils';
 import { ICompany } from '@interfaces/company.interface';
 import { IEmailOptions, ISuccessReturnData } from '@interfaces/utils.interface';
 
@@ -21,7 +21,10 @@ class UserService {
   getCurrentUser = async (
     userId: string
   ): Promise<ISuccessReturnData<ICurrentUser>> => {
-    const user = (await User.findOne({ id: userId })) as IUserType;
+    const user = (await User.findOne({
+      id: userId,
+      isActive: true,
+    })) as IUserType;
 
     if (!user) {
       const err = 'Something went wrong, please try again.';

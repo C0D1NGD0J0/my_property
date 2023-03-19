@@ -5,10 +5,12 @@ import { NextFunction } from 'express';
 
 import { asyncHandler } from '.';
 import User from '../../models/user.model';
-import { AuthCache } from '@services/redis';
+import { AuthCache } from '@root/app/caching';
 import ErrorResponse from '../errorResponse';
 import { AppRequest, AppResponse } from '../../interfaces/utils.interface';
-import { httpStatusCodes } from '@utils/helperFN';
+import { ICurrentUser, IUserType } from '@interfaces/user.interface';
+import { mapCurrentUserObject } from '@services/user/utils';
+import { errorTypes, httpStatusCodes } from '@utils/constants';
 
 const authCache: AuthCache = new AuthCache();
 
@@ -27,7 +29,7 @@ export const isAuthenticated = asyncHandler(
       return next(
         new ErrorResponse(
           'Access denied!',
-          'jwtError',
+          errorTypes.AUTH_ERROR,
           httpStatusCodes.UNAUTHORIZED
         )
       );
@@ -38,16 +40,20 @@ export const isAuthenticated = asyncHandler(
       const resp = await authCache.getCurrentUser(decoded.id);
 
       if (!resp.data) {
-        const user = await User.findById(decoded.id);
-        if (!user || !user.isActive) {
+        const user = (await User.findOne({
+          isActive: true,
+          id: decoded.id,
+        })) as IUserType;
+
+        if (!user) {
           throw new ErrorResponse(
             'Please validate your email by clicking the link emailed during regitration process.',
-            'authServiceError',
-            httpStatusCodes.UNPROCESSABLE
+            errorTypes.AUTH_ERROR,
+            httpStatusCodes.UNAUTHORIZED
           );
         }
 
-        req.currentuser = user;
+        req.currentuser = mapCurrentUserObject(user);
         return next();
       }
 

@@ -61,4 +61,8 @@ baseUserSchema.methods.validatePassword = async function (
 
 baseUserSchema.plugin(uniqueValidator);
 
-export default model<IBaseUserDocument>('User', baseUserSchema);
+const BaseUserModel = model<IBaseUserDocument>('User', baseUserSchema);
+
+BaseUserModel.syncIndexes();
+
+export default BaseUserModel;

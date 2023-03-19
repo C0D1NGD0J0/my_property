@@ -1,7 +1,6 @@
 import { createLogger } from '@utils/helperFN';
-import { BaseCache, ICacheResponse } from '@services/redis/base.cache';
-import { ICurrentUser } from '@services/user/utils';
-import { NullAttributeValue } from 'aws-sdk/clients/dynamodbstreams';
+import { BaseCache, ICacheResponse } from '@root/app/caching/base.cache';
+import { ICurrentUser } from '@interfaces/user.interface';
 
 export default class AuthCache extends BaseCache {
   constructor() {

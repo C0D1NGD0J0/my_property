@@ -99,4 +99,13 @@ export interface IUserType
   id: string;
 }
 
-// CURRENTUSER INTERFACE
+export interface ICurrentUser {
+  id: string;
+  uuid: string;
+  email: string;
+  fullname?: string;
+  isActive: boolean;
+  accountype: string;
+  _id: Types.ObjectId;
+  companyName?: string;
+}

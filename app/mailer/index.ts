@@ -5,9 +5,8 @@ import {
   FORGOT_PASSWORD,
   PASSWORD_RESET_SUCCESS,
   ACCOUNT_UPDATE_NOTIFICATION,
-} from '../../utils/constants';
+} from '../utils/constants';
 import ejs from 'ejs';
-import fs from 'fs';
 
 interface IMailer {
   sendMail: (

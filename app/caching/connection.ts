@@ -1,5 +1,5 @@
 import { createLogger } from '@utils/helperFN';
-import { BaseCache } from '@services/redis/base.cache';
+import { BaseCache } from '@root/app/caching/base.cache';
 
 const log = createLogger('redisConnection');
 

@@ -2,7 +2,7 @@ import User from '../../models/user.model';
 import ErrorResponse from '../../utils/errorResponse';
 import { body, param } from 'express-validator';
 import { ISignupAccountType } from '@interfaces/user.interface';
-import { httpStatusCodes } from '@utils/helperFN';
+import { httpStatusCodes } from '@utils/constants';
 
 const signup = () => {
   return [

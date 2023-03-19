@@ -8,11 +8,13 @@ import {
   IPropertyManagerDocument,
   IUserType,
 } from '@interfaces/user.interface';
-import { hashGenerator, httpStatusCodes, jwtGenerator } from '@utils/helperFN';
+import { hashGenerator, jwtGenerator } from '@utils/helperFN';
 import {
   USER_REGISTRATION,
   PASSWORD_RESET_SUCCESS,
   FORGOT_PASSWORD,
+  errorTypes,
+  httpStatusCodes,
 } from '@utils/constants';
 import { PropertyManager, Company, User } from '@models/index';
 import { IPropertyManager } from '@interfaces/user.interface';
@@ -85,7 +87,11 @@ class AuthService {
 
       if (!user) {
         const msg = 'Activation code has exipred.';
-        throw new ErrorResponse(msg, 'authServiceError', 422);
+        throw new ErrorResponse(
+          msg,
+          errorTypes.SERVICE_ERROR,
+          httpStatusCodes.UNPROCESSABLE
+        );
       }
 
       user.isActive = true;
@@ -157,7 +163,7 @@ class AuthService {
         const err = 'Invalid email/password credentials.';
         throw new ErrorResponse(
           err,
-          'authServiceError',
+          errorTypes.AUTH_ERROR,
           httpStatusCodes.UNAUTHORIZED
         );
       }
@@ -165,7 +171,7 @@ class AuthService {
       if (!user.isActive) {
         throw new ErrorResponse(
           'Please validate your email by clicking the link emailed during regitration process.',
-          'authError',
+          errorTypes.AUTH_ERROR,
           httpStatusCodes.UNPROCESSABLE
         );
       }

@@ -74,13 +74,3 @@ export const parseJSON = (value: string) => {
     return value;
   }
 };
-
-export const httpStatusCodes = {
-  OK: 200,
-  FORBIDDEN: 403,
-  NOT_FOUND: 404,
-  BAD_REQUEST: 400,
-  UNPROCESSABLE: 422,
-  UNAUTHORIZED: 401,
-  INTERNAL_SERVER: 500,
-};

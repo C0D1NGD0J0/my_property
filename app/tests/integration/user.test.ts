@@ -3,8 +3,6 @@ import redisMock from 'redis-mock';
 
 import { app } from '../../../server';
 import { UserFactory } from '../configs/db/factory';
-import { EmailQueue } from '../../services/queues';
-import { jwtGenerator } from '../../utils/helperFN';
 
 describe.only('UserController', () => {
   let agent: any;

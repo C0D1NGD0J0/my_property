@@ -1,9 +1,9 @@
 import { UserService } from '@services/user';
-import { EmailQueue } from '@services/queues';
-import { httpStatusCodes } from '@utils/helperFN';
-import { USER_EMAIL_QUEUE } from '@utils/constants';
-import { AuthCache } from '@services/redis';
+import { EmailQueue } from '@queues/index';
+import { httpStatusCodes, USER_EMAIL_QUEUE } from '@utils/constants';
+import { AuthCache } from '@root/app/caching/index';
 import { AppRequest, AppResponse } from '@interfaces/utils.interface';
+import { ICurrentUser } from '@interfaces/user.interface';
 
 class UserController {
   private userService: UserService;
@@ -17,20 +17,24 @@ class UserController {
   }
 
   getCurrentUser = async (req: AppRequest, res: AppResponse) => {
-    const resp = await this.userService.getCurrentUser(req.currentuser.id);
+    const resp = await this.userService.getCurrentUser(
+      (req.currentuser as ICurrentUser).id
+    );
     resp.data && (await this.cache.saveCurrentUser(resp.data));
     res.status(httpStatusCodes.OK).json(resp);
   };
 
   getAccountInfo = async (req: AppRequest, res: AppResponse) => {
-    const resp = await this.userService.getAccountInfo(req.currentuser.id);
+    const resp = await this.userService.getAccountInfo(
+      (req.currentuser as ICurrentUser).id
+    );
     res.status(httpStatusCodes.OK).json(resp);
   };
 
   updateAccount = async (req: AppRequest, res: AppResponse) => {
     const { data, ...rest } = await this.userService.updateAccount({
       ...req.body,
-      userId: req.currentuser.id,
+      userId: (req.currentuser as ICurrentUser).id,
     });
 
     if (data) {
@@ -44,12 +48,12 @@ class UserController {
   deleteAccount = async (req: AppRequest, res: AppResponse) => {
     const { password } = req.body;
     const data = await this.userService.deleteAccount({
-      userId: req.currentuser.id,
+      userId: (req.currentuser as ICurrentUser).id,
       password,
     });
 
     // this.emailQueue.addEmailToQueue(AUTH_EMAIL_QUEUE, data!.emailOptions);
-    await this.cache.delAuthTokens(req.currentuser.id);
+    await this.cache.delAuthTokens((req.currentuser as ICurrentUser).id);
     res.clearCookie('refreshToken');
 
     res.status(httpStatusCodes.OK).json(data);

@@ -2,17 +2,14 @@ import jwt from 'jsonwebtoken';
 import jwt_decode from 'jwt-decode';
 import { NextFunction } from 'express';
 
-import { AuthCache } from '@services/redis';
+import { AppRequest, AppResponse } from '@interfaces/utils.interface';
+import { EmailQueue } from '@queues/index';
 import { AuthService } from '@services/auth';
-import { EmailQueue } from '@services/queues';
 import ErrorResponse from '@utils/errorResponse';
-import { AUTH_EMAIL_QUEUE } from '@utils/constants';
-import {
-  AppRequest,
-  AppResponse,
-  IEmailOptions,
-} from '@interfaces/utils.interface';
-import { httpStatusCodes, jwtGenerator, setCookieAuth } from '@utils/helperFN';
+import { AuthCache } from '@root/app/caching/index';
+import { ICurrentUser } from '@interfaces/user.interface';
+import { jwtGenerator, setCookieAuth } from '@utils/helperFN';
+import { httpStatusCodes, AUTH_EMAIL_QUEUE } from '@utils/constants';
 
 class AuthController {
   private authService: AuthService;
@@ -66,7 +63,7 @@ class AuthController {
 
   logout = async (req: AppRequest, res: AppResponse) => {
     res.clearCookie('refreshToken');
-    await this.cache.logoutUser(req.currentuser.id);
+    await this.cache.logoutUser((req.currentuser as ICurrentUser).id);
     res
       .status(httpStatusCodes.OK)
       .json({ success: true, msg: 'Logout was successful.' });
@@ -131,7 +128,8 @@ class AuthController {
 
   resetPassword = async (req: AppRequest, res: AppResponse) => {
     const { data, ...rest } = await this.authService.resetPassword(req.body);
-    this.emailQueue.addEmailToQueue(AUTH_EMAIL_QUEUE, data!.emailOptions);
+    data &&
+      this.emailQueue.addEmailToQueue(AUTH_EMAIL_QUEUE, data.emailOptions);
     res.status(httpStatusCodes.OK).json(rest);
   };
 }

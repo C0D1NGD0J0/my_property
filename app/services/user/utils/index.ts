@@ -1,18 +1,9 @@
-import { IUserType } from '@interfaces/user.interface';
-
-export interface ICurrentUser {
-  id: string;
-  uuid: string;
-  email: string;
-  fullname?: string;
-  isActive: boolean;
-  accountype: string;
-  companyName?: string;
-}
+import { ICurrentUser, IUserType } from '@interfaces/user.interface';
 
 export const mapCurrentUserObject = (userObject: IUserType) => {
   let currentuser: ICurrentUser = {
     id: userObject.id,
+    _id: userObject._id,
     uuid: userObject.uuid,
     email: userObject.email,
     isActive: userObject.isActive,

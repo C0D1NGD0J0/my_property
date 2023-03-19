@@ -10,10 +10,10 @@ import helmet from 'helmet';
 import hpp from 'hpp';
 import compression from 'compression';
 
-import { authRoutes, userRoutes } from '@routes/index';
+import routes from '@routes/index';
 import { createLogger } from '@utils/helperFN';
 import { dbErrorHandler } from '@utils/middlewares';
-import { serverAdapter } from '@services/queues/base.queue';
+import { serverAdapter } from '@root/app/queues/base.queue';
 
 export class App {
   private log;
@@ -64,8 +64,9 @@ export class App {
     const BASE_PATH = '/api/v1';
 
     app.use('/queues', serverAdapter.getRouter());
-    app.use(`${BASE_PATH}/auth`, authRoutes);
-    app.use(`${BASE_PATH}/users`, userRoutes);
+    app.use(`${BASE_PATH}/auth`, routes.authRoutes);
+    app.use(`${BASE_PATH}/users`, routes.userRoutes);
+    app.use(`${BASE_PATH}/properties`, routes.propertyRoutes);
   }
 
   private appErroHandler(app: Application): void {

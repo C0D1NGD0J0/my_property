@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { createLogger } from '@utils/helperFN';
-import { redisConnection } from '@services/redis';
+import { redisConnection } from '@root/app/caching';
 const isProduction = process.env.NODE_ENV === 'production';
 
 class ConnectDB {

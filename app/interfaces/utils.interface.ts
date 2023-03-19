@@ -1,11 +1,12 @@
 import { Request, Response } from 'express';
+import { ICurrentUser } from '@interfaces/user.interface';
 
 export interface AppRequest extends Request {
-  currentuser?: any;
+  currentuser?: ICurrentUser;
 }
 
 export interface AppResponse extends Response {
-  currentuser?: any;
+  currentuser?: ICurrentUser;
 }
 
 export interface IEmailOptions<T = unknown> {
