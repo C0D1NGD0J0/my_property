@@ -17,7 +17,9 @@ class UserController {
   }
 
   getCurrentUser = async (req: AppRequest, res: AppResponse) => {
+    const { cid } = req.params;
     const resp = await this.userService.getCurrentUser(
+      cid,
       (req.currentuser as ICurrentUser).id
     );
     resp.data && (await this.cache.saveCurrentUser(resp.data));
@@ -25,14 +27,17 @@ class UserController {
   };
 
   getAccountInfo = async (req: AppRequest, res: AppResponse) => {
+    const { cid } = req.params;
     const resp = await this.userService.getAccountInfo(
+      cid,
       (req.currentuser as ICurrentUser).id
     );
     res.status(httpStatusCodes.OK).json(resp);
   };
 
   updateAccount = async (req: AppRequest, res: AppResponse) => {
-    const { data, ...rest } = await this.userService.updateAccount({
+    const { cid } = req.params;
+    const { data, ...rest } = await this.userService.updateAccount(cid, {
       ...req.body,
       userId: (req.currentuser as ICurrentUser).id,
     });

@@ -1,56 +1,69 @@
+import dayjs from 'dayjs';
+import { Types } from 'mongoose';
+import { v4 as uuid } from 'uuid';
 import { faker } from '@faker-js/faker';
-import { IAccountType, ISignupAccountType } from '@interfaces/user.interface';
-import { Company, PropertyManager } from '@models/index';
-import { ISignupData } from '@services/auth/auth.service';
+import {
+  IAccountType,
+  ISignupData,
+  IUserDocument,
+} from '@interfaces/user.interface';
+import { User, Client } from '@models/index';
 import { hashGenerator } from '@utils/helperFN';
 
 class UserFactory {
-  create = async (data: ISignupData, type?: 'business' | 'individual') => {
-    if (type == 'business') {
-      return await Company.create({
-        ...(await this.defaultCompany()),
-        ...data,
-        uuid: '1234-acde',
-        isActive: true,
-        activationToken: hashGenerator(),
-        activationTokenExpires: new Date(Date.now() + 3600000),
-      });
-    } else {
-      return await PropertyManager.create({
-        ...(await this.default()),
-        ...data,
-        isActive: true,
-        uuid: '5678-fghj',
-        activationToken: '',
-        activationTokenExpiresAt: '',
-      });
-    }
+  create = async (data: Partial<ISignupData>) => {
+    const _userId = new Types.ObjectId();
+
+    const client = await Client.create({
+      cid: uuid(),
+      admin: _userId,
+      accountType: data?.accountType || 'individual',
+      ...(data?.accountType === IAccountType.enterprise
+        ? { enterpriseProfile: data.enterpriseProfile }
+        : {}),
+    });
+
+    // create user record
+    return (await User.create({
+      ...(await this.default()),
+      ...data,
+      uid: uuid(),
+      _id: _userId,
+      isActive: true,
+      activationToken: hashGenerator(),
+      cids: [{ cid: client?.cid, role: 'admin' }],
+      activationTokenExpiresAt: dayjs().add(2, 'hour').toDate(),
+    })) as IUserDocument;
   };
 
-  build = async (data: ISignupData, type?: string) => {
-    if (type == 'business') {
-      return new Company({
-        ...(await this.default()),
-        ...data,
-        uuid: '1234-abde',
-        activationToken: hashGenerator(),
-        activationTokenExpiresAt: new Date(Date.now() + 3600000),
-      });
-    } else {
-      return new PropertyManager({
-        ...(await this.default()),
-        ...data,
-        uuid: '5678-fghj',
-        activationToken: hashGenerator(),
-        activationTokenExpiresAt: new Date(Date.now() + 3600000),
-      });
-    }
+  build = async (data: Partial<ISignupData>) => {
+    const _userId = new Types.ObjectId();
+    const client = await Client.create({
+      cid: uuid(),
+      admin: _userId,
+      accountType: data?.accountType || 'individual',
+      ...(data?.accountType === IAccountType.enterprise
+        ? { enterpriseProfile: data.enterpriseProfile }
+        : {}),
+    });
+
+    // create user record
+    return new User({
+      ...(await this.default()),
+      ...data,
+      uid: uuid(),
+      _id: _userId,
+      isActive: false,
+      activationToken: hashGenerator(),
+      cids: [{ cid: client?.cid, role: 'admin' }],
+      activationTokenExpiresAt: dayjs().add(2, 'hour').toDate(),
+    }) as IUserDocument;
   };
 
   getPlainUserObject = async () => {
     return {
       individual: await this.default(),
-      company: await this.defaultCompany(),
+      enterpriseInfo: await this.defaultCompany(),
     };
   };
 
@@ -61,12 +74,13 @@ class UserFactory {
     return {
       lastName,
       firstName,
-      password: 'password',
       deletedAt: '',
-      location: faker.address.cityName(),
+      password: 'password',
+      enterpriseInfo: {},
+      accountType: 'individual',
       phoneNumber: faker.phone.number(),
+      location: faker.address.cityName(),
       email: `${firstName + '_' + lastName}@yopmail.com`,
-      accountType: IAccountType.individual,
     };
   };
 
@@ -85,10 +99,7 @@ class UserFactory {
         phoneNumber: faker.phone.number(),
         contactPerson: `${firstName} ${lastName}`,
       },
-      password: 'password',
-      deletedAt: '',
-      email: `${firstName.trim()}@example.com`,
-      accountType: IAccountType.business,
+      accountType: IAccountType.enterprise,
       businessRegistrationNumber: faker.finance.account(),
     };
   };

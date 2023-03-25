@@ -4,13 +4,14 @@ import {
   PropertyTypeEnum,
   PropertyCategoryEnum,
   PropertyStatusEnum,
-} from '../interfaces/property.interface';
+} from '../../interfaces/property.interface';
 import { Schema, model } from 'mongoose';
 import uniqueValidator from 'mongoose-unique-validator';
 
 const PropertySchema = new Schema<IPropertyDocument>(
   {
-    puid: { type: String, required: true, index: true },
+    cid: { type: String, required: true, index: true },
+    pid: { type: String, required: true, index: true },
     propertyType: {
       type: String,
       required: true,

@@ -2,7 +2,7 @@ import request from 'supertest';
 import { app } from '../../../server';
 import { UserFactory } from '../configs/db/factory';
 import redisMock from 'redis-mock';
-import { EmailQueue } from '../../services/queues';
+import { EmailQueue } from '../../queues';
 
 describe('AuthController', () => {
   let agent: any;
@@ -27,7 +27,7 @@ describe('AuthController', () => {
       };
     });
 
-    emailQueueMock = jest.mock('@services/queues/email.queue', () => {
+    emailQueueMock = jest.mock('@queues/email.queue', () => {
       return {
         EmailQueue: jest.fn().mockImplementation(() => {
           return {
@@ -40,7 +40,7 @@ describe('AuthController', () => {
 
   describe('signup', () => {
     it('respond with a success when a valid request is made for individual signup', async () => {
-      const user = (await UserFactory.getPlainUserObject()).individual;
+      const { individual: user } = await UserFactory.getPlainUserObject();
       const response = await agent
         .post(`${baseUrl}/signup`)
         .type('json')
@@ -54,7 +54,11 @@ describe('AuthController', () => {
     });
 
     it('respond with a success when a valid request is made for business signup', async () => {
-      const user = (await UserFactory.getPlainUserObject()).company;
+      const { individual: user, enterpriseInfo } =
+        await UserFactory.getPlainUserObject();
+      user.accountType = 'enterprise';
+      user.enterpriseInfo = enterpriseInfo;
+
       const response = await agent
         .post(`${baseUrl}/signup`)
         .type('json')
@@ -85,10 +89,12 @@ describe('AuthController', () => {
 
   describe('account_activation', () => {
     it('respond with a success when a valid request is made to activate account', async () => {
-      const user = await UserFactory.build({}, 'individual');
-      await user.save();
+      let user = await UserFactory.build({});
+      user = await user.save();
       const response = await agent
-        .get(`${baseUrl}/account_activation/${user.activationToken}`)
+        .get(
+          `${baseUrl}/account_activation/${user.cids[0].cid}/${user.activationToken}`
+        )
         .type('json')
         .send({});
 
@@ -102,7 +108,7 @@ describe('AuthController', () => {
     let user: any;
 
     beforeEach(async () => {
-      user = await UserFactory.create({}, 'individual');
+      user = await UserFactory.create({});
     });
 
     it('respond with a success when a valid request is made', async () => {
@@ -132,7 +138,7 @@ describe('AuthController', () => {
 
   describe('PUT: forgot password', () => {
     it('respond with a success message when a valid request is made', async () => {
-      const user = await UserFactory.create({}, 'individual');
+      const user = await UserFactory.create({});
       const response = await request(app)
         .post(`${baseUrl}/forgot_password`)
         .type('json')

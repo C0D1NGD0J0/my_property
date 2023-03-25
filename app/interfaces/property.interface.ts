@@ -70,6 +70,8 @@ export interface IProperty {
     amount: number | string;
     currency: string;
   };
+  cid: string;
+  pid: string;
   photos: PropertyImages[];
 }
 

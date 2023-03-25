@@ -1,12 +1,13 @@
 import dayjs from 'dayjs';
+import { Types } from 'mongoose';
 import { v4 as uuid } from 'uuid';
 
 import {
-  IBaseUser,
+  IUser,
   IAccountType,
-  IBaseUserDocument,
-  IPropertyManagerDocument,
-  IUserType,
+  ISignupData,
+  IUserDocument,
+  IUserRole,
 } from '@interfaces/user.interface';
 import { hashGenerator, jwtGenerator } from '@utils/helperFN';
 import {
@@ -16,60 +17,49 @@ import {
   errorTypes,
   httpStatusCodes,
 } from '@utils/constants';
-import { PropertyManager, Company, User } from '@models/index';
-import { IPropertyManager } from '@interfaces/user.interface';
-import { ICompany, ICompanyDocument } from '@interfaces/company.interface';
+import { User, Client } from '@models/index';
 import { IEmailOptions, ISuccessReturnData } from '@interfaces/utils.interface';
 import ErrorResponse from '@utils/errorResponse';
-
-export type ISignupData = Partial<IPropertyManager & IBaseUser> | ICompany;
 
 class AuthService {
   signup = async (
     data: ISignupData
   ): Promise<ISuccessReturnData<{ emailOptions: IEmailOptions }>> => {
-    let user: ICompanyDocument | IPropertyManagerDocument;
-    const dataToSave = {
-      ...data,
-      uuid: uuid(),
+    const _userId = new Types.ObjectId();
+
+    // create client record
+    const client = await Client.create({
+      cid: uuid(),
+      admin: _userId,
+      accountType: data.accountType,
+      ...(data.accountType === IAccountType.enterprise
+        ? { enterpriseProfile: data.enterpriseProfile }
+        : {}),
+    });
+
+    // create user record
+    const { accountType, enterpriseProfile, ...userData } = data;
+    const user = (await User.create({
+      ...userData,
+      uid: uuid(),
+      _id: _userId,
       isActive: false,
       activationToken: hashGenerator(),
+      cids: [{ cid: client?.cid, role: IUserRole.ADMIN }],
       activationTokenExpiresAt: dayjs().add(1, 'hour').toDate(),
-    };
-    let emailOptions: IEmailOptions = {
-      to: '',
-      data: null,
+    })) as IUserDocument;
+
+    await user.save();
+    const emailOptions: IEmailOptions = {
+      to: user?.email,
+      data: {
+        fullname: user?.fullname,
+        activationUrl: `${process.env.FRONTEND_URL}/account_activation/${client.cid}/${user.activationToken}`,
+      },
       emailType: USER_REGISTRATION,
       subject: 'Activate your account',
     };
 
-    if (data.accountType === IAccountType.business) {
-      user = new Company(dataToSave) as ICompanyDocument;
-
-      // EMAIL ACTIVATION LINK
-      emailOptions = {
-        ...emailOptions,
-        to: user?.contactInfo.email,
-        data: {
-          fullname: user?.companyName,
-          activationUrl: `${process.env.FRONTEND_URL}/account_activation/${user.activationToken}`,
-        },
-      };
-    } else {
-      user = new PropertyManager(dataToSave) as IPropertyManagerDocument;
-
-      // EMAIL ACTIVATION LINK
-      emailOptions = {
-        ...emailOptions,
-        to: user?.email,
-        data: {
-          fullname: user?.fullname,
-          activationUrl: `${process.env.FRONTEND_URL}/account_activation/${user.activationToken}`,
-        },
-      };
-    }
-
-    await user.save();
     return {
       success: true,
       data: { emailOptions },
@@ -77,13 +67,16 @@ class AuthService {
     };
   };
 
-  accountActivation = async (token: string): Promise<ISuccessReturnData> => {
+  accountActivation = async (
+    cid: string,
+    token: string
+  ): Promise<ISuccessReturnData> => {
     try {
       const user = (await User.findOne({
         isActive: false,
         activationToken: { $eq: token.trim() },
         activationTokenExpiresAt: { $gt: Date.now() },
-      })) as IBaseUserDocument;
+      })) as IUserDocument;
 
       if (!user) {
         const msg = 'Activation code has exipred.';
@@ -96,6 +89,13 @@ class AuthService {
 
       user.isActive = true;
       user.activationToken = '';
+      user.cids = user.cids.map((item) => {
+        if (item.cid === cid) {
+          item.isConnected = true;
+        }
+
+        return item;
+      });
       user.activationTokenExpiresAt = null;
       await user.save();
 
@@ -109,24 +109,16 @@ class AuthService {
     email: string
   ): Promise<ISuccessReturnData<{ emailOptions: IEmailOptions }>> => {
     try {
-      const user = (await User.findOne({ email })) as IUserType;
+      const user = (await User.findOne({ email })) as IUserDocument;
       const emailOptions = {
         to: user?.email,
         data: {
-          fullname: '',
+          fullname: user?.fullname,
           activationUrl: `${process.env.FRONTEND_URL}/account_activation/${user.activationToken}`,
         },
         emailType: USER_REGISTRATION,
         subject: 'Activate your account',
       };
-
-      if (user.accountType === IAccountType.business) {
-        const _user = user as ICompanyDocument;
-        emailOptions.data.fullname = _user.companyName;
-      } else {
-        const _user = user as IPropertyManagerDocument;
-        emailOptions.data.fullname = _user.firstName;
-      }
 
       user.activationToken = hashGenerator();
       user.activationTokenExpiresAt = dayjs().add(1, 'hour').toDate();
@@ -144,19 +136,20 @@ class AuthService {
   };
 
   login = async (
-    data: Pick<IBaseUser, 'email' | 'password'>
+    data: Pick<IUser, 'email' | 'password'>
   ): Promise<
     ISuccessReturnData<{
       refreshToken: string;
       accessToken: string;
       userid: string;
+      clientId: string;
     }>
   > => {
     try {
       const user = (await User.findOne({
         email: data.email,
         isActive: true,
-      })) as IUserType;
+      })) as IUserDocument;
       const isMatch = await user.validatePassword(data.password);
 
       if (!isMatch) {
@@ -183,8 +176,9 @@ class AuthService {
         msg: 'Login was successful.',
         data: {
           accessToken,
+          refreshToken,
           userid: user.id,
-          refreshToken: refreshToken as string,
+          clientId: user.cids[0].cid,
         },
       };
     } catch (error) {
@@ -192,9 +186,9 @@ class AuthService {
     }
   };
 
-  forgotPassword = async (email: Pick<IUserType, 'email'>) => {
+  forgotPassword = async (email: Pick<IUser, 'email'>) => {
     try {
-      const user = (await User.findOne({ email })) as IUserType;
+      const user = (await User.findOne({ email })) as IUserDocument;
       const oneHour = dayjs().add(1, 'hour').toDate();
 
       // SEND EMAIL
@@ -202,19 +196,11 @@ class AuthService {
         subject: 'Account Password Reset',
         to: user.email,
         data: {
-          fullname: '',
+          fullname: user.fullname,
           resetPasswordUrl: `${process.env.FRONTEND_URL}/reset_password/${user.passwordResetToken}`,
         },
         emailType: FORGOT_PASSWORD,
       };
-
-      if (user.accountType === IAccountType.business) {
-        const _user = user as ICompanyDocument;
-        emailOptions.data.fullname = _user.companyName;
-      } else {
-        const _user = user as IPropertyManagerDocument;
-        emailOptions.data.fullname = _user.firstName;
-      }
 
       user.passwordResetToken = hashGenerator();
       user.passwordResetTokenExpiresAt = oneHour;
@@ -237,26 +223,18 @@ class AuthService {
     try {
       const user = (await User.findOne({
         passwordResetToken: data.passwordResetToken,
-      })) as IUserType;
+      })) as IUserDocument;
 
       // SEND EMAIL
       const emailOptions = {
         subject: 'Password Reset Successful',
         to: user.email,
         data: {
-          fullname: '',
+          fullname: user.fullname,
           resetAt: dayjs().format('DD/MM/YYYY H:m:s'),
         },
         emailType: PASSWORD_RESET_SUCCESS,
       };
-
-      if (user.accountType === IAccountType.business) {
-        const _user = user as ICompanyDocument;
-        emailOptions.data.fullname = _user.companyName;
-      } else {
-        const _user = user as IPropertyManagerDocument;
-        emailOptions.data.fullname = _user.firstName;
-      }
 
       user.password = data.password;
       user.passwordResetToken = '';

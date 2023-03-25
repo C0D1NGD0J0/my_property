@@ -30,8 +30,8 @@ class AuthController {
   };
 
   accountActivation = async (req: AppRequest, res: AppResponse) => {
-    const { token } = req.params;
-    const data = await this.authService.accountActivation(token);
+    const { cid, token } = req.params;
+    const data = await this.authService.accountActivation(cid, token);
     res.status(httpStatusCodes.OK).json(data);
   };
 

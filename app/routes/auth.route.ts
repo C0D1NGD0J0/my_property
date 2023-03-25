@@ -14,7 +14,7 @@ router.post(
 );
 
 router.get(
-  '/account_activation/:token',
+  '/account_activation/:cid/:token',
   AuthValidations.tokenValidation,
   validationRequestHandler,
   asyncHandler(AuthController.accountActivation)

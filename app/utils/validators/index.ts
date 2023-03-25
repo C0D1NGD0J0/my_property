@@ -1,12 +1,12 @@
+import colors from 'colors';
 import { NextFunction } from 'express';
 import { validationResult } from 'express-validator';
 
+import { errorTypes, httpStatusCodes } from '@utils/constants';
 import AuthValidations from '@utils/validators/auth.validation';
 import UserValidations from '@utils/validators/user.validation';
-import PropertyValidations from '@utils/validators/property.validation';
 import { AppRequest, AppResponse } from '@interfaces/utils.interface';
-import colors from 'colors';
-import { errorTypes, httpStatusCodes } from '@utils/constants';
+import PropertyValidations from '@utils/validators/property.validation';
 
 const validationRequestHandler = (
   req: AppRequest,

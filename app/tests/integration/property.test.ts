@@ -39,7 +39,7 @@ describe.only('PropertyController', () => {
 
   beforeEach(async () => {
     agent = request(app);
-    createdUser = await UserFactory.create({}, 'individual');
+    createdUser = await UserFactory.create({});
     const resp = await request(app)
       .post(`/api/v1/auth/login`)
       .type('json')

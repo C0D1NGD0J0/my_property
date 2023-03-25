@@ -65,8 +65,8 @@ export class App {
 
     app.use('/queues', serverAdapter.getRouter());
     app.use(`${BASE_PATH}/auth`, routes.authRoutes);
-    app.use(`${BASE_PATH}/users`, routes.userRoutes);
-    app.use(`${BASE_PATH}/properties`, routes.propertyRoutes);
+    app.use(`${BASE_PATH}/:cid/users`, routes.userRoutes);
+    app.use(`${BASE_PATH}/:cid/properties`, routes.propertyRoutes);
   }
 
   private appErroHandler(app: Application): void {

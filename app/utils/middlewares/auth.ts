@@ -4,11 +4,11 @@ import jwt from 'jsonwebtoken';
 import { NextFunction } from 'express';
 
 import { asyncHandler } from '.';
-import User from '../../models/user.model';
+import User from '../../models/user/user.model';
 import { AuthCache } from '@root/app/caching';
 import ErrorResponse from '../errorResponse';
 import { AppRequest, AppResponse } from '../../interfaces/utils.interface';
-import { ICurrentUser, IUserType } from '@interfaces/user.interface';
+import { ICurrentUser, IUserDocument } from '@interfaces/user.interface';
 import { mapCurrentUserObject } from '@services/user/utils';
 import { errorTypes, httpStatusCodes } from '@utils/constants';
 
@@ -43,7 +43,7 @@ export const isAuthenticated = asyncHandler(
         const user = (await User.findOne({
           isActive: true,
           id: decoded.id,
-        })) as IUserType;
+        })) as IUserDocument;
 
         if (!user) {
           throw new ErrorResponse(

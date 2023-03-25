@@ -1,7 +1,7 @@
-import User from '../../models/user.model';
+import User from '../../models/user/user.model';
 import ErrorResponse from '../../utils/errorResponse';
 import { body, param } from 'express-validator';
-import { ISignupAccountType } from '@interfaces/user.interface';
+import { IAccountType } from '@interfaces/user.interface';
 import { httpStatusCodes } from '@utils/constants';
 
 const signup = () => {
@@ -41,7 +41,8 @@ const signup = () => {
       .exists()
       .bail()
       .custom(async (utype) => {
-        if (!Object.values(ISignupAccountType).includes(utype)) {
+        if (!Object.values(IAccountType).includes(utype)) {
+          console.log(utype, '----swwwww-');
           throw new ErrorResponse(
             `Invalid account type provided.`,
             'validationError',
@@ -56,42 +57,60 @@ const signup = () => {
   ];
 };
 
-const business_signup = () => {
+const enterprise_profile = () => {
   return [
     body('contactInfo.email', 'Business email address is required')
-      .if((_value: any, { req }: any) => req.body.acctType === 'business')
+      .if(
+        (_value: any, { req }: any) =>
+          req.body.acctType === IAccountType.enterprise
+      )
       .exists()
       .bail()
       .isEmail()
       .withMessage('Invalid email address format'),
     body('contactInfo.address', 'Business address is required')
-      .if((_value: any, { req }: any) => req.body.acctType === 'business')
+      .if(
+        (_value: any, { req }: any) =>
+          req.body.acctType === IAccountType.enterprise
+      )
       .exists(),
     body('contactInfo.phoneNumber', 'Business phone number is required')
-      .if((_value: any, { req }: any) => req.body.acctType === 'business')
+      .if(
+        (_value: any, { req }: any) =>
+          req.body.acctType === IAccountType.enterprise
+      )
       .exists()
       .isMobilePhone('any', { strictMode: true })
       .withMessage('Phone number is invalid'),
     body('companyName', 'Company name is required')
-      .if((_value: any, { req }: any) => req.body.acctType === 'business')
+      .if(
+        (_value: any, { req }: any) =>
+          req.body.acctType === IAccountType.enterprise
+      )
       .exists()
       .isLength({ min: 2, max: 25 }),
     body('legaEntityName', 'Legal entity name is required')
-      .if((_value: any, { req }: any) => req.body.acctType === 'business')
+      .if(
+        (_value: any, { req }: any) =>
+          req.body.acctType === IAccountType.enterprise
+      )
       .exists()
       .isLength({ min: 2, max: 25 }),
     body(
       'businessRegistrationNumber',
       'Business registration number is required'
     )
-      .if((_value: any, { req }: any) => req.body.acctType === 'business')
+      .if(
+        (_value: any, { req }: any) =>
+          req.body.acctType === IAccountType.enterprise
+      )
       .exists()
       .isLength({ min: 2, max: 25 }),
   ];
 };
 
-const validateAllUserTypeSignup = () => {
-  return [...signup(), ...business_signup()];
+const validateUserSignup = () => {
+  return [...signup(), ...enterprise_profile()];
 };
 
 const login = () => {
@@ -214,7 +233,7 @@ export default {
   login: login(),
   resetPassword: resetPassword(),
   forgotPassword: forgotPassword(),
-  signup: validateAllUserTypeSignup(),
+  signup: validateUserSignup(),
   accountActivation: accountActivation(),
   tokenValidation: tokenValidation(),
 };

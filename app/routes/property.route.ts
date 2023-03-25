@@ -21,4 +21,42 @@ router.post(
   asyncHandler(PropertyController.createProperty)
 );
 
+// router.get(
+//   '/',
+//   PropertyValidations.hasValidRequestParams,
+//   validationRequestHandler,
+//   asyncHandler(PropertyController.getAllUserProperties)
+// );
+
+// router.get("/:propertyId/:landlordId",
+//   PropertyValidation.hasValidRequestParams,
+//   validationRequestHandler,
+//   asyncHandler(PropertyController.getProperty)
+// );
+
+// router.put("/:propertyId",
+//   fileUpload.upload,
+//   PropertyValidation.update,
+//   validationRequestHandler,
+//   asyncHandler(PropertyController.updateProperty)
+// );
+
+// router.post("/:propertyId/add_apartment_unit",
+//   PropertyValidation.addApartmentUnit,
+//   validationRequestHandler,
+//   asyncHandler(PropertyController.addApartmentUnit)
+// );
+
+// router.delete("/:propertyId",
+//   PropertyValidation.validateResourceId,
+//   validationRequestHandler,
+//   asyncHandler(PropertyController.deleteProperty)
+// );
+
+// router.delete("/:propertyId/apartment_units/:unitId",
+//   PropertyValidation.deleteApartmentUnit,
+//   validationRequestHandler,
+//   asyncHandler(PropertyController.deleteApartmentUnit)
+// );
+
 export default router;

@@ -1,7 +1,7 @@
-import User from '../../models/user.model';
+import User from '../../models/user/user.model';
 import ErrorResponse from '../../utils/errorResponse';
 import { body } from 'express-validator';
-import { ISignupAccountType } from '@interfaces/user.interface';
+import { IAccountType } from '@interfaces/user.interface';
 import { errorTypes, httpStatusCodes } from '@utils/constants';
 
 const updateAccount = () => {
@@ -63,7 +63,7 @@ const updateAccount = () => {
       .exists()
       .bail()
       .custom(async (utype) => {
-        if (!Object.values(ISignupAccountType).includes(utype)) {
+        if (!Object.values(IAccountType).includes(utype)) {
           throw new ErrorResponse(
             `Invalid account type provided.`,
             errorTypes.VALIDATION_ERROR,
