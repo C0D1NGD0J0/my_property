@@ -4,18 +4,18 @@ import jwt from 'jsonwebtoken';
 import { NextFunction } from 'express';
 
 import { asyncHandler } from '.';
-import User from '../../models/user/user.model';
-import { AuthCache } from '@root/app/caching';
 import ErrorResponse from '../errorResponse';
-import { AppRequest, AppResponse } from '../../interfaces/utils.interface';
-import { ICurrentUser, IUserDocument } from '@interfaces/user.interface';
+import { AuthCache } from '@root/app/caching';
+import User from '../../models/user/user.model';
+import { IUserDocument } from '@interfaces/user.interface';
 import { mapCurrentUserObject } from '@services/user/utils';
 import { errorTypes, httpStatusCodes } from '@utils/constants';
+import { AppRequest, AppResponse } from '../../interfaces/utils.interface';
 
 const authCache: AuthCache = new AuthCache();
 
 export const isAuthenticated = asyncHandler(
-  async (req: AppRequest, res: AppResponse, next: NextFunction) => {
+  async (req: AppRequest, _res: AppResponse, next: NextFunction) => {
     let token = '';
 
     if (

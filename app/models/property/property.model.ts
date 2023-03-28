@@ -1,5 +1,4 @@
 import {
-  PaymentTypeEnum,
   IPropertyDocument,
   PropertyTypeEnum,
   PropertyCategoryEnum,
@@ -99,6 +98,10 @@ const PropertySchema = new Schema<IPropertyDocument>(
         key: String,
       },
     ],
+    deletedAt: {
+      type: Date,
+      defult: null,
+    },
   },
   {
     timestamps: true,

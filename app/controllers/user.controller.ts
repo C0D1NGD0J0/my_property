@@ -1,9 +1,9 @@
-import { UserService } from '@services/user';
 import { EmailQueue } from '@queues/index';
-import { httpStatusCodes, USER_EMAIL_QUEUE } from '@utils/constants';
+import { UserService } from '@services/user';
 import { AuthCache } from '@root/app/caching/index';
-import { AppRequest, AppResponse } from '@interfaces/utils.interface';
 import { ICurrentUser } from '@interfaces/user.interface';
+import { httpStatusCodes, USER_EMAIL_QUEUE } from '@utils/constants';
+import { AppRequest, AppResponse } from '@interfaces/utils.interface';
 
 class UserController {
   private userService: UserService;
@@ -20,7 +20,7 @@ class UserController {
     const { cid } = req.params;
     const resp = await this.userService.getCurrentUser(
       cid,
-      (req.currentuser as ICurrentUser).id
+      req.currentuser!.id
     );
     resp.data && (await this.cache.saveCurrentUser(resp.data));
     res.status(httpStatusCodes.OK).json(resp);
@@ -30,7 +30,7 @@ class UserController {
     const { cid } = req.params;
     const resp = await this.userService.getAccountInfo(
       cid,
-      (req.currentuser as ICurrentUser).id
+      req.currentuser!.id
     );
     res.status(httpStatusCodes.OK).json(resp);
   };
@@ -39,7 +39,7 @@ class UserController {
     const { cid } = req.params;
     const { data, ...rest } = await this.userService.updateAccount(cid, {
       ...req.body,
-      userId: (req.currentuser as ICurrentUser).id,
+      userId: req.currentuser!.id,
     });
 
     if (data) {
@@ -53,12 +53,12 @@ class UserController {
   deleteAccount = async (req: AppRequest, res: AppResponse) => {
     const { password } = req.body;
     const data = await this.userService.deleteAccount({
-      userId: (req.currentuser as ICurrentUser).id,
+      userId: req.currentuser!.id,
       password,
     });
 
     // this.emailQueue.addEmailToQueue(AUTH_EMAIL_QUEUE, data!.emailOptions);
-    await this.cache.delAuthTokens((req.currentuser as ICurrentUser).id);
+    await this.cache.delAuthTokens((req.currentuser! as ICurrentUser).id);
     res.clearCookie('refreshToken');
 
     res.status(httpStatusCodes.OK).json(data);

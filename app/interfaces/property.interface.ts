@@ -72,6 +72,7 @@ export interface IProperty {
   };
   cid: string;
   pid: string;
+  deletedAt: Date | null;
   photos: PropertyImages[];
 }
 

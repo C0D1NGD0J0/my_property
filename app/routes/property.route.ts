@@ -21,12 +21,11 @@ router.post(
   asyncHandler(PropertyController.createProperty)
 );
 
-// router.get(
-//   '/',
-//   PropertyValidations.hasValidRequestParams,
-//   validationRequestHandler,
-//   asyncHandler(PropertyController.getAllUserProperties)
-// );
+router.get(
+  '/',
+  validationRequestHandler,
+  asyncHandler(PropertyController.getUserProperties)
+);
 
 // router.get("/:propertyId/:landlordId",
 //   PropertyValidation.hasValidRequestParams,

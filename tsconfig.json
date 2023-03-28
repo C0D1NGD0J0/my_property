@@ -32,6 +32,7 @@
       "@utils/*": ["app/utils/*"],
       "@root/*": ["./*"]
     }
+    // "typeRoots": ["@types/express/index.d.ts", "node_modules/@types"]
   },
   "ts-node": {
     "require": ["tsconfig-paths/register"]
@@ -42,7 +43,8 @@
     "./app/**/*.js",
     "./server.ts",
     "./app/**/*.ejs",
-    "app/tests/configs/teardown.test.ts"
+    "app/tests/configs/teardown.test.ts",
+    "types/custom.d.ts"
   ],
   "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.*", "**/mocks/*"]
 }

@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { Response } from 'express';
 import bunyan from 'bunyan';
+import { IPaginateResult } from '@interfaces/utils.interface';
 
 export const hashGenerator = (): string => {
   const token = crypto.randomBytes(10).toString('hex');
@@ -38,7 +39,7 @@ export const setCookieAuth = (token: string, res: Response) => {
 };
 
 export const paginateResult = (count: number, skip: number, limit: number) => {
-  const result = {
+  const result: IPaginateResult = {
     total: count,
     per_page: limit,
     current_page: Math.floor(skip / limit) + 1,

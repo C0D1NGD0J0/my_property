@@ -1,8 +1,13 @@
 import color from 'colors';
 import { v4 as uuid } from 'uuid';
+import { Types } from 'mongoose';
 import { Property } from '@models/index';
+
 import {
   IAWSFileUploadResponse,
+  IPaginateResult,
+  IPaginationQuery,
+  IPromiseReturnedData,
   ISuccessReturnData,
 } from '@interfaces/utils.interface';
 import {
@@ -10,7 +15,7 @@ import {
   PropertyTypeEnum,
   IPropertyDocument,
 } from '@interfaces/property.interface';
-import { createLogger } from '@utils/helperFN';
+import { createLogger, paginateResult } from '@utils/helperFN';
 import ErrorResponse from '@utils/errorResponse';
 import { ICurrentUser } from '@interfaces/user.interface';
 import GeoCoder from '@services/external/geoCoder.service';
@@ -23,8 +28,9 @@ class PropertyService {
   }
 
   create = async (
-    data: Partial<IProperty & { s3Files: IAWSFileUploadResponse[] }>,
-    currentuser: ICurrentUser
+    cid: string,
+    userId: Types.ObjectId,
+    data: Partial<IProperty & { s3Files: IAWSFileUploadResponse[] }>
   ): Promise<ISuccessReturnData<IPropertyDocument>> => {
     try {
       const { s3Files, ...dataToSave } = data;
@@ -59,14 +65,42 @@ class PropertyService {
         property.address = gCode[0]?.formattedAddress || '';
       }
 
-      property.puid = uuid();
-      property.managedBy = currentuser._id;
+      property.pid = uuid();
+      property.cid = cid;
+      property.managedBy = userId;
       await property.save();
       return {
         success: true,
         data: property,
         msg: 'Property has been successfully added.',
       };
+    } catch (error: any) {
+      this.log.error(color.bold.red(error));
+      throw error;
+    }
+  };
+
+  getUserProperties = async (
+    cid: string,
+    userId: Types.ObjectId,
+    data: IPaginationQuery
+  ): IPromiseReturnedData<{
+    properties: IPropertyDocument[];
+    paginate: IPaginateResult;
+  }> => {
+    try {
+      const { limit, skip, sortBy } = data;
+      const query = { deletedAt: null, managedBy: userId, cid };
+
+      const properties = await Property.find(query)
+        .skip(skip!)
+        .limit(limit!)
+        .sort(sortBy);
+      const count = await Property.countDocuments();
+
+      const paginationInfo = paginateResult(count, skip!, limit!);
+
+      return { success: true, data: { properties, paginate: paginationInfo } };
     } catch (error: any) {
       this.log.error(color.bold.red(error));
       throw error;

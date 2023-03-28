@@ -1,12 +1,12 @@
-import { Request, Response } from 'express';
+import express from 'express';
 import { ICurrentUser } from '@interfaces/user.interface';
 
-export interface AppRequest extends Request {
+export interface AppRequest extends express.Request {
   currentuser?: ICurrentUser;
 }
 
-export interface AppResponse extends Response {
-  currentuser?: ICurrentUser;
+export interface AppResponse extends express.Response {
+  error?: any;
 }
 
 export interface IEmailOptions<T = unknown> {
@@ -21,6 +21,8 @@ export interface ISuccessReturnData<T = object> {
   msg?: string;
   success: boolean;
 }
+
+export type IPromiseReturnedData<T = object> = Promise<ISuccessReturnData<T>>;
 
 export interface IAWSFileUploadResponse {
   fieldname: string;
@@ -40,4 +42,19 @@ export interface IAWSFileUploadResponse {
   location: string;
   etag: string;
   versionId?: string;
+}
+
+export interface IPaginationQuery {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  skip?: number | null;
+}
+
+export interface IPaginateResult {
+  total: number;
+  per_page: number;
+  current_page: number;
+  total_pages: number;
+  hasMoreResource: boolean;
 }
