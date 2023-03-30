@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { app } from '../../../server';
 import { UserFactory, PropertyFactory } from '../configs/db/factory';
+import { IUserDocument } from '../../interfaces/user.interface';
 
 jest.mock('../../services/external/geoCoder.service', () => {
   return jest.fn().mockImplementation(() => {
@@ -31,19 +32,19 @@ jest.mock('../../services/external/geoCoder.service', () => {
   });
 });
 
-describe.only('PropertyController', () => {
+describe('PropertyController', () => {
   let agent: any;
-  let createdUser: any;
+  let user: any;
   let accessToken: string;
   const baseUrl = '/api/v1/properties';
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     agent = request(app);
-    createdUser = await UserFactory.create({});
+    user = (await UserFactory.getUser()) as IUserDocument;
     const resp = await request(app)
       .post(`/api/v1/auth/login`)
       .type('json')
-      .send({ email: createdUser.email, password: 'password' });
+      .send({ email: user.email, password: 'password' });
     accessToken = resp.body.accessToken;
   });
 
@@ -67,7 +68,7 @@ describe.only('PropertyController', () => {
       expect(response.body.data._id).toBeDefined();
     });
 
-    it('respond with validation error when a invalid data is provided to add a new property', async () => {
+    it('respond with validation error when a required field is not provided', async () => {
       const property = await PropertyFactory.getPlainPropertyObject();
       property.address = '';
       const response = await agent
@@ -85,6 +86,22 @@ describe.only('PropertyController', () => {
           { address: 'Valid property address is required' },
         ])
       );
+    });
+  });
+
+  describe('get properties', () => {
+    it('respond with all client properties', async () => {
+      const expectedCID = user.cids[0].cid;
+      const response = await agent
+        .get(`${baseUrl}`)
+        .set({
+          Authorization: accessToken,
+        })
+        .type('json');
+
+      expect(response.status).toEqual(200);
+      expect(response.body.success).toEqual(true);
+      expect(response.body.data.properties[0].cid).toEqual(expectedCID);
     });
   });
 });

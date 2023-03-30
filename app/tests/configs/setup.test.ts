@@ -2,18 +2,16 @@ import dotenv from 'dotenv';
 dotenv.config({ path: './.env.test' });
 import { createLogger } from '../../utils/helperFN';
 import { connectDB, disconnectDB, clearDB } from './db';
-
+import { UserFactory } from './db/factory';
 const log = createLogger('TesetSetup');
 
 beforeAll(async () => {
   await connectDB();
-});
-
-beforeEach(async () => {
-  await clearDB();
+  await UserFactory.seedUsersAndClients();
 });
 
 afterAll(async () => {
   log.info('Disconnecting Test DB afterAll...');
+  await clearDB();
   await disconnectDB();
 });

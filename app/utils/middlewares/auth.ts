@@ -48,8 +48,8 @@ export const isAuthenticated = asyncHandler(
         if (!user) {
           throw new ErrorResponse(
             'Please validate your email by clicking the link emailed during regitration process.',
-            errorTypes.AUTH_ERROR,
-            httpStatusCodes.UNAUTHORIZED
+            errorTypes.NO_RESOURCE_ERROR,
+            httpStatusCodes.NOT_FOUND
           );
         }
 
@@ -61,7 +61,7 @@ export const isAuthenticated = asyncHandler(
       next();
     } catch (error: Error | any) {
       console.log(colors.red.bold(error), '---middleware---');
-      return next(error);
+      next(error);
     }
   }
 );

@@ -8,6 +8,10 @@ import {
   PropertyTypeEnum,
   PropertyCategoryEnum,
 } from '@interfaces/property.interface';
+import { Property } from '@models/index';
+import ErrorResponse from '@utils/errorResponse';
+import { errorTypes, httpStatusCodes } from '@utils/constants';
+import { validateResourceID } from '@utils/helperFN';
 
 const create = () => {
   return [
@@ -80,6 +84,34 @@ const create = () => {
   ];
 };
 
+const validateParams = () => {
+  return [
+    param('pid', 'Property resource identifier missing.')
+      .exists()
+      .bail()
+      .custom(async (pid) => {
+        const { isValid } = validateResourceID(pid);
+        if (!isValid) {
+          throw new ErrorResponse(
+            `Invalid resource identifier provided <${pid}>.`,
+            errorTypes.NO_RESOURCE_ERROR,
+            httpStatusCodes.NOT_FOUND
+          );
+        }
+
+        const property = await Property.findOne({ pid });
+        if (!property) {
+          throw new ErrorResponse(
+            `No Property resource available with the identifier provided <${pid}>.`,
+            errorTypes.NO_RESOURCE_ERROR,
+            httpStatusCodes.NOT_FOUND
+          );
+        }
+      }),
+  ];
+};
+
 export default {
   createProperty: create(),
+  validateParams: validateParams(),
 };

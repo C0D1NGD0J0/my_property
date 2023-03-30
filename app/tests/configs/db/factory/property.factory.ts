@@ -1,9 +1,11 @@
+import { v4 as uuid } from 'uuid';
 import { faker } from '@faker-js/faker';
 import { HydratedDocument } from 'mongoose';
 
 import { Property } from '@models/index';
 import {
   IProperty,
+  IPropertyDocument,
   PropertyCategoryEnum,
   PropertyTypeEnum,
 } from '@interfaces/property.interface';
@@ -19,13 +21,17 @@ class PropertyFactory {
     return (await Property.create({
       ..._temp,
       ...data,
-    })) as HydratedDocument<IProperty>;
+    })) as HydratedDocument<IPropertyDocument>;
   };
 
-  build = async (data?: Partial<IProperty>) => {
+  build = async (data?: Partial<IProperty & { cid: string }>) => {
     const _temp = await this.default();
 
-    return new Property({ ..._temp, ...data }) as HydratedDocument<IProperty>;
+    return new Property({
+      ..._temp,
+      ...data,
+      pid: uuid(),
+    }) as HydratedDocument<IPropertyDocument>;
   };
 
   getPlainPropertyObject = async () => {

@@ -1,4 +1,5 @@
 import { AppRequest, AppResponse } from '@interfaces/utils.interface';
+import { errorTypes, httpStatusCodes } from '@utils/constants';
 import colors from 'colors/safe';
 import { NextFunction } from 'express';
 import ErrorResponse from '../errorResponse';
@@ -12,41 +13,39 @@ export const dbErrorHandler = (
   let error = { ...err };
   error.message = err.message || 'Server Error...';
   error.type = err.type || 'apiError';
+  error.statusCode = err.statusCode;
 
-  console.log(colors.red(err.message), '-----Errors----', err);
-  if (err.messaage) {
-    // Mongoose bad ObjectID
-    if (err.name === 'CastError') {
-      const message = `Resource with ID ${err.value} not found!`;
-      error = new ErrorResponse(message, 'dbError', 404);
-    }
+  console.log(colors.red(err.stack), '-----Errors----');
 
-    // Mongoose duplicate key
-    if (err.code === 11000) {
-      const message = `Duplicate fields value were provided!`;
-      error = new ErrorResponse(message, 'dbError', 400);
-    }
-
-    // Mongoose Validation error
-    if (err.name === 'ValidationError') {
-      const messages = Object.values(err.errors).map((val: any) =>
-        `${val.message}`.replace('Error, ', '')
-      );
-      error = new ErrorResponse(
-        JSON.stringify(messages),
-        'validationError',
-        422
-      );
-    }
-
-    return res.status(error.statusCode || 500).json({
-      success: false,
-      type: error.type,
-      error: { data: error.message },
-    });
+  // Mongoose bad ObjectID
+  if (err.name === 'CastError') {
+    const message = `Resource with ID ${err.value} not found!`;
+    error = new ErrorResponse(
+      message,
+      errorTypes.NO_RESOURCE_ERROR,
+      httpStatusCodes.NOT_FOUND
+    );
   }
 
-  next();
+  // Mongoose duplicate key
+  if (err.code === 11000) {
+    const message = `Duplicate fields value were provided!`;
+    error = new ErrorResponse(message, 'dbError', 400);
+  }
+
+  // Mongoose Validation error
+  if (err.name === 'ValidationError') {
+    const messages = Object.values(err.errors).map((val: any) =>
+      `${val.message}`.replace('Error, ', '')
+    );
+    error = new ErrorResponse(JSON.stringify(messages), 'validationError', 422);
+  }
+
+  return res.status(error.statusCode || 500).json({
+    success: false,
+    type: error.type,
+    error: { data: error.message },
+  });
 };
 
 export const asyncHandler =

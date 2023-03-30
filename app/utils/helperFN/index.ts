@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { Response } from 'express';
 import bunyan from 'bunyan';
 import { IPaginateResult } from '@interfaces/utils.interface';
+import { isValidObjectId } from 'mongoose';
 
 export const hashGenerator = (): string => {
   const token = crypto.randomBytes(10).toString('hex');
@@ -73,5 +74,18 @@ export const parseJSON = (value: string) => {
     return JSON.parse(value);
   } catch (error) {
     return value;
+  }
+};
+
+export const validateResourceID = (id: string) => {
+  const regexExp =
+    /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/gi;
+
+  if (id.length == 24 && isValidObjectId(id)) {
+    return { isValid: true };
+  } else if (id.length > 32 && regexExp.test(id)) {
+    return { isValid: true };
+  } else {
+    return { isValid: false };
   }
 };

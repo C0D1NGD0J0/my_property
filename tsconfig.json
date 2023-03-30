@@ -30,7 +30,7 @@
       "@workers/*": ["app/workers/*"],
       "@tests/*": ["app/tests/*"],
       "@utils/*": ["app/utils/*"],
-      "@root/*": ["./*"]
+      "@root/*": ["*"]
     }
     // "typeRoots": ["@types/express/index.d.ts", "node_modules/@types"]
   },

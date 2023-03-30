@@ -22,5 +22,6 @@ export const errorTypes = {
   SERVICE_ERROR: 'serviceError',
   AUTH_ERROR: 'authError',
   DB_ERROR: 'dbError',
+  NO_RESOURCE_ERROR: 'noResourceError',
   VALIDATION_ERROR: 'validationError',
 };

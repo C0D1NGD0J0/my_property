@@ -27,11 +27,12 @@ router.get(
   asyncHandler(PropertyController.getUserProperties)
 );
 
-// router.get("/:propertyId/:landlordId",
-//   PropertyValidation.hasValidRequestParams,
-//   validationRequestHandler,
-//   asyncHandler(PropertyController.getProperty)
-// );
+router.get(
+  '/:pid',
+  PropertyValidations.validateParams,
+  validationRequestHandler,
+  asyncHandler(PropertyController.getProperty)
+);
 
 // router.put("/:propertyId",
 //   fileUpload.upload,

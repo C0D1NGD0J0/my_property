@@ -17,9 +17,9 @@ class UserFactory {
     const client = await Client.create({
       cid: uuid(),
       admin: _userId,
-      accountType: data?.accountType || 'individual',
-      ...(data?.accountType === IAccountType.enterprise
-        ? { enterpriseProfile: data.enterpriseProfile }
+      accountType: data?.accountType,
+      ...(data?.accountType === 'enterprise'
+        ? { enterpriseProfile: await this.defaultCompany() }
         : {}),
     });
 
@@ -65,6 +65,30 @@ class UserFactory {
       individual: await this.default(),
       enterpriseInfo: await this.defaultCompany(),
     };
+  };
+
+  seedUsersAndClients = async () => {
+    try {
+      const maxUsers = [1, 2, 3, 4, 5];
+      for (const x of maxUsers) {
+        const data: Partial<ISignupData> = {
+          accountType: x > 3 ? 'enterprise' : 'individual',
+        };
+        await this.create(data);
+      }
+      return { success: true };
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  getUser = async () => {
+    try {
+      const users = (await User.find({})) as IUserDocument[];
+      return users[0];
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   private default = async () => {

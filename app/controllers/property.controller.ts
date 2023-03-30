@@ -52,6 +52,14 @@ class PropertyController {
     );
     res.status(200).json(data);
   };
+
+  getProperty = async (req: AppRequest, res: AppResponse) => {
+    const { pid } = req.params;
+    const { cid } = req.currentuser!;
+
+    const data = await this.propertyService.getProperty(cid, pid);
+    res.status(200).json(data);
+  };
 }
 
 export default new PropertyController();

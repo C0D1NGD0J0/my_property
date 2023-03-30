@@ -20,7 +20,7 @@ const PropertySchema = new Schema<IPropertyDocument>(
     status: {
       type: String,
       default: PropertyStatusEnum.vacant,
-      enum: Object.values(PropertyStatusEnum),
+      enum: PropertyStatusEnum,
     },
     managedBy: { type: Schema.Types.ObjectId, ref: 'User' },
     features: {

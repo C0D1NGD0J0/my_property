@@ -6,6 +6,7 @@ export enum PaymentTypeEnum {
   weekly = 'weekly',
   daily = 'daily',
 }
+export type IPaymentTypes = 'yearly' | 'monthly' | 'weekly' | 'daily';
 
 export enum PropertyTypeEnum {
   singleFamily = 'single-family',
@@ -15,6 +16,13 @@ export enum PropertyTypeEnum {
   officeUnits = 'office-units',
   others = 'others',
 }
+
+export type IPropertyType =
+  | 'singleFamily'
+  | 'townHouse'
+  | 'apartmentUnits'
+  | 'officeUnits'
+  | 'others';
 
 export enum PropertyCategoryEnum {
   commercial = 'commercial',
@@ -30,7 +38,7 @@ export enum PropertyStatusEnum {
 export interface IProperty {
   description?: string;
   propertyType: PropertyTypeEnum;
-  status: PropertyStatusEnum;
+  status: 'vacant' | 'occupied';
   managedBy: Types.ObjectId;
   features: {
     floors: number;
@@ -70,8 +78,6 @@ export interface IProperty {
     amount: number | string;
     currency: string;
   };
-  cid: string;
-  pid: string;
   deletedAt: Date | null;
   photos: PropertyImages[];
 }
@@ -83,10 +89,11 @@ interface PropertyImages {
 }
 
 export interface IPropertyDocument extends IProperty, Document {
-  _id: Types.ObjectId;
-  puid: string;
+  cid: string;
+  pid: string;
   createdAt: Date;
   updatedAt: Date;
+  _id: Types.ObjectId;
 }
 
 export interface IApartment extends IProperty {

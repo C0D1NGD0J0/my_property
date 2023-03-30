@@ -19,6 +19,7 @@ import { createLogger, paginateResult } from '@utils/helperFN';
 import ErrorResponse from '@utils/errorResponse';
 import { ICurrentUser } from '@interfaces/user.interface';
 import GeoCoder from '@services/external/geoCoder.service';
+import { httpStatusCodes, errorTypes } from '@utils/constants';
 
 class PropertyService {
   private log;
@@ -101,6 +102,30 @@ class PropertyService {
       const paginationInfo = paginateResult(count, skip!, limit!);
 
       return { success: true, data: { properties, paginate: paginationInfo } };
+    } catch (error: any) {
+      this.log.error(color.bold.red(error));
+      throw error;
+    }
+  };
+
+  getProperty = async (
+    cid: string,
+    pid: string
+  ): IPromiseReturnedData<IPropertyDocument> => {
+    try {
+      const property = await Property.findOne({ cid, pid });
+
+      if (!property) {
+        const err = 'Property not found for this client.';
+        this.log.error(err);
+        throw new ErrorResponse(
+          err,
+          errorTypes.SERVICE_ERROR,
+          httpStatusCodes.NOT_FOUND
+        );
+      }
+
+      return { success: true, data: property };
     } catch (error: any) {
       this.log.error(color.bold.red(error));
       throw error;
