@@ -15,8 +15,6 @@ export const dbErrorHandler = (
   error.type = err.type || 'apiError';
   error.statusCode = err.statusCode;
 
-  console.log(colors.red(err.stack), '-----Errors----');
-
   // Mongoose bad ObjectID
   if (err.name === 'CastError') {
     const message = `Resource with ID ${err.value} not found!`;
@@ -30,7 +28,11 @@ export const dbErrorHandler = (
   // Mongoose duplicate key
   if (err.code === 11000) {
     const message = `Duplicate fields value were provided!`;
-    error = new ErrorResponse(message, 'dbError', 400);
+    error = new ErrorResponse(
+      message,
+      errorTypes.DB_ERROR,
+      httpStatusCodes.BAD_REQUEST
+    );
   }
 
   // Mongoose Validation error
@@ -38,7 +40,20 @@ export const dbErrorHandler = (
     const messages = Object.values(err.errors).map((val: any) =>
       `${val.message}`.replace('Error, ', '')
     );
-    error = new ErrorResponse(JSON.stringify(messages), 'validationError', 422);
+    error = new ErrorResponse(
+      JSON.stringify(messages),
+      errorTypes.VALIDATION_ERROR,
+      httpStatusCodes.UNPROCESSABLE
+    );
+
+    if (err.errors.description.kind === 'unique') {
+      const message = `${err.errors.description.path} field value must be unique`;
+      error = new ErrorResponse(
+        message,
+        errorTypes.VALIDATION_ERROR,
+        httpStatusCodes.UNPROCESSABLE
+      );
+    }
   }
 
   return res.status(error.statusCode || 500).json({

@@ -1,8 +1,37 @@
 import User from '../../models/user/user.model';
 import ErrorResponse from '../../utils/errorResponse';
-import { body, param } from 'express-validator';
+import { body, param, query } from 'express-validator';
 import { IAccountType } from '@interfaces/user.interface';
-import { httpStatusCodes } from '@utils/constants';
+import { errorTypes, httpStatusCodes } from '@utils/constants';
+import { validateResourceID } from '@utils/helperFN';
+import { Client } from '@models/index';
+
+const validateCIDParams = () => {
+  return [
+    param('cid', 'Client resource identifier missing.')
+      .exists()
+      .bail()
+      .custom(async (cid) => {
+        const { isValid } = validateResourceID(cid);
+        if (!isValid) {
+          throw new ErrorResponse(
+            `Invalid resource identifier provided <${cid}>.`,
+            errorTypes.NO_RESOURCE_ERROR,
+            httpStatusCodes.NOT_FOUND
+          );
+        }
+
+        const client = await Client.findOne({ cid });
+        if (!client) {
+          throw new ErrorResponse(
+            `No resource available with the identifier provided <${cid}>.`,
+            errorTypes.NO_RESOURCE_ERROR,
+            httpStatusCodes.NOT_FOUND
+          );
+        }
+      }),
+  ];
+};
 
 const signup = () => {
   return [
@@ -221,7 +250,8 @@ const accountActivation = () => {
 
 const tokenValidation = () => {
   return [
-    param('token')
+    ...validateCIDParams(),
+    query('t')
       .exists({ checkFalsy: true })
       .withMessage('Account activation is required.')
       .isHash('sha256')

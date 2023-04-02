@@ -1,7 +1,7 @@
 import {
   ICurrentUser,
   IUserDocument,
-  IUserRole,
+  IClientUserRole,
 } from '@interfaces/user.interface';
 import { errorTypes, httpStatusCodes } from '@utils/constants';
 import ErrorResponse from '@utils/errorResponse';

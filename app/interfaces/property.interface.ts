@@ -1,6 +1,6 @@
 import { Document, Types } from 'mongoose';
 
-export enum PaymentTypeEnum {
+export enum IPaymentTypeEnum {
   yearly = 'yearly',
   monthly = 'monthly',
   weekly = 'weekly',
@@ -8,37 +8,39 @@ export enum PaymentTypeEnum {
 }
 export type IPaymentTypes = 'yearly' | 'monthly' | 'weekly' | 'daily';
 
-export enum PropertyTypeEnum {
-  singleFamily = 'single-family',
-  townHouse = 'town-house',
-  condoUnit = 'condo-unit',
-  apartments = 'apartment-units',
-  officeUnits = 'office-units',
+export enum IPropertyTypeEnum {
   others = 'others',
+  townHouse = 'townHouse',
+  singleRoom = 'singleRoom',
+  officeUnits = 'officeUnits',
+  singleFamily = 'singleFamily',
+  apartments = 'apartmentUnits',
 }
-
 export type IPropertyType =
   | 'singleFamily'
   | 'townHouse'
+  | 'singleRoom'
   | 'apartmentUnits'
   | 'officeUnits'
   | 'others';
 
-export enum PropertyCategoryEnum {
+export enum IPropertyCategoryEnum {
   commercial = 'commercial',
   residential = 'residential',
-  mixed = 'commercial-residential',
+  others = 'other',
 }
+export type IPropertyCategories = 'commercial' | 'residential' | 'others';
 
-export enum PropertyStatusEnum {
+export enum IPropertyStatusEnum {
   vacant = 'vacant',
   occupied = 'occupied',
 }
+export type IPropertyStatus = 'vacant' | 'occupied';
 
 export interface IProperty {
   description?: string;
-  propertyType: PropertyTypeEnum;
-  status: 'vacant' | 'occupied';
+  propertyType: IPropertyType;
+  status: IPropertyStatus;
   managedBy: Types.ObjectId;
   features: {
     floors: number;
@@ -59,7 +61,7 @@ export interface IProperty {
     has_laundry: boolean;
     petsAllowed: boolean;
   };
-  category: PropertyCategoryEnum;
+  category: IPropertyCategoryEnum;
   computedLocation?: {
     type: string;
     coordinates: [number, number];
@@ -74,12 +76,13 @@ export interface IProperty {
     latAndlon?: string;
   };
   address: string;
-  baseRentalPrice: {
+  managementFees: {
     amount: number | string;
     currency: string;
   };
   deletedAt: Date | null;
   photos: PropertyImages[];
+  totalUnits?: number;
 }
 
 interface PropertyImages {
@@ -94,32 +97,19 @@ export interface IPropertyDocument extends IProperty, Document {
   createdAt: Date;
   updatedAt: Date;
   _id: Types.ObjectId;
-}
-
-export interface IApartment extends IProperty {
-  totalUnits: number;
-  floors: number;
-  hasParking: boolean;
-  managementFees?: number;
-  apartmentUnits: Types.DocumentArray<IApartmentUnit>;
-}
-
-export interface IApartmentDocument extends IApartment, Document {
-  _id: Types.ObjectId;
-  createdAt: Date;
-  updatedAt: Date;
+  apartmentUnits?: IApartmentUnitDocument[];
 }
 
 export interface IApartmentUnit {
   unitNumber: string;
-  features?: {
+  features: {
     bedroom: number;
     bathroom: number;
     maxCapacity: number;
     hasParking: boolean;
   };
   status: string;
-  unitPrice: {
+  rentalPrice: {
     amount: number | null;
     currency: string;
   };

@@ -1,11 +1,23 @@
 import {
   IPropertyDocument,
-  PropertyTypeEnum,
-  PropertyCategoryEnum,
-  PropertyStatusEnum,
+  IPropertyTypeEnum,
+  IPropertyCategoryEnum,
+  IPropertyStatusEnum,
+  IApartmentUnit,
 } from '../../interfaces/property.interface';
 import { Schema, model } from 'mongoose';
 import uniqueValidator from 'mongoose-unique-validator';
+
+const ApartmentSchema = new Schema<IApartmentUnit>({
+  unitNumber: { type: String },
+  features: {
+    bedroom: { type: Number, default: 1, max: 5 },
+    bathroom: { type: Number, default: 1, max: 5 },
+    maxCapacity: { type: Number, default: 1, max: 15 },
+    hasParking: { type: Boolean, default: true },
+  },
+  status: { type: String, default: 'vacant' },
+});
 
 const PropertySchema = new Schema<IPropertyDocument>(
   {
@@ -14,13 +26,13 @@ const PropertySchema = new Schema<IPropertyDocument>(
     propertyType: {
       type: String,
       required: true,
-      default: PropertyTypeEnum.singleFamily,
-      enum: Object.values(PropertyTypeEnum),
+      default: IPropertyTypeEnum.singleFamily,
+      enum: Object.values(IPropertyTypeEnum),
     },
     status: {
       type: String,
-      default: PropertyStatusEnum.vacant,
-      enum: PropertyStatusEnum,
+      enum: IPropertyStatusEnum,
+      default: IPropertyStatusEnum.vacant,
     },
     managedBy: { type: Schema.Types.ObjectId, ref: 'User' },
     features: {
@@ -30,7 +42,7 @@ const PropertySchema = new Schema<IPropertyDocument>(
       floors: { type: Number, default: 0 },
       availableParking: { type: Number, default: 0 },
     },
-    baseRentalPrice: {
+    managementFees: {
       amount: {
         type: Number,
         required: true,
@@ -85,8 +97,8 @@ const PropertySchema = new Schema<IPropertyDocument>(
     category: {
       type: String,
       required: true,
-      default: PropertyCategoryEnum.residential,
-      enum: Object.values(PropertyCategoryEnum),
+      default: IPropertyCategoryEnum.residential,
+      enum: Object.values(IPropertyCategoryEnum),
     },
     photos: [
       {
@@ -98,9 +110,16 @@ const PropertySchema = new Schema<IPropertyDocument>(
         key: String,
       },
     ],
+    apartmentUnits: [ApartmentSchema],
     deletedAt: {
       type: Date,
       defult: null,
+    },
+    totalUnits: {
+      min: 0,
+      max: 50,
+      default: 0,
+      type: Number,
     },
   },
   {

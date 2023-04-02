@@ -78,7 +78,7 @@ export interface IClientDocument extends Document {
   enterpriseProfile?: IEnterpriseInfo;
 }
 
-export enum IUserRole {
+export enum IClientUserRole {
   ADMIN = 'admin',
   TENANT = 'tenant',
   MANAGER = 'manager',

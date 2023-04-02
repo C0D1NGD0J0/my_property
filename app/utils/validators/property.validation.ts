@@ -4,14 +4,42 @@ import { body, param } from 'express-validator';
 // import { User, Property } from '@models/index';
 // import { httpStatusCodes } from '@utils/helperFN';
 // import ErrorResponse from '@utils/errorResponse';
-import {
-  PropertyTypeEnum,
-  PropertyCategoryEnum,
-} from '@interfaces/property.interface';
 import { Property } from '@models/index';
 import ErrorResponse from '@utils/errorResponse';
 import { errorTypes, httpStatusCodes } from '@utils/constants';
 import { validateResourceID } from '@utils/helperFN';
+import {
+  IPropertyTypeEnum,
+  IPropertyCategoryEnum,
+  IPropertyStatusEnum,
+} from '@interfaces/property.interface';
+
+const validateParams = () => {
+  return [
+    param('pid', 'Property resource identifier missing.')
+      .exists()
+      .bail()
+      .custom(async (pid) => {
+        const { isValid } = validateResourceID(pid);
+        if (!isValid) {
+          throw new ErrorResponse(
+            `Invalid resource identifier provided <${pid}>.`,
+            errorTypes.NO_RESOURCE_ERROR,
+            httpStatusCodes.NOT_FOUND
+          );
+        }
+
+        const property = await Property.findOne({ pid });
+        if (!property) {
+          throw new ErrorResponse(
+            `No Property resource available with the identifier provided <${pid}>.`,
+            errorTypes.NO_RESOURCE_ERROR,
+            httpStatusCodes.NOT_FOUND
+          );
+        }
+      }),
+  ];
+};
 
 const create = () => {
   return [
@@ -44,74 +72,45 @@ const create = () => {
       .escape(),
     body('propertyType', 'Please select a valid property type')
       .exists()
-      .isIn(Object.values(PropertyTypeEnum)),
+      .isIn(Object.values(IPropertyTypeEnum)),
     body('category', 'Please select a valid property category')
       .exists()
-      .isIn(Object.values(PropertyCategoryEnum)),
+      .isIn(Object.values(IPropertyCategoryEnum)),
     body('description', 'Please provide a description of the property type')
-      .if(body('propertyType').equals(PropertyTypeEnum.others))
+      .if(body('propertyType').equals(IPropertyTypeEnum.others))
       .exists()
       .isLength({ min: 5, max: 45 })
       .trim()
       .escape(),
-    body('baseRentalPrice.amount', 'Invalid amount provided.')
+    body('managementFees.amount', 'Invalid amount provided.')
       .exists()
       .isCurrency({ allow_negatives: false, allow_decimal: false })
       .escape(),
     body(
-      'baseRentalPrice.currency',
+      'managementFees.currency',
       'Please provide a currency for collecting payments.'
     )
-      .if(body('rentalPrice.amount').exists())
+      .if(body('managementFees.amount').exists())
       .exists()
       .isIn(['USD', 'CAD', 'EUR', 'GBP'])
       .withMessage('Invalid currency provided.'),
     body('totalUnits', 'Value for total units in the building is missing')
-      .if(body('propertyType').equals(PropertyTypeEnum.apartments))
+      .if(body('propertyType').equals(IPropertyTypeEnum.apartments))
       .exists()
       .isInt({ min: 1, max: 25 })
       .withMessage('Max amount of units for an apartment is 25.'),
-    body('floors')
-      .if(body('propertyType').equals(PropertyTypeEnum.apartments))
+    body('status', 'Please provide the current status of the property.')
       .exists()
-      .isInt({ min: 1, max: 25 })
-      .withMessage('Max amount of levels for an apartment building is 25.'),
-    body('managementFees', 'Invalid amount entered')
-      .if(body('propertyType').equals(PropertyTypeEnum.apartments))
-      .exists()
-      .isCurrency({ allow_negatives: false, allow_decimal: false })
-      .escape(),
+      .isIn(Object.values(IPropertyStatusEnum)),
   ];
 };
 
-const validateParams = () => {
-  return [
-    param('pid', 'Property resource identifier missing.')
-      .exists()
-      .bail()
-      .custom(async (pid) => {
-        const { isValid } = validateResourceID(pid);
-        if (!isValid) {
-          throw new ErrorResponse(
-            `Invalid resource identifier provided <${pid}>.`,
-            errorTypes.NO_RESOURCE_ERROR,
-            httpStatusCodes.NOT_FOUND
-          );
-        }
-
-        const property = await Property.findOne({ pid });
-        if (!property) {
-          throw new ErrorResponse(
-            `No Property resource available with the identifier provided <${pid}>.`,
-            errorTypes.NO_RESOURCE_ERROR,
-            httpStatusCodes.NOT_FOUND
-          );
-        }
-      }),
-  ];
+const updateDetails = () => {
+  return [...validateParams(), ...create()];
 };
 
 export default {
   createProperty: create(),
   validateParams: validateParams(),
+  updateDetails: updateDetails(),
 };

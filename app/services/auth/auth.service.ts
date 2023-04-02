@@ -4,10 +4,11 @@ import { v4 as uuid } from 'uuid';
 
 import {
   IUser,
-  IAccountType,
+  IClientUserRole,
   ISignupData,
+  IAccountType,
   IUserDocument,
-  IUserRole,
+  IClientDocument,
 } from '@interfaces/user.interface';
 import { hashGenerator, jwtGenerator } from '@utils/helperFN';
 import {
@@ -26,9 +27,8 @@ class AuthService {
     data: ISignupData
   ): Promise<ISuccessReturnData<{ emailOptions: IEmailOptions }>> => {
     const _userId = new Types.ObjectId();
-
-    // create client record
-    const client = await Client.create({
+    // new client record
+    const client = new Client({
       cid: uuid(),
       admin: _userId,
       accountType: data.accountType,
@@ -45,16 +45,18 @@ class AuthService {
       _id: _userId,
       isActive: false,
       activationToken: hashGenerator(),
-      cids: [{ cid: client?.cid, role: IUserRole.ADMIN }],
+      cids: [
+        { cid: client?.cid, role: IClientUserRole.ADMIN, isConnected: false },
+      ],
       activationTokenExpiresAt: dayjs().add(1, 'hour').toDate(),
     })) as IUserDocument;
 
-    await user.save();
+    await client.save(); //only save if user is created successfully
     const emailOptions: IEmailOptions = {
       to: user?.email,
       data: {
         fullname: user?.fullname,
-        activationUrl: `${process.env.FRONTEND_URL}/account_activation/${client.cid}/${user.activationToken}`,
+        activationUrl: `${process.env.FRONTEND_URL}/account_activation/${client.cid}?t=${user.activationToken}`,
       },
       emailType: USER_REGISTRATION,
       subject: 'Activate your account',
@@ -75,7 +77,7 @@ class AuthService {
       const user = (await User.findOne({
         isActive: false,
         activationToken: { $eq: token.trim() },
-        activationTokenExpiresAt: { $gt: Date.now() },
+        activationTokenExpiresAt: { $gt: dayjs() },
       })) as IUserDocument;
 
       if (!user) {

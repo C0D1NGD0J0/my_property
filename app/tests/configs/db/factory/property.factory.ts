@@ -5,9 +5,10 @@ import { HydratedDocument } from 'mongoose';
 import { Property } from '@models/index';
 import {
   IProperty,
+  IPropertyTypeEnum,
   IPropertyDocument,
-  PropertyCategoryEnum,
-  PropertyTypeEnum,
+  IPropertyStatusEnum,
+  IPropertyCategoryEnum,
 } from '@interfaces/property.interface';
 
 class PropertyFactory {
@@ -61,13 +62,15 @@ class PropertyFactory {
       },
       description: faker.lorem.lines(1),
       address: faker.address.streetAddress(true),
-      propertyType: PropertyTypeEnum.singleFamily,
-      category: PropertyCategoryEnum.commercial,
-      baseRentalPrice: {
-        amount: '2000',
+      propertyType: IPropertyTypeEnum.singleFamily,
+      category: IPropertyCategoryEnum.commercial,
+      managementFees: {
+        amount: '5000',
         currency: 'USD',
       },
       photos: [],
+      totalUnits: 0,
+      status: IPropertyStatusEnum.vacant,
     };
   };
 }

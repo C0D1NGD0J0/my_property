@@ -8,7 +8,12 @@ import ErrorResponse from '@utils/errorResponse';
 import { AuthCache } from '@root/app/caching/index';
 import { AppRequest } from '@interfaces/utils.interface';
 import { jwtGenerator, setCookieAuth } from '@utils/helperFN';
-import { httpStatusCodes, AUTH_EMAIL_QUEUE } from '@utils/constants';
+import {
+  httpStatusCodes,
+  AUTH_EMAIL_QUEUE,
+  errorTypes,
+  REFRESH_TOKEN,
+} from '@utils/constants';
 
 class AuthController {
   private authService: AuthService;
@@ -29,8 +34,9 @@ class AuthController {
   };
 
   accountActivation = async (req: Request, res: Response) => {
-    const { cid, token } = req.params;
-    const data = await this.authService.accountActivation(cid, token);
+    const { cid } = req.params;
+    const { t } = req.query;
+    const data = await this.authService.accountActivation(cid, t as string);
     res.status(httpStatusCodes.OK).json(data);
   };
 
@@ -69,47 +75,7 @@ class AuthController {
   };
 
   refreshToken = async (req: Request, res: Response, next: NextFunction) => {
-    const cookies = req.cookies;
-    if (!cookies['refresh-token']) {
-      return next(
-        new ErrorResponse(
-          'Access denied, please login again.',
-          'authServiceError',
-          httpStatusCodes.UNAUTHORIZED
-        )
-      );
-    }
-
-    const token = cookies['refresh-token'].split(' ')[1];
-
-    const _decoded: any = jwt_decode(token);
-    const resp = jwt.verify(
-      token,
-      process.env.JWT_REFRESH_SECRET as string,
-      async (err: any, _: any) => {
-        if (err) {
-          console.log(err.message, '===ERROR====jwt');
-          await this.cache.delAuthTokens(_decoded.id);
-          res.clearCookie('refreshToken');
-          return next(
-            new ErrorResponse(
-              'Access denied, please login again.',
-              'authServiceError',
-              httpStatusCodes.UNAUTHORIZED
-            )
-          );
-        }
-
-        const { accessToken, refreshToken } = jwtGenerator(_decoded.id);
-        setCookieAuth(refreshToken, res);
-        await this.cache.saveAuthTokens(_decoded.id, [
-          accessToken,
-          refreshToken,
-        ]);
-        return { success: true, accessToken };
-      }
-    );
-
+    const resp = await this.generateRrefreshToken(req, res, next);
     res.status(httpStatusCodes.OK).json(resp);
   };
 
@@ -126,6 +92,52 @@ class AuthController {
     data &&
       this.emailQueue.addEmailToQueue(AUTH_EMAIL_QUEUE, data.emailOptions);
     res.status(httpStatusCodes.OK).json(rest);
+  };
+
+  private generateRrefreshToken = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    const cookies = req.cookies;
+    if (!cookies[REFRESH_TOKEN]) {
+      return next(
+        new ErrorResponse(
+          'Access denied, please login again.',
+          'authServiceError',
+          httpStatusCodes.UNAUTHORIZED
+        )
+      );
+    }
+
+    const token = cookies[REFRESH_TOKEN].split(' ')[1];
+    const _decoded: any = jwt_decode(token);
+    const resp = jwt.verify(
+      token,
+      process.env.JWT_REFRESH_SECRET as string,
+      async (err: any, _: any) => {
+        if (err) {
+          await this.cache.delAuthTokens(_decoded.id);
+          res.clearCookie(REFRESH_TOKEN);
+          return next(
+            new ErrorResponse(
+              'Access denied, please login again.',
+              errorTypes.AUTH_ERROR,
+              httpStatusCodes.UNAUTHORIZED
+            )
+          );
+        }
+
+        const { accessToken, refreshToken } = jwtGenerator(_decoded.id);
+        setCookieAuth(refreshToken, res);
+        await this.cache.saveAuthTokens(_decoded.id, [
+          accessToken,
+          refreshToken,
+        ]);
+        return { success: true, accessToken };
+      }
+    );
+    return resp;
   };
 }
 

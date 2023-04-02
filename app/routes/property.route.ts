@@ -3,7 +3,7 @@ const router: Router = express.Router();
 
 import { asyncHandler } from '@utils/middlewares';
 import { PropertyController } from '@controllers/index';
-import { isAuthenticated } from '@utils/middlewares/auth';
+import AuthMiddleware from '@utils/middlewares/auth';
 import {
   PropertyValidations,
   validationRequestHandler,
@@ -11,7 +11,7 @@ import {
 import S3FileUpload from '@services/external/s3.service';
 const fileUpload: S3FileUpload = new S3FileUpload();
 
-router.use(isAuthenticated);
+router.use(AuthMiddleware.isAuthenticated);
 
 router.post(
   '/',
@@ -34,23 +34,25 @@ router.get(
   asyncHandler(PropertyController.getProperty)
 );
 
-// router.put("/:propertyId",
-//   fileUpload.upload,
-//   PropertyValidation.update,
-//   validationRequestHandler,
-//   asyncHandler(PropertyController.updateProperty)
-// );
+router.put(
+  '/:pid/archive',
+  PropertyValidations.validateParams,
+  validationRequestHandler,
+  asyncHandler(PropertyController.archiveProperty)
+);
+
+router.put(
+  '/:pid',
+  fileUpload.upload,
+  PropertyValidations.updateDetails,
+  validationRequestHandler,
+  asyncHandler(PropertyController.updateDetails)
+);
 
 // router.post("/:propertyId/add_apartment_unit",
 //   PropertyValidation.addApartmentUnit,
 //   validationRequestHandler,
 //   asyncHandler(PropertyController.addApartmentUnit)
-// );
-
-// router.delete("/:propertyId",
-//   PropertyValidation.validateResourceId,
-//   validationRequestHandler,
-//   asyncHandler(PropertyController.deleteProperty)
 // );
 
 // router.delete("/:propertyId/apartment_units/:unitId",

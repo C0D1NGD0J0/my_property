@@ -6,6 +6,7 @@ import {
   AppResponse,
   IPaginationQuery,
 } from '@interfaces/utils.interface';
+import { httpStatusCodes } from '@utils/constants';
 
 class PropertyController {
   private propertyService: PropertyService;
@@ -15,6 +16,7 @@ class PropertyController {
   }
 
   createProperty = async (req: AppRequest, res: AppResponse) => {
+    const { _id, cid } = req.currentuser!;
     const fileUploadResponse = req.files as {
       [fieldname: string]: Express.Multer.File[];
     };
@@ -24,11 +26,7 @@ class PropertyController {
       s3Files: fileUploadResponse?.propertyImgs,
     };
 
-    const data = await this.propertyService.create(
-      req.currentuser!.cid,
-      req.currentuser!._id,
-      newPropertyData
-    );
+    const data = await this.propertyService.create(cid, _id, newPropertyData);
     res.status(200).json(data);
   };
 
@@ -59,6 +57,32 @@ class PropertyController {
 
     const data = await this.propertyService.getProperty(cid, pid);
     res.status(200).json(data);
+  };
+
+  updateDetails = async (req: AppRequest, res: AppResponse) => {
+    const { pid } = req.params;
+    const { cid, _id } = req.currentuser!;
+
+    const fileUploadResponse = req.files as {
+      [fieldname: string]: Express.Multer.File[];
+    };
+
+    const updateData = {
+      ...req.body,
+      pid,
+      s3Files: fileUploadResponse?.propertyImgs,
+    };
+
+    const data = await this.propertyService.update(cid, updateData);
+    return res.status(httpStatusCodes.OK).json(data);
+  };
+
+  archiveProperty = async (req: AppRequest, res: AppResponse) => {
+    const { pid } = req.params;
+    const { cid } = req.currentuser!;
+
+    const data = await this.propertyService.archiveProperty(cid, pid);
+    return res.status(204).json(data);
   };
 }
 

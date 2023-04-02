@@ -4,6 +4,7 @@ import { Response } from 'express';
 import bunyan from 'bunyan';
 import { IPaginateResult } from '@interfaces/utils.interface';
 import { isValidObjectId } from 'mongoose';
+import { REFRESH_TOKEN } from '@utils/constants';
 
 export const hashGenerator = (): string => {
   const token = crypto.randomBytes(10).toString('hex');
@@ -35,7 +36,7 @@ export const setCookieAuth = (token: string, res: Response) => {
     secure: process.env.NODE_ENV === 'production', //only works with https
   };
 
-  res.cookie('refreshToken', token, options);
+  res.cookie(REFRESH_TOKEN, token, options);
   return res;
 };
 
@@ -88,4 +89,22 @@ export const validateResourceID = (id: string) => {
   } else {
     return { isValid: false };
   }
+};
+
+export const mergeArrayWithLimit = (
+  limit = 5,
+  originalArray: any[],
+  newArray: any[]
+) => {
+  // Determine the number of items to be removed to accommodate the incoming data
+  const numItemsToRemove = Math.max(
+    0,
+    originalArray.length + newArray.length - limit
+  );
+  // Remove the necessary number of items from the beginning of the internal array
+  const removedItems = originalArray.splice(0, numItemsToRemove);
+  // Merge the incoming data with the internal array
+  originalArray.push(...newArray);
+  // Return the removed items
+  return { data: originalArray, removedItems };
 };

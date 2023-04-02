@@ -12,19 +12,26 @@ import {
 } from '@interfaces/utils.interface';
 import {
   IProperty,
-  PropertyTypeEnum,
+  IPropertyTypeEnum,
   IPropertyDocument,
 } from '@interfaces/property.interface';
-import { createLogger, paginateResult } from '@utils/helperFN';
 import ErrorResponse from '@utils/errorResponse';
+import S3FileUpload from '@services/external/s3.service';
 import { ICurrentUser } from '@interfaces/user.interface';
 import GeoCoder from '@services/external/geoCoder.service';
 import { httpStatusCodes, errorTypes } from '@utils/constants';
+import {
+  createLogger,
+  mergeArrayWithLimit,
+  paginateResult,
+} from '@utils/helperFN';
 
 class PropertyService {
   private log;
+  private fileUpload: S3FileUpload;
 
   constructor() {
+    this.fileUpload = new S3FileUpload();
     this.log = createLogger('PropertyService', true);
   }
 
@@ -32,7 +39,7 @@ class PropertyService {
     cid: string,
     userId: Types.ObjectId,
     data: Partial<IProperty & { s3Files: IAWSFileUploadResponse[] }>
-  ): Promise<ISuccessReturnData<IPropertyDocument>> => {
+  ): IPromiseReturnedData<IPropertyDocument> => {
     try {
       const { s3Files, ...dataToSave } = data;
 
@@ -81,6 +88,83 @@ class PropertyService {
     }
   };
 
+  update = async (
+    cid: string,
+    data: Partial<IPropertyDocument & { s3Files: IAWSFileUploadResponse[] }>
+  ): IPromiseReturnedData<{ property: IPropertyDocument }> => {
+    try {
+      const { s3Files, ...rest } = data;
+      let property = await Property.findOne({
+        deletedAt: { $eq: null },
+        cid,
+        pid: data.pid,
+      });
+
+      if (!property) {
+        const err = 'Property not found.';
+        this.log.error(`Property update: `, err);
+        throw new ErrorResponse(
+          err,
+          errorTypes.SERVICE_ERROR,
+          httpStatusCodes.NOT_FOUND
+        );
+      }
+
+      if (s3Files && s3Files.length) {
+        const { data, removedItems } = mergeArrayWithLimit(
+          5,
+          property.photos,
+          s3Files.map((fileInfo) => {
+            return {
+              url: fileInfo.location,
+              filename: fileInfo.originalname,
+              key: fileInfo.key,
+            };
+          })
+        );
+        for (const item of removedItems) {
+          await this.fileUpload.deleteFile(item.key);
+        }
+        rest.photos = data;
+      }
+
+      if (rest.address && property.address !== rest.address) {
+        const gCode = await new GeoCoder().parseLocation(rest.address);
+
+        if (gCode[0]) {
+          rest.computedLocation = {
+            type: 'Point',
+            coordinates: [gCode[0].longitude!, gCode[0].latitude!],
+            address: {
+              city: gCode[0].city,
+              state: gCode[0].state,
+              country: gCode[0].country,
+              postCode: gCode[0].zipcode,
+              street: gCode[0].streetName,
+              streetNumber: gCode[0].streetNumber,
+            },
+            latAndlon: `${gCode[0].longitude} ${gCode[0].latitude}`,
+          };
+          rest.address = gCode[0].formattedAddress;
+        }
+      }
+
+      property = (await Property.findOneAndUpdate(
+        { _id: rest._id, cid: rest.cid },
+        { $set: rest },
+        {
+          new: true,
+          runValidators: true,
+        }
+      )) as IPropertyDocument;
+
+      return { success: true, data: { property } };
+    } catch (error: any) {
+      this.log.error(color.bold.red(error.message));
+      throw error;
+    }
+  };
+
   getUserProperties = async (
     cid: string,
     userId: Types.ObjectId,
@@ -113,7 +197,11 @@ class PropertyService {
     pid: string
   ): IPromiseReturnedData<IPropertyDocument> => {
     try {
-      const property = await Property.findOne({ cid, pid });
+      const property = await Property.findOne({
+        deletedAt: { $eq: null },
+        cid,
+        pid,
+      });
 
       if (!property) {
         const err = 'Property not found for this client.';
@@ -128,6 +216,33 @@ class PropertyService {
       return { success: true, data: property };
     } catch (error: any) {
       this.log.error(color.bold.red(error));
+      throw error;
+    }
+  };
+
+  archiveProperty = async (cid: string, pid: string): IPromiseReturnedData => {
+    try {
+      const property = await Property.findOne({
+        deletedAt: { $eq: null },
+        cid,
+        pid,
+      });
+
+      if (!property) {
+        const err = 'Property not found.';
+        this.log.error(`Property archive: `, err);
+        throw new ErrorResponse(
+          err,
+          errorTypes.SERVICE_ERROR,
+          httpStatusCodes.NOT_FOUND
+        );
+      }
+
+      property.deletedAt = new Date();
+      await property.save();
+      return { success: true, data: { property } };
+    } catch (error: any) {
+      this.log.error(color.bold.red(error.message));
       throw error;
     }
   };
