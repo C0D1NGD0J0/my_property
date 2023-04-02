@@ -1,6 +1,6 @@
-import User from '@models/user.model';
-import Tenant from '@models/tenant.model';
-import Company from '@models/company.model';
-import PropertyManager from '@models/manager.model';
+import Client from '@models/client/client.model';
+import User from '@models/user/user.model';
+import Tenant from '@models/user/tenant.model';
+import Property from '@models/property/property.model';
 
-export { User, Tenant, Company, PropertyManager };
+export { User, Tenant, Client, Property };

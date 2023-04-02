@@ -1,0 +1,116 @@
+import { body, param } from 'express-validator';
+// import { isValidObjectId } from 'mongoose';
+
+// import { User, Property } from '@models/index';
+// import { httpStatusCodes } from '@utils/helperFN';
+// import ErrorResponse from '@utils/errorResponse';
+import { Property } from '@models/index';
+import ErrorResponse from '@utils/errorResponse';
+import { errorTypes, httpStatusCodes } from '@utils/constants';
+import { validateResourceID } from '@utils/helperFN';
+import {
+  IPropertyTypeEnum,
+  IPropertyCategoryEnum,
+  IPropertyStatusEnum,
+} from '@interfaces/property.interface';
+
+const validateParams = () => {
+  return [
+    param('pid', 'Property resource identifier missing.')
+      .exists()
+      .bail()
+      .custom(async (pid) => {
+        const { isValid } = validateResourceID(pid);
+        if (!isValid) {
+          throw new ErrorResponse(
+            `Invalid resource identifier provided <${pid}>.`,
+            errorTypes.NO_RESOURCE_ERROR,
+            httpStatusCodes.NOT_FOUND
+          );
+        }
+
+        const property = await Property.findOne({ pid });
+        if (!property) {
+          throw new ErrorResponse(
+            `No Property resource available with the identifier provided <${pid}>.`,
+            errorTypes.NO_RESOURCE_ERROR,
+            httpStatusCodes.NOT_FOUND
+          );
+        }
+      }),
+  ];
+};
+
+const create = () => {
+  return [
+    body('features.bedroom').optional().isInt({ min: 0, max: 6 }),
+    body('features.bathroom').optional().isInt({ min: 0, max: 6 }),
+    body('features.floors').optional().isInt({ min: 0, max: 6 }),
+    body('features.parking').optional().isInt({ min: 0, max: 6 }),
+    body('features.maxCapacity').optional().isInt({ min: 0, max: 7 }),
+    body('features.availableParking')
+      .optional()
+      .if(body('extras.has_parking').equals('true'))
+      .isInt({ min: 0, max: 6 })
+      .withMessage('Value missing for parking availability'),
+
+    body('extras.has_tv').optional().isBoolean().toBoolean(),
+    body('extras.has_ac').optional().isBoolean().toBoolean(),
+    body('extras.has_gym').optional().isBoolean().toBoolean(),
+    body('extras.has_heating').optional().isBoolean().toBoolean(),
+    body('extras.has_laundry').optional().isBoolean().toBoolean(),
+    body('extras.has_kitchen').optional().isBoolean().toBoolean(),
+    body('extras.has_parking').optional().isBoolean().toBoolean(),
+    body('extras.petsAllowed').optional().isBoolean().toBoolean(),
+    body('extras.has_internet').optional().isBoolean().toBoolean(),
+    body('extras.has_swimmingpool').optional().isBoolean().toBoolean(),
+
+    body('address')
+      .exists({ checkFalsy: true })
+      .withMessage('Valid property address is required')
+      .trim()
+      .escape(),
+    body('propertyType', 'Please select a valid property type')
+      .exists()
+      .isIn(Object.values(IPropertyTypeEnum)),
+    body('category', 'Please select a valid property category')
+      .exists()
+      .isIn(Object.values(IPropertyCategoryEnum)),
+    body('description', 'Please provide a description of the property type')
+      .if(body('propertyType').equals(IPropertyTypeEnum.others))
+      .exists()
+      .isLength({ min: 5, max: 45 })
+      .trim()
+      .escape(),
+    body('managementFees.amount', 'Invalid amount provided.')
+      .exists()
+      .isCurrency({ allow_negatives: false, allow_decimal: false })
+      .escape(),
+    body(
+      'managementFees.currency',
+      'Please provide a currency for collecting payments.'
+    )
+      .if(body('managementFees.amount').exists())
+      .exists()
+      .isIn(['USD', 'CAD', 'EUR', 'GBP'])
+      .withMessage('Invalid currency provided.'),
+    body('totalUnits', 'Value for total units in the building is missing')
+      .if(body('propertyType').equals(IPropertyTypeEnum.apartments))
+      .exists()
+      .isInt({ min: 1, max: 25 })
+      .withMessage('Max amount of units for an apartment is 25.'),
+    body('status', 'Please provide the current status of the property.')
+      .exists()
+      .isIn(Object.values(IPropertyStatusEnum)),
+  ];
+};
+
+const updateDetails = () => {
+  return [...validateParams(), ...create()];
+};
+
+export default {
+  createProperty: create(),
+  validateParams: validateParams(),
+  updateDetails: updateDetails(),
+};

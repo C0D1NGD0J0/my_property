@@ -1,41 +1,52 @@
 import { Types } from 'mongoose';
 
-import { User } from '@models/index';
+import { User, Client } from '@models/index';
 import ErrorResponse from '@utils/errorResponse';
 import {
   IAccountType,
-  IBaseUser,
-  IBaseUserDocument,
-  IUserType,
+  ICurrentUser,
+  ISignupData,
+  IUserDocument,
 } from '@interfaces/user.interface';
-import { httpStatusCodes } from '@utils/helperFN';
-import { IPropertyManager } from '@interfaces/user.interface';
-import { ACCOUNT_UPDATE_NOTIFICATION } from '@utils/constants';
-import { ICurrentUser, mapCurrentUserObject } from '@services/user/utils';
-import { ICompany } from '@interfaces/company.interface';
+import {
+  httpStatusCodes,
+  ACCOUNT_UPDATE_NOTIFICATION,
+  errorTypes,
+} from '@utils/constants';
+import { mapCurrentUserObject } from '@services/user/utils';
 import { IEmailOptions, ISuccessReturnData } from '@interfaces/utils.interface';
-
-export type ISignupData = Partial<IPropertyManager & IBaseUser & ICompany>;
+import { createLogger } from '@utils/helperFN';
 
 class UserService {
+  private log;
+
+  constructor() {
+    this.log = createLogger('UserService', true);
+  }
+
   getCurrentUser = async (
+    cid: string,
     userId: string
   ): Promise<ISuccessReturnData<ICurrentUser>> => {
-    const user = (await User.findOne({ id: userId })) as IUserType;
+    const user = (await User.findOne({
+      id: userId,
+      isActive: true,
+    })) as IUserDocument;
 
     if (!user) {
       const err = 'Something went wrong, please try again.';
+      this.log.error(err);
       throw new ErrorResponse(err, 'authError', httpStatusCodes.UNPROCESSABLE);
     }
 
-    const currentuser = mapCurrentUserObject(user);
-
+    const currentuser = mapCurrentUserObject(user, cid);
     return { success: true, data: currentuser };
   };
 
   getAccountInfo = async (
+    cid: string,
     userId: string
-  ): Promise<ISuccessReturnData<IUserType>> => {
+  ): Promise<ISuccessReturnData<IUserDocument>> => {
     const excludeFields = {
       activationToken: 0,
       passwordResetToken: 0,
@@ -46,10 +57,11 @@ class UserService {
 
     const user = (await User.findOne({ id: userId }).select(
       excludeFields
-    )) as IUserType;
+    )) as IUserDocument;
 
     if (!user) {
       const err = 'Something went wrong, please try again.';
+      this.log.error(err);
       throw new ErrorResponse(err, 'authError', httpStatusCodes.UNPROCESSABLE);
     }
 
@@ -57,19 +69,19 @@ class UserService {
   };
 
   updateAccount = async (
+    cid: string,
     data: ISignupData & { userId: Types.ObjectId }
   ): Promise<
     ISuccessReturnData<{ emailOptions: IEmailOptions; user: ICurrentUser }>
   > => {
-    let userEmail = '';
-    let fullname = '';
     const { accountType, ...dataToSave } = data;
 
-    let user = (await User.findOne({ id: data.userId })) as IUserType;
+    let user = (await User.findOne({ id: data.userId })) as IUserDocument;
     const isMatch = await user.validatePassword(data.password as string);
 
     if (!isMatch) {
       const err = 'Valid account password must be provided to update account.';
+      this.log.error(err);
       throw new ErrorResponse(err, 'authError', httpStatusCodes.UNPROCESSABLE);
     }
 
@@ -77,29 +89,22 @@ class UserService {
       { _id: data.userId },
       { $set: dataToSave },
       { new: true }
-    )) as IUserType;
-
-    if (accountType === IAccountType.business) {
-      fullname = user?.companyName;
-      userEmail = user?.contactInfo.email;
-    } else {
-      fullname = user.fullname as string;
-      userEmail = user.email;
-    }
+    )) as IUserDocument;
 
     const emailOptions: IEmailOptions = {
-      to: userEmail,
+      to: user.email,
       data: {
-        fullname,
+        fullname: user.fullname,
         updatedAt: new Date(),
       },
       emailType: ACCOUNT_UPDATE_NOTIFICATION,
       subject: 'Account has been updated.',
     };
 
+    const currentuser = mapCurrentUserObject(user, cid);
     return {
       success: true,
-      data: { emailOptions, user: mapCurrentUserObject(user) },
+      data: { emailOptions, user: currentuser },
       msg: `Account was successfully updated.`,
     };
   };
@@ -107,7 +112,7 @@ class UserService {
   deleteAccount = async (userdata: { password: string; userId: string }) => {
     const user = (await User.findOne({
       id: userdata.userId,
-    })) as IBaseUserDocument;
+    })) as IUserDocument;
 
     const isMatch = await user.validatePassword(userdata.password);
     if (!isMatch) {

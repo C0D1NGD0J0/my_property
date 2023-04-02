@@ -1,18 +1,19 @@
 import jwt from 'jsonwebtoken';
 import jwt_decode from 'jwt-decode';
-import { NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 
-import { AuthCache } from '@services/redis';
+import { EmailQueue } from '@queues/index';
 import { AuthService } from '@services/auth';
-import { EmailQueue } from '@services/queues';
 import ErrorResponse from '@utils/errorResponse';
-import { AUTH_EMAIL_QUEUE } from '@utils/constants';
+import { AuthCache } from '@root/app/caching/index';
+import { AppRequest } from '@interfaces/utils.interface';
+import { jwtGenerator, setCookieAuth } from '@utils/helperFN';
 import {
-  AppRequest,
-  AppResponse,
-  IEmailOptions,
-} from '@interfaces/utils.interface';
-import { httpStatusCodes, jwtGenerator, setCookieAuth } from '@utils/helperFN';
+  httpStatusCodes,
+  AUTH_EMAIL_QUEUE,
+  errorTypes,
+  REFRESH_TOKEN,
+} from '@utils/constants';
 
 class AuthController {
   private authService: AuthService;
@@ -25,20 +26,21 @@ class AuthController {
     this.emailQueue = new EmailQueue();
   }
 
-  signup = async (req: AppRequest, res: AppResponse) => {
+  signup = async (req: Request, res: Response) => {
     const { data, ...rest } = await this.authService.signup(req.body);
     data &&
       this.emailQueue.addEmailToQueue(AUTH_EMAIL_QUEUE, data.emailOptions);
     res.status(httpStatusCodes.OK).json(rest);
   };
 
-  accountActivation = async (req: AppRequest, res: AppResponse) => {
-    const { token } = req.params;
-    const data = await this.authService.accountActivation(token);
+  accountActivation = async (req: Request, res: Response) => {
+    const { cid } = req.params;
+    const { t } = req.query;
+    const data = await this.authService.accountActivation(cid, t as string);
     res.status(httpStatusCodes.OK).json(data);
   };
 
-  resendActivationLink = async (req: AppRequest, res: AppResponse) => {
+  resendActivationLink = async (req: Request, res: Response) => {
     const { data, ...rest } = await this.authService.resendActivationLink(
       req.body.email
     );
@@ -47,7 +49,7 @@ class AuthController {
     res.status(httpStatusCodes.OK).json(rest);
   };
 
-  login = async (req: AppRequest, res: AppResponse) => {
+  login = async (req: Request, res: Response) => {
     const { email, password } = req.body;
     const { data, ...rest } = await this.authService.login({
       email,
@@ -64,21 +66,41 @@ class AuthController {
       .json({ ...rest, accessToken: data?.accessToken });
   };
 
-  logout = async (req: AppRequest, res: AppResponse) => {
+  logout = async (req: AppRequest, res: Response) => {
     res.clearCookie('refreshToken');
-    await this.cache.logoutUser(req.currentuser.id);
+    await this.cache.logoutUser(req.currentuser!.id);
     res
       .status(httpStatusCodes.OK)
       .json({ success: true, msg: 'Logout was successful.' });
   };
 
-  refreshToken = async (
-    req: AppRequest,
-    res: AppResponse,
+  refreshToken = async (req: Request, res: Response, next: NextFunction) => {
+    const resp = await this.generateRrefreshToken(req, res, next);
+    res.status(httpStatusCodes.OK).json(resp);
+  };
+
+  forgotPassword = async (req: Request, res: Response) => {
+    const { email } = req.body;
+    const { data, ...rest } = await this.authService.forgotPassword(email);
+    data &&
+      this.emailQueue.addEmailToQueue(AUTH_EMAIL_QUEUE, data.emailOptions);
+    res.status(httpStatusCodes.OK).json(rest);
+  };
+
+  resetPassword = async (req: Request, res: Response) => {
+    const { data, ...rest } = await this.authService.resetPassword(req.body);
+    data &&
+      this.emailQueue.addEmailToQueue(AUTH_EMAIL_QUEUE, data.emailOptions);
+    res.status(httpStatusCodes.OK).json(rest);
+  };
+
+  private generateRrefreshToken = async (
+    req: Request,
+    res: Response,
     next: NextFunction
   ) => {
     const cookies = req.cookies;
-    if (!cookies['refresh-token']) {
+    if (!cookies[REFRESH_TOKEN]) {
       return next(
         new ErrorResponse(
           'Access denied, please login again.',
@@ -88,21 +110,19 @@ class AuthController {
       );
     }
 
-    const token = cookies['refresh-token'].split(' ')[1];
-
+    const token = cookies[REFRESH_TOKEN].split(' ')[1];
     const _decoded: any = jwt_decode(token);
     const resp = jwt.verify(
       token,
       process.env.JWT_REFRESH_SECRET as string,
       async (err: any, _: any) => {
         if (err) {
-          console.log(err.message, '===ERROR====jwt');
           await this.cache.delAuthTokens(_decoded.id);
-          res.clearCookie('refreshToken');
+          res.clearCookie(REFRESH_TOKEN);
           return next(
             new ErrorResponse(
               'Access denied, please login again.',
-              'authServiceError',
+              errorTypes.AUTH_ERROR,
               httpStatusCodes.UNAUTHORIZED
             )
           );
@@ -117,22 +137,7 @@ class AuthController {
         return { success: true, accessToken };
       }
     );
-
-    res.status(httpStatusCodes.OK).json(resp);
-  };
-
-  forgotPassword = async (req: AppRequest, res: AppResponse) => {
-    const { email } = req.body;
-    const { data, ...rest } = await this.authService.forgotPassword(email);
-    data &&
-      this.emailQueue.addEmailToQueue(AUTH_EMAIL_QUEUE, data.emailOptions);
-    res.status(httpStatusCodes.OK).json(rest);
-  };
-
-  resetPassword = async (req: AppRequest, res: AppResponse) => {
-    const { data, ...rest } = await this.authService.resetPassword(req.body);
-    this.emailQueue.addEmailToQueue(AUTH_EMAIL_QUEUE, data!.emailOptions);
-    res.status(httpStatusCodes.OK).json(rest);
+    return resp;
   };
 }
 

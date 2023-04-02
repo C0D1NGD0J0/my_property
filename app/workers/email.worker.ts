@@ -1,7 +1,7 @@
 import Logger from 'bunyan';
 import { DoneCallback, Job } from 'bull';
 
-import Mailer from '@services/mailer';
+import Mailer from '@root/app/mailer';
 import { createLogger } from '@utils/helperFN';
 
 const log: Logger = createLogger('emailWorker', true);

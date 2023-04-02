@@ -1,7 +1,7 @@
 import { AUTH_EMAIL_QUEUE, USER_EMAIL_QUEUE } from '@utils/constants';
-import { BaseQueue } from '@services/queues/base.queue';
+import { BaseQueue } from '@root/app/queues/base.queue';
 import { IEmailOptions } from '@interfaces/utils.interface';
-import { EmailWorker } from '@services/workers';
+import { EmailWorker } from '@root/app/workers';
 
 class EmailQueue extends BaseQueue {
   constructor() {

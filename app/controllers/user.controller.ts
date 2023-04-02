@@ -1,8 +1,8 @@
+import { EmailQueue } from '@queues/index';
 import { UserService } from '@services/user';
-import { EmailQueue } from '@services/queues';
-import { httpStatusCodes } from '@utils/helperFN';
-import { USER_EMAIL_QUEUE } from '@utils/constants';
-import { AuthCache } from '@services/redis';
+import { AuthCache } from '@root/app/caching/index';
+import { ICurrentUser } from '@interfaces/user.interface';
+import { httpStatusCodes, USER_EMAIL_QUEUE } from '@utils/constants';
 import { AppRequest, AppResponse } from '@interfaces/utils.interface';
 
 class UserController {
@@ -17,20 +17,29 @@ class UserController {
   }
 
   getCurrentUser = async (req: AppRequest, res: AppResponse) => {
-    const resp = await this.userService.getCurrentUser(req.currentuser.id);
+    const { cid } = req.params;
+    const resp = await this.userService.getCurrentUser(
+      cid,
+      req.currentuser!.id
+    );
     resp.data && (await this.cache.saveCurrentUser(resp.data));
     res.status(httpStatusCodes.OK).json(resp);
   };
 
   getAccountInfo = async (req: AppRequest, res: AppResponse) => {
-    const resp = await this.userService.getAccountInfo(req.currentuser.id);
+    const { cid } = req.params;
+    const resp = await this.userService.getAccountInfo(
+      cid,
+      req.currentuser!.id
+    );
     res.status(httpStatusCodes.OK).json(resp);
   };
 
   updateAccount = async (req: AppRequest, res: AppResponse) => {
-    const { data, ...rest } = await this.userService.updateAccount({
+    const { cid } = req.params;
+    const { data, ...rest } = await this.userService.updateAccount(cid, {
       ...req.body,
-      userId: req.currentuser.id,
+      userId: req.currentuser!.id,
     });
 
     if (data) {
@@ -44,12 +53,12 @@ class UserController {
   deleteAccount = async (req: AppRequest, res: AppResponse) => {
     const { password } = req.body;
     const data = await this.userService.deleteAccount({
-      userId: req.currentuser.id,
+      userId: req.currentuser!.id,
       password,
     });
 
     // this.emailQueue.addEmailToQueue(AUTH_EMAIL_QUEUE, data!.emailOptions);
-    await this.cache.delAuthTokens(req.currentuser.id);
+    await this.cache.delAuthTokens((req.currentuser! as ICurrentUser).id);
     res.clearCookie('refreshToken');
 
     res.status(httpStatusCodes.OK).json(data);

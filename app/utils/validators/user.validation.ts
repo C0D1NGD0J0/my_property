@@ -1,8 +1,8 @@
-import User from '../../models/user.model';
+import User from '../../models/user/user.model';
 import ErrorResponse from '../../utils/errorResponse';
-import { body, param } from 'express-validator';
-import { ISignupAccountType } from '@interfaces/user.interface';
-import { httpStatusCodes } from '@utils/helperFN';
+import { body } from 'express-validator';
+import { IAccountType } from '@interfaces/user.interface';
+import { errorTypes, httpStatusCodes } from '@utils/constants';
 
 const updateAccount = () => {
   const businessAcct = [
@@ -63,10 +63,10 @@ const updateAccount = () => {
       .exists()
       .bail()
       .custom(async (utype) => {
-        if (!Object.values(ISignupAccountType).includes(utype)) {
+        if (!Object.values(IAccountType).includes(utype)) {
           throw new ErrorResponse(
             `Invalid account type provided.`,
-            'validationError',
+            errorTypes.VALIDATION_ERROR,
             httpStatusCodes.UNPROCESSABLE
           );
         }

@@ -1,20 +1,13 @@
 import { Document, Types } from 'mongoose';
-import { ICompanyDocument } from '@interfaces/company.interface';
 
 // USER
 export enum IAccountType {
   individual = 'individual',
-  business = 'business',
-  tenant = 'tenant',
-  admin = 'admin',
+  enterprise = 'enterprise',
 }
+export type IAccountTypes = 'individual' | 'enterprise';
 
-export enum ISignupAccountType {
-  individual = 'individual',
-  business = 'business',
-}
-
-export enum IBaseUserRelationshipsEnum {
+export enum IUserRelationshipsEnum {
   parents = 'parents',
   sibling = 'sibling',
   spouse = 'spouse',
@@ -22,61 +15,100 @@ export enum IBaseUserRelationshipsEnum {
   other = 'other',
 }
 
-// BASE-USER INTERFACE
-export interface IBaseUser {
-  uuid: string;
+export type ISignupData = Pick<
+  IClientDocument,
+  'accountType' | 'enterpriseProfile'
+> &
+  Omit<
+    IUser,
+    | 'activationToken'
+    | 'passwordResetToken'
+    | 'activationTokenExpiresAt'
+    | 'passwordResetTokenExpiresAt'
+  >;
+
+// USER INTERFACE
+export interface IUser {
+  uid: string;
   email: string;
   password: string;
-  activationToken?: string;
-  accountType: IAccountType;
-  passwordResetToken?: string;
-  activationTokenExpiresAt: Date | number | null;
-  passwordResetTokenExpiresAt: Date | number | null;
-}
-
-export interface IBaseUserDocument extends IBaseUser, Document {
-  id: string;
-  createdAt: Date;
-  updatedAt: Date;
-  isActive: boolean;
-  _id: Types.ObjectId;
-  deletedAt: Date | null;
-  validatePassword: (pwd1: string) => Promise<boolean>;
-}
-
-// PROPERTYMANAGER
-export interface IPropertyManager extends IBaseUser {
-  uuid: string;
   lastName: string;
   firstName: string;
-  fullname?: string;
   location?: string;
   phoneNumber?: string;
-}
-
-export interface IPropertyManagerDocument extends IPropertyManager, Document {
-  _id: Types.ObjectId;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-// TENANT INTERFACE
-export interface ITenant extends IBaseUser {
   emergencyContact?: {
     name: string;
     email?: string;
     phoneNumber: string;
-    relationship: IBaseUserRelationshipsEnum;
+    relationship: IUserRelationshipsEnum;
   };
-  landlords?: Types.ObjectId[];
-  occupation?: string;
-  activationCode?: string | undefined;
+  activationToken?: string;
+  passwordResetToken?: string;
+  enterpriseProfile?: IEnterpriseInfo;
+  activationTokenExpiresAt: Date | number | null;
+  passwordResetTokenExpiresAt: Date | number | null;
+}
+
+interface IClientUserConnections {
+  cid: string;
+  role: string;
+  isConnected: boolean;
+}
+export interface IUserDocument extends IUser, Document {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  isActive: boolean;
+  fullname?: string;
+  _id: Types.ObjectId;
+  deletedAt: Date | null;
+  cids: IClientUserConnections[];
+  validatePassword: (pwd1: string) => Promise<boolean>;
+}
+
+// CLIENT
+export interface IClientDocument extends Document {
+  id: string;
+  cid: string;
+  createdAt: Date;
+  updatedAt: Date;
+  _id: Types.ObjectId;
+  admin: Types.ObjectId;
+  accountType: IAccountTypes;
+  enterpriseProfile?: IEnterpriseInfo;
+}
+
+export enum IClientUserRole {
+  ADMIN = 'admin',
+  TENANT = 'tenant',
+  MANAGER = 'manager',
+  EMPLOYEE = 'employee',
+}
+
+interface IEnterpriseInfo {
+  contactInfo: {
+    email: string;
+    address: string;
+    phoneNumber: string;
+    contactPerson: string;
+  };
+  companyName: string;
+  legaEntityName: string;
+  businessRegistrationNumber: string;
+}
+
+// TENANT INTERFACE
+export interface ITenant extends IUser {
+  cid: string;
   activatedAt: Date;
+  landlord: Types.ObjectId;
   rentalHistory?: string[];
   paymentRecords?: string[];
+  clientUser: Types.ObjectId;
   leaseAgreements?: string[];
   activeLeaseAgreement?: string;
   maintenanceRequests?: string[]; // refactor once models have been added
+  activationCode: string | undefined;
 }
 
 export interface ITenantDocument extends ITenant, Document {
@@ -85,18 +117,21 @@ export interface ITenantDocument extends ITenant, Document {
   updatedAt: Date;
 }
 
+// REFRESH-TOKEN
 interface IRefreshTokenDocument extends Document {
   token: string;
   user: Types.ObjectId;
 }
 
 export type IRefreshToken = IRefreshTokenDocument;
-export interface IUserType
-  extends IBaseUserDocument,
-    IPropertyManagerDocument,
-    ITenantDocument,
-    ICompanyDocument {
-  id: string;
-}
 
-// CURRENTUSER INTERFACE
+export interface ICurrentUser {
+  id: string;
+  uid: string;
+  cid: string;
+  role: string;
+  email: string;
+  isActive: boolean;
+  _id: Types.ObjectId;
+  fullname: string | null;
+}

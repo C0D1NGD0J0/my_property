@@ -2,6 +2,9 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { Response } from 'express';
 import bunyan from 'bunyan';
+import { IPaginateResult } from '@interfaces/utils.interface';
+import { isValidObjectId } from 'mongoose';
+import { REFRESH_TOKEN } from '@utils/constants';
 
 export const hashGenerator = (): string => {
   const token = crypto.randomBytes(10).toString('hex');
@@ -33,12 +36,12 @@ export const setCookieAuth = (token: string, res: Response) => {
     secure: process.env.NODE_ENV === 'production', //only works with https
   };
 
-  res.cookie('refreshToken', token, options);
+  res.cookie(REFRESH_TOKEN, token, options);
   return res;
 };
 
 export const paginateResult = (count: number, skip: number, limit: number) => {
-  const result = {
+  const result: IPaginateResult = {
     total: count,
     per_page: limit,
     current_page: Math.floor(skip / limit) + 1,
@@ -75,12 +78,33 @@ export const parseJSON = (value: string) => {
   }
 };
 
-export const httpStatusCodes = {
-  OK: 200,
-  FORBIDDEN: 403,
-  NOT_FOUND: 404,
-  BAD_REQUEST: 400,
-  UNPROCESSABLE: 422,
-  UNAUTHORIZED: 401,
-  INTERNAL_SERVER: 500,
+export const validateResourceID = (id: string) => {
+  const regexExp =
+    /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/gi;
+
+  if (id.length == 24 && isValidObjectId(id)) {
+    return { isValid: true };
+  } else if (id.length > 32 && regexExp.test(id)) {
+    return { isValid: true };
+  } else {
+    return { isValid: false };
+  }
+};
+
+export const mergeArrayWithLimit = (
+  limit = 5,
+  originalArray: any[],
+  newArray: any[]
+) => {
+  // Determine the number of items to be removed to accommodate the incoming data
+  const numItemsToRemove = Math.max(
+    0,
+    originalArray.length + newArray.length - limit
+  );
+  // Remove the necessary number of items from the beginning of the internal array
+  const removedItems = originalArray.splice(0, numItemsToRemove);
+  // Merge the incoming data with the internal array
+  originalArray.push(...newArray);
+  // Return the removed items
+  return { data: originalArray, removedItems };
 };

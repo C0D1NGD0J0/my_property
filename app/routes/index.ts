@@ -1,4 +1,5 @@
 import authRoutes from './auth.route';
 import userRoutes from './user.route';
+import propertyRoutes from './property.route';
 
-export { authRoutes, userRoutes };
+export default { authRoutes, userRoutes, propertyRoutes };

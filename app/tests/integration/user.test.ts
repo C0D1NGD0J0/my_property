@@ -3,8 +3,6 @@ import redisMock from 'redis-mock';
 
 import { app } from '../../../server';
 import { UserFactory } from '../configs/db/factory';
-import { EmailQueue } from '../../services/queues';
-import { jwtGenerator } from '../../utils/helperFN';
 
 describe.only('UserController', () => {
   let agent: any;
@@ -15,14 +13,14 @@ describe.only('UserController', () => {
 
   beforeEach(async () => {
     agent = request(app);
-    createdUser = await UserFactory.create({}, 'individual');
+    createdUser = await UserFactory.create({});
     const resp = await request(app)
       .post(`/api/v1/auth/login`)
       .type('json')
       .send({ email: createdUser.email, password: 'password' });
     accessToken = resp.body.accessToken;
 
-    emailQueueMock = jest.mock('@services/queues/email.queue', () => {
+    emailQueueMock = jest.mock('@queues/email.queue', () => {
       return {
         EmailQueue: jest.fn().mockImplementation(() => {
           return {

@@ -4,7 +4,7 @@ const router: Router = express.Router();
 import { asyncHandler } from '@utils/middlewares';
 import { AuthController } from '@controllers/index';
 import { AuthValidations, validationRequestHandler } from '@utils/validators';
-import { isAuthenticated } from '@utils/middlewares/auth';
+import AuthMiddleware from '@utils/middlewares/auth';
 
 router.post(
   '/signup',
@@ -14,7 +14,7 @@ router.post(
 );
 
 router.get(
-  '/account_activation/:token',
+  '/account_activation/:cid',
   AuthValidations.tokenValidation,
   validationRequestHandler,
   asyncHandler(AuthController.accountActivation)
@@ -34,7 +34,11 @@ router.post(
   asyncHandler(AuthController.login)
 );
 
-router.delete('/logout', isAuthenticated, asyncHandler(AuthController.logout));
+router.delete(
+  '/logout',
+  AuthMiddleware.isAuthenticated,
+  asyncHandler(AuthController.logout)
+);
 
 router.get('/refresh_token', asyncHandler(AuthController.refreshToken));
 

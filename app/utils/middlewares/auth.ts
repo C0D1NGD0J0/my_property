@@ -4,58 +4,92 @@ import jwt from 'jsonwebtoken';
 import { NextFunction } from 'express';
 
 import { asyncHandler } from '.';
-import User from '../../models/user.model';
-import { AuthCache } from '@services/redis';
 import ErrorResponse from '../errorResponse';
+import { AuthCache } from '@root/app/caching';
+import User from '../../models/user/user.model';
+import { AuthController } from '@controllers/index';
+import { ICurrentUser } from '@interfaces/user.interface';
+import { IUserDocument } from '@interfaces/user.interface';
+import { mapCurrentUserObject } from '@services/user/utils';
+import { errorTypes, httpStatusCodes } from '@utils/constants';
 import { AppRequest, AppResponse } from '../../interfaces/utils.interface';
-import { httpStatusCodes } from '@utils/helperFN';
 
-const authCache: AuthCache = new AuthCache();
+class AuthMiddlewares {
+  private authCache: AuthCache;
+  private authCntrl: typeof AuthController;
 
-export const isAuthenticated = asyncHandler(
-  async (req: AppRequest, res: AppResponse, next: NextFunction) => {
-    let token = '';
+  constructor(authController: typeof AuthController) {
+    this.authCache = new AuthCache();
+    this.authCntrl = authController;
+  }
 
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith('Bearer')
-    ) {
-      token = req.headers.authorization.split(' ')[1];
+  isAuthenticated = asyncHandler(
+    async (req: AppRequest, res: AppResponse, next: NextFunction) => {
+      let token = '';
+
+      if (
+        req.headers?.authorization &&
+        req.headers.authorization.startsWith('Bearer')
+      ) {
+        token = req.headers.authorization.split(' ')[1];
+      }
+
+      if (!token) {
+        return next(
+          new ErrorResponse(
+            'Access denied!',
+            errorTypes.AUTH_ERROR,
+            httpStatusCodes.UNAUTHORIZED
+          )
+        );
+      }
+
+      try {
+        const decoded = <any>(
+          jwt.verify(token, process.env.JWT_SECRET as string)
+        );
+        // no currentuser object in cache,
+        const resp = await this.authCache.getCurrentUser(decoded.id);
+
+        if (!resp.data) {
+          // no currentuser object in cache,
+          req.currentuser = await this.generateCurrentUserObject(decoded.id);
+          return next();
+        }
+
+        req.currentuser = resp.data as ICurrentUser;
+        next();
+      } catch (error: Error | any) {
+        if (error.name === 'TokenExpiredError') {
+          return next(
+            new ErrorResponse(
+              'Access denied.',
+              errorTypes.AUTH_ERROR,
+              httpStatusCodes.UNAUTHORIZED
+            )
+          );
+        }
+        next(error);
+      }
     }
+  );
 
-    if (!token) {
-      return next(
-        new ErrorResponse(
-          'Access denied!',
-          'jwtError',
-          httpStatusCodes.UNAUTHORIZED
-        )
+  private generateCurrentUserObject = async (id: string) => {
+    const user = (await User.findOne({
+      isActive: true,
+      id,
+    })) as IUserDocument;
+
+    if (!user) {
+      throw new ErrorResponse(
+        'Please validate your email by clicking the link emailed during regitration process.',
+        errorTypes.NO_RESOURCE_ERROR,
+        httpStatusCodes.NOT_FOUND
       );
     }
 
-    try {
-      const decoded = <any>jwt.verify(token, process.env.JWT_SECRET as string);
-      const resp = await authCache.getCurrentUser(decoded.id);
+    return mapCurrentUserObject(user);
+  };
+}
 
-      if (!resp.data) {
-        const user = await User.findById(decoded.id);
-        if (!user || !user.isActive) {
-          throw new ErrorResponse(
-            'Please validate your email by clicking the link emailed during regitration process.',
-            'authServiceError',
-            httpStatusCodes.UNPROCESSABLE
-          );
-        }
-
-        req.currentuser = user;
-        return next();
-      }
-
-      req.currentuser = resp.data;
-      next();
-    } catch (error: Error | any) {
-      console.log(colors.red.bold(error), '---middleware---');
-      return next(error);
-    }
-  }
-);
+export default new AuthMiddlewares(AuthController);

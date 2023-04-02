@@ -24,10 +24,15 @@
       "@routes/*": ["app/routes/*"],
       "@database/*": ["app/database/*"],
       "@services/*": ["app/services/*"],
+      "@caching/*": ["app/caching/*"],
+      "@queues/*": ["app/queues/*"],
+      "@mailer/*": ["app/mailer/*"],
+      "@workers/*": ["app/workers/*"],
       "@tests/*": ["app/tests/*"],
       "@utils/*": ["app/utils/*"],
-      "@root/*": ["./*"]
+      "@root/*": ["*"]
     }
+    // "typeRoots": ["@types/express/index.d.ts", "node_modules/@types"]
   },
   "ts-node": {
     "require": ["tsconfig-paths/register"]
@@ -37,7 +42,9 @@
     "./app/**/*.ts",
     "./app/**/*.js",
     "./server.ts",
-    "./app/**/*.ejs"
+    "./app/**/*.ejs",
+    "app/tests/configs/teardown.test.ts",
+    "types/custom.d.ts"
   ],
   "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.*", "**/mocks/*"]
 }

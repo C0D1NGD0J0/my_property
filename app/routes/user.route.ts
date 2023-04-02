@@ -3,10 +3,10 @@ const router: Router = express.Router();
 
 import { asyncHandler } from '@utils/middlewares';
 import { UserController } from '@controllers/index';
-import { isAuthenticated } from '@utils/middlewares/auth';
+import AuthMiddleware from '@utils/middlewares/auth';
 import { UserValidations, validationRequestHandler } from '@utils/validators';
 
-router.use(isAuthenticated);
+router.use(AuthMiddleware.isAuthenticated);
 
 router.get('/currentuser', asyncHandler(UserController.getCurrentUser));
 

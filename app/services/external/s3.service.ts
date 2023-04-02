@@ -30,7 +30,7 @@ class S3FileUpload {
       limits: { fileSize: 1024 * 1024 * 3 },
     }).fields([
       { name: 'avatar', maxCount: 1 },
-      { name: 'articleImgs', maxCount: 3 },
+      { name: 'propertyImgs', maxCount: 3 },
     ]);
 
     return _upload(req, res, next);
