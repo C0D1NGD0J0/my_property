@@ -7,8 +7,8 @@ const TenantSchema = new Schema<ITenantDocument>(
     activatedAt: { type: Date, default: null },
     activationCode: { type: String, default: '' },
     cid: { type: String, required: true, index: true },
-    landlord: { type: Schema.Types.ObjectId, ref: 'User' },
-    clientUser: { type: Schema.Types.ObjectId, ref: 'User' },
+    managedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    user: { type: Schema.Types.ObjectId, ref: 'User' },
     rentalHistory: [{ type: String, default: '' }], // change to reference model
     paymentRecords: [{ type: String, default: '' }], // change to reference model
     leaseAgreements: [{ type: String, default: '' }], // change to reference model

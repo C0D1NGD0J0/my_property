@@ -95,7 +95,6 @@ const UserSchema = new Schema<IUserDocument>(
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-    discriminatorKey: '_type',
   }
 );
 

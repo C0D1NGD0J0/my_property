@@ -1,10 +1,4 @@
-import {
-  ICurrentUser,
-  IUserDocument,
-  IClientUserRole,
-} from '@interfaces/user.interface';
-import { errorTypes, httpStatusCodes } from '@utils/constants';
-import ErrorResponse from '@utils/errorResponse';
+import { ICurrentUser, IUserDocument } from '@interfaces/user.interface';
 
 export const mapCurrentUserObject = (
   userObject: IUserDocument,

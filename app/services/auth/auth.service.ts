@@ -4,11 +4,10 @@ import { v4 as uuid } from 'uuid';
 
 import {
   IUser,
-  IClientUserRole,
+  IUserRole,
   ISignupData,
   IAccountType,
   IUserDocument,
-  IClientDocument,
 } from '@interfaces/user.interface';
 import { hashGenerator, jwtGenerator } from '@utils/helperFN';
 import {
@@ -45,9 +44,7 @@ class AuthService {
       _id: _userId,
       isActive: false,
       activationToken: hashGenerator(),
-      cids: [
-        { cid: client?.cid, role: IClientUserRole.ADMIN, isConnected: false },
-      ],
+      cids: [{ cid: client?.cid, role: IUserRole.ADMIN, isConnected: false }],
       activationTokenExpiresAt: dayjs().add(1, 'hour').toDate(),
     })) as IUserDocument;
 
