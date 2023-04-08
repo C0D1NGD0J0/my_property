@@ -1,8 +1,9 @@
 import nodemailer from 'nodemailer';
 import Mail from 'nodemailer/lib/mailer';
 import {
-  USER_REGISTRATION,
   FORGOT_PASSWORD,
+  USER_INVITE_EMAIL,
+  USER_REGISTRATION,
   PASSWORD_RESET_SUCCESS,
   ACCOUNT_UPDATE_NOTIFICATION,
 } from '../utils/constants';
@@ -91,6 +92,9 @@ export default class Mailer implements IMailer {
         break;
       case ACCOUNT_UPDATE_NOTIFICATION:
         result = await this.buildTemplate('accountUpdate', emailData);
+        break;
+      case USER_INVITE_EMAIL:
+        result = await this.buildTemplate('userInvite', emailData);
         break;
     }
 

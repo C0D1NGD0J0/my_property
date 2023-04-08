@@ -73,9 +73,10 @@ class PropertyService {
         property.address = gCode[0]?.formattedAddress || '';
       }
 
-      property.pid = uuid();
       property.cid = cid;
+      property.pid = uuid();
       property.managedBy = userId;
+
       await property.save();
       return {
         success: true,

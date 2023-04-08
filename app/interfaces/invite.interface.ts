@@ -11,14 +11,14 @@ export interface IInvite {
   cid: string;
   pid: string;
   sendNow: boolean;
-  inviteToken: string;
-  sentAt: Date | null;
-  inviteTokenExpiresAt: Date | null;
-  createdBy: Types.ObjectId | string;
 }
 
 export interface IInviteDocument extends IInvite, Document {
   _id: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
+  inviteToken: string;
+  sentAt: Date | null;
+  inviteTokenExpiresAt: Date | null;
+  createdBy: Types.ObjectId | string;
 }

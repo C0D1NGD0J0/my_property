@@ -1,6 +1,6 @@
 import { Schema, model } from 'mongoose';
 import uniqueValidator from 'mongoose-unique-validator';
-import { IClientUserRole } from '@interfaces/user.interface';
+import { IUserRole } from '@interfaces/user.interface';
 import { IInviteDocument } from '@interfaces/invite.interface';
 
 const InviteSchema = new Schema<IInviteDocument>(
@@ -36,8 +36,8 @@ const InviteSchema = new Schema<IInviteDocument>(
         userType: {
           type: String,
           required: true,
-          default: IClientUserRole.TENANT,
-          enum: Object.values(IClientUserRole),
+          default: IUserRole.TENANT,
+          enum: Object.values(IUserRole),
         },
       },
       required: true,

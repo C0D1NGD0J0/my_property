@@ -63,7 +63,7 @@ class AuthMiddlewares {
         if (error.name === 'TokenExpiredError') {
           return next(
             new ErrorResponse(
-              'Access denied.',
+              'Access denied due to expired token.',
               errorTypes.AUTH_ERROR,
               httpStatusCodes.UNAUTHORIZED
             )

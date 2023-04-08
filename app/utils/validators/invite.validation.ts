@@ -5,7 +5,7 @@ import ErrorResponse from '@utils/errorResponse';
 import { validateResourceID } from '@utils/helperFN';
 import { errorTypes, httpStatusCodes } from '@utils/constants';
 
-const create = () => {
+const createInvite = () => {
   return [
     body('userInfo.userType').exists().isIn(['tenant', 'employee', 'vendor']),
     body('userInfo.firstName', "First Name field can't be blank")
@@ -28,7 +28,10 @@ const create = () => {
           );
         }
 
-        const property = await Property.findOne({ pid });
+        const property = await Property.findOne({
+          pid,
+          deletedAt: { $eq: null },
+        });
         if (!property) {
           throw new ErrorResponse(
             `Invalid Property resource identifier provided <${pid}>.`,
@@ -67,5 +70,5 @@ const create = () => {
 };
 
 export default {
-  createProperty: create(),
+  createInvite: createInvite(),
 };

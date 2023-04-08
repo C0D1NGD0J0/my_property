@@ -4,15 +4,18 @@ const router: Router = express.Router();
 import { asyncHandler } from '@utils/middlewares';
 import { InviteController } from '@controllers/index';
 import AuthMiddleware from '@utils/middlewares/auth';
-import { InviteValidations, validationRequestHandler } from '@utils/validators';
+import {
+  InvitationValidations,
+  validationRequestHandler,
+} from '@utils/validators';
 
 router.use(AuthMiddleware.isAuthenticated);
 
 router.post(
   '/',
-  InviteValidations.create,
+  InvitationValidations.createInvite,
   validationRequestHandler,
-  asyncHandler(InviteController.createInvitation)
+  asyncHandler(InviteController.createInvite)
 );
 
 export default router;
