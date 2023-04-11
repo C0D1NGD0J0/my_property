@@ -78,12 +78,13 @@ export interface IClientDocument extends Document {
   enterpriseProfile?: IEnterpriseInfo;
 }
 
-export enum IClientUserRole {
+export enum IUserRole {
   ADMIN = 'admin',
   TENANT = 'tenant',
   MANAGER = 'manager',
   EMPLOYEE = 'employee',
 }
+export type IUserRoleType = 'admin' | 'tenant' | 'manager' | 'employee';
 
 interface IEnterpriseInfo {
   contactInfo: {
@@ -101,10 +102,10 @@ interface IEnterpriseInfo {
 export interface ITenant extends IUser {
   cid: string;
   activatedAt: Date;
-  landlord: Types.ObjectId;
+  managedBy: Types.ObjectId;
   rentalHistory?: string[];
   paymentRecords?: string[];
-  clientUser: Types.ObjectId;
+  user: Types.ObjectId;
   leaseAgreements?: string[];
   activeLeaseAgreement?: string;
   maintenanceRequests?: string[]; // refactor once models have been added
@@ -132,6 +133,5 @@ export interface ICurrentUser {
   role: string;
   email: string;
   isActive: boolean;
-  _id: Types.ObjectId;
   fullname: string | null;
 }

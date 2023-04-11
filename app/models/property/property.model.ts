@@ -113,7 +113,7 @@ const PropertySchema = new Schema<IPropertyDocument>(
     apartmentUnits: [ApartmentSchema],
     deletedAt: {
       type: Date,
-      defult: null,
+      default: null,
     },
     totalUnits: {
       min: 0,

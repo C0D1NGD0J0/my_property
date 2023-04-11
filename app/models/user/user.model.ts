@@ -84,6 +84,7 @@ const UserSchema = new Schema<IUserDocument>(
         cid: { type: String, required: true, index: true },
         role: { type: String, required: true, default: 'tenant' },
         isConnected: { type: Boolean, required: true, default: false },
+        _id: false,
       },
     ],
     uid: { type: String, required: true, index: true },
@@ -95,7 +96,6 @@ const UserSchema = new Schema<IUserDocument>(
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-    discriminatorKey: '_type',
   }
 );
 
@@ -115,7 +115,7 @@ UserSchema.methods.validatePassword = async function (
   return await bcrypt.compare(pwd, this.password);
 };
 
-UserSchema.virtual('fullname').get(function (this: IUserDocument) {
+UserSchema.virtual('fullname').get(function () {
   return `${this.firstName} ${this.lastName}`;
 });
 

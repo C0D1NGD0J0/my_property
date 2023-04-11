@@ -1,4 +1,5 @@
 import { Document, Types } from 'mongoose';
+import { IUserDocument } from './user.interface';
 
 export enum IPaymentTypeEnum {
   yearly = 'yearly',
@@ -41,7 +42,7 @@ export interface IProperty {
   description?: string;
   propertyType: IPropertyType;
   status: IPropertyStatus;
-  managedBy: Types.ObjectId;
+  managedBy: Types.ObjectId | Partial<IUserDocument>;
   features: {
     floors: number;
     bedroom: number;

@@ -1,10 +1,4 @@
-import {
-  ICurrentUser,
-  IUserDocument,
-  IClientUserRole,
-} from '@interfaces/user.interface';
-import { errorTypes, httpStatusCodes } from '@utils/constants';
-import ErrorResponse from '@utils/errorResponse';
+import { ICurrentUser, IUserDocument } from '@interfaces/user.interface';
 
 export const mapCurrentUserObject = (
   userObject: IUserDocument,
@@ -21,7 +15,6 @@ export const mapCurrentUserObject = (
   const data = getCidAndRole(_cid);
   const currentuser: ICurrentUser = {
     id: userObject.id,
-    _id: userObject._id,
     uid: userObject.uid,
     email: userObject.email,
     cid: data?.cid as string,

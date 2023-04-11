@@ -7,6 +7,7 @@ import AuthValidations from '@utils/validators/auth.validation';
 import UserValidations from '@utils/validators/user.validation';
 import { AppRequest, AppResponse } from '@interfaces/utils.interface';
 import PropertyValidations from '@utils/validators/property.validation';
+import InvitationValidations from '@utils/validators/invite.validation';
 
 const validationRequestHandler = (
   req: AppRequest,
@@ -38,4 +39,5 @@ export {
   AuthValidations,
   UserValidations,
   PropertyValidations,
+  InvitationValidations,
 };

@@ -37,7 +37,7 @@ class PropertyService {
 
   create = async (
     cid: string,
-    userId: Types.ObjectId,
+    userId: string,
     data: Partial<IProperty & { s3Files: IAWSFileUploadResponse[] }>
   ): IPromiseReturnedData<IPropertyDocument> => {
     try {
@@ -73,9 +73,10 @@ class PropertyService {
         property.address = gCode[0]?.formattedAddress || '';
       }
 
-      property.pid = uuid();
       property.cid = cid;
-      property.managedBy = userId;
+      property.pid = uuid();
+      property.managedBy = new Types.ObjectId(userId);
+
       await property.save();
       return {
         success: true,
@@ -167,7 +168,7 @@ class PropertyService {
 
   getUserProperties = async (
     cid: string,
-    userId: Types.ObjectId,
+    userId: string,
     data: IPaginationQuery
   ): IPromiseReturnedData<{
     properties: IPropertyDocument[];
@@ -175,7 +176,11 @@ class PropertyService {
   }> => {
     try {
       const { limit, skip, sortBy } = data;
-      const query = { deletedAt: null, managedBy: userId, cid };
+      const query = {
+        deletedAt: null,
+        managedBy: new Types.ObjectId(userId),
+        cid,
+      };
 
       const properties = await Property.find(query)
         .skip(skip!)

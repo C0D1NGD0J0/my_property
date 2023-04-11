@@ -29,14 +29,18 @@ class UserService {
     userId: string
   ): Promise<ISuccessReturnData<ICurrentUser>> => {
     const user = (await User.findOne({
-      id: userId,
+      _id: new Types.ObjectId(userId),
       isActive: true,
     })) as IUserDocument;
 
     if (!user) {
       const err = 'Something went wrong, please try again.';
       this.log.error(err);
-      throw new ErrorResponse(err, 'authError', httpStatusCodes.UNPROCESSABLE);
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.UNPROCESSABLE
+      );
     }
 
     const currentuser = mapCurrentUserObject(user, cid);
@@ -86,7 +90,7 @@ class UserService {
     }
 
     user = (await User.findOneAndUpdate(
-      { _id: data.userId },
+      { _id: new Types.ObjectId(data.userId) },
       { $set: dataToSave },
       { new: true }
     )) as IUserDocument;
