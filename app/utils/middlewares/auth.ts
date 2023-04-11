@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import colors from 'colors';
 import jwt from 'jsonwebtoken';
+import { Types } from 'mongoose';
 import { NextFunction } from 'express';
 
 import { asyncHandler } from '.';
@@ -11,7 +12,7 @@ import { AuthController } from '@controllers/index';
 import { ICurrentUser } from '@interfaces/user.interface';
 import { IUserDocument } from '@interfaces/user.interface';
 import { mapCurrentUserObject } from '@services/user/utils';
-import { errorTypes, httpStatusCodes } from '@utils/constants';
+import { errorTypes, httpStatusCodes, REFRESH_TOKEN } from '@utils/constants';
 import { AppRequest, AppResponse } from '../../interfaces/utils.interface';
 
 class AuthMiddlewares {
@@ -48,13 +49,21 @@ class AuthMiddlewares {
         const decoded = <any>(
           jwt.verify(token, process.env.JWT_SECRET as string)
         );
-        // no currentuser object in cache,
-        const resp = await this.authCache.getCurrentUser(decoded.id);
 
+        const resp = await this.authCache.getCurrentUser(decoded.id);
         if (!resp.data) {
           // no currentuser object in cache,
-          req.currentuser = await this.generateCurrentUserObject(decoded.id);
-          return next();
+          // const user = await this.getUser(decoded.id);
+          // await this.authCache.saveCurrentUser(user);
+          // req.currentuser = user;
+          // return next();
+          await this.authCache.delAuthTokens(decoded.id);
+          res.clearCookie(REFRESH_TOKEN);
+          throw new ErrorResponse(
+            'Access denied.',
+            errorTypes.AUTH_ERROR,
+            httpStatusCodes.UNAUTHORIZED
+          );
         }
 
         req.currentuser = resp.data as ICurrentUser;
@@ -74,10 +83,10 @@ class AuthMiddlewares {
     }
   );
 
-  private generateCurrentUserObject = async (id: string) => {
+  private getUser = async (id: string) => {
     const user = (await User.findOne({
       isActive: true,
-      id,
+      _id: new Types.ObjectId(id),
     })) as IUserDocument;
 
     if (!user) {
@@ -87,7 +96,6 @@ class AuthMiddlewares {
         httpStatusCodes.NOT_FOUND
       );
     }
-
     return mapCurrentUserObject(user);
   };
 }

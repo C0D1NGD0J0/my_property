@@ -25,7 +25,7 @@ export abstract class BaseCache {
   setItem = async (
     key: string,
     value: string,
-    ttl = 120
+    ttl = 24 * 60 * 60 //24hrs
   ): Promise<ICacheResponse> => {
     try {
       let resp;

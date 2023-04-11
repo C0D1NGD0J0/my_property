@@ -1,9 +1,10 @@
 import { body, param } from 'express-validator';
 
-import { Client, Property } from '@models/index';
+import { Client, Invite, Property } from '@models/index';
 import ErrorResponse from '@utils/errorResponse';
 import { validateResourceID } from '@utils/helperFN';
 import { errorTypes, httpStatusCodes } from '@utils/constants';
+import dayjs from 'dayjs';
 
 const createInvite = () => {
   return [
@@ -69,6 +70,72 @@ const createInvite = () => {
   ];
 };
 
+const resendInvite = () => {
+  return [
+    body('id', 'Resource identifier missing.')
+      .exists()
+      .bail()
+      .custom(async (id) => {
+        const { isValid } = validateResourceID(id);
+        if (!isValid) {
+          throw new ErrorResponse(
+            `Invalid identifier provided <${id}>.`,
+            errorTypes.NO_RESOURCE_ERROR,
+            httpStatusCodes.BAD_REQUEST
+          );
+        }
+
+        const invite = await Invite.findById(id);
+        if (!invite) {
+          throw new ErrorResponse(
+            `Resource not found.`,
+            errorTypes.NO_RESOURCE_ERROR,
+            httpStatusCodes.NOT_FOUND
+          );
+        }
+      }),
+  ];
+};
+
+const validateInviteToken = () => {
+  return [
+    param('id', 'Resource identifier missing.')
+      .exists()
+      .bail()
+      .custom(async (id) => {
+        const invite = await Invite.findById(id);
+        if (!invite) {
+          throw new ErrorResponse(
+            `No resource available with the identifier provided <${id}>.`,
+            errorTypes.VALIDATION_ERROR,
+            httpStatusCodes.UNPROCESSABLE
+          );
+        }
+      }),
+    body('token')
+      .exists({ checkFalsy: true })
+      .withMessage('Invite token is required.')
+      .isHash('sha256')
+      .withMessage('Invalid invite activation token provided')
+      .bail()
+      .custom(async (token) => {
+        const invite = await Invite.findOne({
+          inviteToken: token,
+          inviteTokenExpiresAt: { $gt: dayjs() },
+        });
+        if (!invite) {
+          throw new ErrorResponse(
+            `Invalid Client resource identifier provided <${token}>.`,
+            errorTypes.NO_RESOURCE_ERROR,
+            httpStatusCodes.NOT_FOUND
+          );
+        }
+      }),
+  ];
+};
+
 export default {
   createInvite: createInvite(),
+  resendInvite: resendInvite(),
+  validateInviteToken: validateInviteToken(),
 };

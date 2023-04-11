@@ -15,7 +15,6 @@ export const mapCurrentUserObject = (
   const data = getCidAndRole(_cid);
   const currentuser: ICurrentUser = {
     id: userObject.id,
-    _id: userObject._id,
     uid: userObject.uid,
     email: userObject.email,
     cid: data?.cid as string,

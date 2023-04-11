@@ -45,6 +45,7 @@ const InviteSchema = new Schema<IInviteDocument>(
     },
     sentAt: { type: Date, default: null },
     sendNow: { type: Boolean, default: false },
+    acceptedInvite: { type: Boolean, default: false },
     cid: { type: String, default: '', required: true },
     pid: { type: String, default: '', required: true },
     inviteTokenExpiresAt: { type: Date, default: null },

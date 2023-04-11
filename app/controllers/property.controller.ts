@@ -16,7 +16,7 @@ class PropertyController {
   }
 
   createProperty = async (req: AppRequest, res: AppResponse) => {
-    const { _id, cid } = req.currentuser!;
+    const { id, cid } = req.currentuser!;
     const fileUploadResponse = req.files as {
       [fieldname: string]: Express.Multer.File[];
     };
@@ -26,7 +26,7 @@ class PropertyController {
       s3Files: fileUploadResponse?.propertyImgs,
     };
 
-    const data = await this.propertyService.create(cid, _id, newPropertyData);
+    const data = await this.propertyService.create(cid, id, newPropertyData);
     res.status(200).json(data);
   };
 
@@ -42,10 +42,10 @@ class PropertyController {
 
     paginationQuery.skip =
       paginationQuery && (paginationQuery.page! - 1) * paginationQuery.limit!;
-    const { cid, _id } = req.currentuser!;
+    const { cid, id } = req.currentuser!;
     const data = await this.propertyService.getUserProperties(
       cid,
-      _id,
+      id,
       paginationQuery
     );
     res.status(200).json(data);
@@ -61,7 +61,7 @@ class PropertyController {
 
   updateDetails = async (req: AppRequest, res: AppResponse) => {
     const { pid } = req.params;
-    const { cid, _id } = req.currentuser!;
+    const { cid, id } = req.currentuser!;
 
     const fileUploadResponse = req.files as {
       [fieldname: string]: Express.Multer.File[];

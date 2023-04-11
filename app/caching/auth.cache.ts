@@ -77,7 +77,7 @@ export default class AuthCache extends BaseCache {
       }
 
       const key = this.generateKey('currentuser', data.id);
-      return await this.setItem(key, JSON.stringify(data), 120);
+      return await this.setItem(key, JSON.stringify(data));
     } catch (error) {
       this.log.error('Auth cache error: ', error);
       throw {

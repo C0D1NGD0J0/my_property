@@ -11,6 +11,22 @@ import {
 
 router.use(AuthMiddleware.isAuthenticated);
 
+router.put(
+  '/validate-invite-token/:id',
+  InvitationValidations.validateInviteToken,
+  validationRequestHandler,
+  asyncHandler(InviteController.validateInvite)
+);
+
+router.get('/', asyncHandler(InviteController.allInvites));
+
+router.put(
+  '/resend-invite',
+  InvitationValidations.resendInvite,
+  validationRequestHandler,
+  asyncHandler(InviteController.resendInvite)
+);
+
 router.post(
   '/',
   InvitationValidations.createInvite,

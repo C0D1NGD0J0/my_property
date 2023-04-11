@@ -133,6 +133,5 @@ export interface ICurrentUser {
   role: string;
   email: string;
   isActive: boolean;
-  _id: Types.ObjectId;
   fullname: string | null;
 }
