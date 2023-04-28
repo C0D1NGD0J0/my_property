@@ -30,6 +30,23 @@ class PropertyController {
     res.status(200).json(data);
   };
 
+  createApartment = async (req: AppRequest, res: AppResponse) => {
+    const { id, cid } = req.currentuser!;
+    const { puid } = req.params;
+
+    const newApartment = {
+      ...req.body,
+      currentuserId: id,
+    };
+
+    const data = await this.propertyService.addApartment(
+      cid,
+      puid,
+      newApartment
+    );
+    res.status(200).json(data);
+  };
+
   getUserProperties = async (req: AppRequest, res: AppResponse) => {
     const { page, limit, sortBy } = req.query;
     // pagination
@@ -52,15 +69,15 @@ class PropertyController {
   };
 
   getProperty = async (req: AppRequest, res: AppResponse) => {
-    const { pid } = req.params;
+    const { puid } = req.params;
     const { cid } = req.currentuser!;
 
-    const data = await this.propertyService.getProperty(cid, pid);
+    const data = await this.propertyService.getProperty(cid, puid);
     res.status(200).json(data);
   };
 
   updateDetails = async (req: AppRequest, res: AppResponse) => {
-    const { pid } = req.params;
+    const { puid } = req.params;
     const { cid, id } = req.currentuser!;
 
     const fileUploadResponse = req.files as {
@@ -69,7 +86,7 @@ class PropertyController {
 
     const updateData = {
       ...req.body,
-      pid,
+      puid,
       s3Files: fileUploadResponse?.propertyImgs,
     };
 
@@ -78,10 +95,10 @@ class PropertyController {
   };
 
   archiveProperty = async (req: AppRequest, res: AppResponse) => {
-    const { pid } = req.params;
+    const { puid } = req.params;
     const { cid } = req.currentuser!;
 
-    const data = await this.propertyService.archiveProperty(cid, pid);
+    const data = await this.propertyService.archiveProperty(cid, puid);
     return res.status(204).json(data);
   };
 }

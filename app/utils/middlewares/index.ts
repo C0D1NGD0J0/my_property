@@ -14,7 +14,7 @@ export const dbErrorHandler = (
   error.message = err.message || 'Server Error...';
   error.type = err.type || 'apiError';
   error.statusCode = err.statusCode;
-
+  console.log(colors.red(err).bold);
   // Mongoose bad ObjectID
   if (err.name === 'CastError') {
     const message = `Resource with ID ${err.value} not found!`;

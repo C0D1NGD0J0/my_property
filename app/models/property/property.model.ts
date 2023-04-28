@@ -4,25 +4,43 @@ import {
   IPropertyCategoryEnum,
   IPropertyStatusEnum,
   IApartmentUnit,
-} from '../../interfaces/property.interface';
-import { Schema, model } from 'mongoose';
+  IApartmentUnitDocument,
+} from '@interfaces/property.interface';
+import { Schema, Types, model } from 'mongoose';
 import uniqueValidator from 'mongoose-unique-validator';
 
-const ApartmentSchema = new Schema<IApartmentUnit>({
-  unitNumber: { type: String },
-  features: {
-    bedroom: { type: Number, default: 1, max: 5 },
-    bathroom: { type: Number, default: 1, max: 5 },
-    maxCapacity: { type: Number, default: 1, max: 15 },
-    hasParking: { type: Boolean, default: true },
+const ApartmentSchema = new Schema<IApartmentUnitDocument>(
+  {
+    unitNumber: { type: String, required: true },
+    features: {
+      bedroom: { type: Number, default: 1, max: 5 },
+      bathroom: { type: Number, default: 1, max: 5 },
+      maxCapacity: { type: Number, default: 1, max: 15 },
+      hasParking: { type: Boolean, default: true },
+    },
+    previousLeases: {
+      type: [{ type: Schema.Types.ObjectId, ref: 'Lease' }],
+      default: [],
+    },
+    auid: { type: String, required: true, index: true },
+    activeLease: { type: Schema.Types.ObjectId, ref: 'Lease', default: '' },
+    status: { type: String, default: 'vacant' },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
   },
-  status: { type: String, default: 'vacant' },
-});
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
+);
 
 const PropertySchema = new Schema<IPropertyDocument>(
   {
     cid: { type: String, required: true, index: true },
-    pid: { type: String, required: true, index: true },
+    puid: { type: String, required: true, index: true },
     propertyType: {
       type: String,
       required: true,
@@ -31,10 +49,11 @@ const PropertySchema = new Schema<IPropertyDocument>(
     },
     status: {
       type: String,
-      enum: IPropertyStatusEnum,
+      required: true,
       default: IPropertyStatusEnum.vacant,
+      enum: Object.values(IPropertyStatusEnum),
     },
-    managedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    managedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     features: {
       bedroom: { type: Number, default: 0 },
       bathroom: { type: Number, default: 0 },
@@ -44,9 +63,9 @@ const PropertySchema = new Schema<IPropertyDocument>(
     },
     managementFees: {
       amount: {
+        default: 0,
         type: Number,
         required: true,
-        default: 0,
         get: (val: number) => {
           return (val / 100).toFixed(2);
         },
@@ -88,11 +107,10 @@ const PropertySchema = new Schema<IPropertyDocument>(
       },
     },
     description: {
-      type: String,
-      unique: true,
       trim: true,
-      maxlength: 250,
+      type: String,
       minlenght: 5,
+      maxlength: 250,
     },
     category: {
       type: String,
@@ -110,17 +128,25 @@ const PropertySchema = new Schema<IPropertyDocument>(
         key: String,
       },
     ],
-    apartmentUnits: [ApartmentSchema],
+    apartmentUnits: {
+      type: [ApartmentSchema],
+      default: [],
+    },
     deletedAt: {
       type: Date,
       default: null,
     },
     totalUnits: {
-      min: 0,
-      max: 50,
+      min: 1,
+      max: 1000,
       default: 0,
       type: Number,
     },
+    previousLeases: {
+      type: [{ type: Schema.Types.ObjectId, ref: 'Lease' }],
+      default: [],
+    },
+    activeLease: { type: Schema.Types.ObjectId, ref: 'Lease', default: '' },
   },
   {
     timestamps: true,
@@ -129,10 +155,37 @@ const PropertySchema = new Schema<IPropertyDocument>(
   }
 );
 
+PropertySchema.methods.hasVacancy = function () {
+  const vacancies = this.totalUnits.allowed - this.totalUnits.occupied;
+  return vacancies > 0;
+};
+
 PropertySchema.index(
   { address: 1, 'computedLocation.latAndlon': 1 },
   { unique: true }
 );
+
+PropertySchema.pre<IPropertyDocument>('validate', function (next) {
+  // Validation 1: Check if the number of apartment units does not exceed the total units.
+  if (this.apartmentUnits.length > this.get('totalUnits')) {
+    this.invalidate(
+      'apartmentUnits',
+      'Number of apartment units must not exceed total units.'
+    );
+  }
+
+  // Validation 2: Check if the unitNumber values are unique within the property.
+  const unitNumbers = this.apartmentUnits?.map((unit) => unit.unitNumber);
+  if (new Set(unitNumbers).size !== unitNumbers.length) {
+    this.invalidate(
+      'apartmentUnits',
+      'Unit number must be unique within the property.'
+    );
+  }
+
+  // Proceed to the next middleware or save the document if validations pass.
+  next();
+});
 
 PropertySchema.plugin(uniqueValidator, { message: '{Path} must be unique' });
 

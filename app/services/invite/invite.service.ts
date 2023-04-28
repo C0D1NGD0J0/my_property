@@ -16,7 +16,7 @@ import dayjs from 'dayjs';
 import { Types } from 'mongoose';
 
 interface IValidateInviteReturnData {
-  pid: string;
+  puid: string;
   cid: string;
   userInfo: IInvite['userInfo'];
   address?: string;
@@ -45,7 +45,7 @@ class InviteService {
     invite.inviteTokenExpiresAt = dayjs().add(1, 'day').toDate();
     await invite.save();
 
-    const property = await Property.findOne({ pid: invite.pid });
+    const property = await Property.findOne({ puid: invite.puid });
     let msg = 'Invite successfully created.';
     if (inviteData.sendNow) {
       msg = `Invite was created and sent to ${invite.userInfo.email}`;
@@ -91,7 +91,7 @@ class InviteService {
     }
 
     const property = await Property.findOne({
-      pid: new Types.ObjectId(invite.pid),
+      puid: new Types.ObjectId(invite.puid),
     })
       .populate({
         path: 'managedBy',
@@ -106,7 +106,7 @@ class InviteService {
     await invite.save();
 
     const returnData: IValidateInviteReturnData = {
-      pid: invite.pid,
+      puid: invite.puid,
       cid: invite.cid,
       userInfo: invite.userInfo,
       address: property?.address,
@@ -144,7 +144,7 @@ class InviteService {
       );
     }
 
-    const property = await Property.findOne({ pid: invite.pid });
+    const property = await Property.findOne({ puid: invite.puid });
 
     invite.sendNow = true;
     invite.inviteToken = hashGenerator();
@@ -182,7 +182,7 @@ class InviteService {
     })
       .limit(25)
       .populate({
-        path: 'pid',
+        path: 'puid',
         model: 'Property',
         select: 'address',
       });

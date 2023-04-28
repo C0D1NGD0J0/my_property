@@ -16,26 +16,26 @@ const createInvite = () => {
       .exists()
       .isLength({ min: 2, max: 25 }),
     body('userInfo.email', "Email field can't be blank.").exists().isEmail(),
-    body('pid', 'Property identifier missing.')
+    body('puid', 'Property identifier missing.')
       .exists()
       .bail()
-      .custom(async (pid) => {
-        const { isValid } = validateResourceID(pid);
+      .custom(async (puid) => {
+        const { isValid } = validateResourceID(puid);
         if (!isValid) {
           throw new ErrorResponse(
-            `Invalid identifier provided <${pid}>.`,
+            `Invalid identifier provided <${puid}>.`,
             errorTypes.NO_RESOURCE_ERROR,
             httpStatusCodes.BAD_REQUEST
           );
         }
 
         const property = await Property.findOne({
-          pid,
+          puid,
           deletedAt: { $eq: null },
         });
         if (!property) {
           throw new ErrorResponse(
-            `Invalid Property resource identifier provided <${pid}>.`,
+            `Invalid Property resource identifier provided <${puid}>.`,
             errorTypes.NO_RESOURCE_ERROR,
             httpStatusCodes.NOT_FOUND
           );
