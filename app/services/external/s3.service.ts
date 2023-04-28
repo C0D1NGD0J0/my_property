@@ -27,10 +27,11 @@ class S3FileUpload {
     const _upload = multer({
       storage: multerS3({ ...this.multerS3Config() }),
       fileFilter: this.fileFilter,
-      limits: { fileSize: 1024 * 1024 * 3 },
+      limits: { fileSize: 1024 * 1024 * 5 },
     }).fields([
       { name: 'avatar', maxCount: 1 },
       { name: 'propertyImgs', maxCount: 3 },
+      { name: 'leaseContract', maxCount: 3 },
     ]);
 
     return _upload(req, res, next);

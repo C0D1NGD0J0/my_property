@@ -67,6 +67,7 @@ export class App {
     app.use(`${BASE_PATH}/auth`, routes.authRoutes);
     app.use(`${BASE_PATH}/users`, routes.userRoutes);
     app.use(`${BASE_PATH}/invites`, routes.inviteRoutes);
+    app.use(`${BASE_PATH}/leases`, routes.leaseRoutes);
     app.use(`${BASE_PATH}/properties`, routes.propertyRoutes);
   }
 

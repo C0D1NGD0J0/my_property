@@ -9,7 +9,7 @@ export interface IInvite {
     userType: IUserRoleType;
   };
   cid: string;
-  pid: string;
+  puid: string;
   sendNow: boolean;
 }
 

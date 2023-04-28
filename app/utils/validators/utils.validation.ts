@@ -7,23 +7,23 @@ import { errorTypes, httpStatusCodes } from '@utils/constants';
 
 export const validatePropertyParams = () => {
   return [
-    param('pid', 'Property resource identifier missing.')
-      .if(param('pid').exists())
+    param('puid', 'Property resource identifier missing.')
+      .if(param('puid').exists())
       .bail()
-      .custom(async (pid) => {
-        const { isValid } = validateResourceID(pid);
+      .custom(async (puid) => {
+        const { isValid } = validateResourceID(puid);
         if (!isValid) {
           throw new ErrorResponse(
-            `Invalid resource identifier provided <${pid}>.`,
+            `Invalid resource identifier provided <${puid}>.`,
             errorTypes.NO_RESOURCE_ERROR,
             httpStatusCodes.NOT_FOUND
           );
         }
 
-        const property = await Property.findOne({ pid });
+        const property = await Property.findOne({ puid });
         if (!property) {
           throw new ErrorResponse(
-            `Invalid Property resource identifier provided <${pid}>.`,
+            `Invalid Property resource identifier provided <${puid}>.`,
             errorTypes.NO_RESOURCE_ERROR,
             httpStatusCodes.NOT_FOUND
           );

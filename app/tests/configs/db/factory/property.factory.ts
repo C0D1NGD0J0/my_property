@@ -31,7 +31,7 @@ class PropertyFactory {
     return new Property({
       ..._temp,
       ...data,
-      pid: uuid(),
+      puid: uuid(),
     }) as HydratedDocument<IPropertyDocument>;
   };
 

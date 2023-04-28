@@ -11,17 +11,15 @@ export type IPaymentTypes = 'yearly' | 'monthly' | 'weekly' | 'daily';
 
 export enum IPropertyTypeEnum {
   others = 'others',
-  townHouse = 'townHouse',
-  singleRoom = 'singleRoom',
+  multiUnits = 'multiUnits',
+  apartments = 'apartments',
   officeUnits = 'officeUnits',
   singleFamily = 'singleFamily',
-  apartments = 'apartmentUnits',
 }
 export type IPropertyType =
   | 'singleFamily'
-  | 'townHouse'
-  | 'singleRoom'
-  | 'apartmentUnits'
+  | 'multiUnits'
+  | 'apartments'
   | 'officeUnits'
   | 'others';
 
@@ -83,7 +81,7 @@ export interface IProperty {
   };
   deletedAt: Date | null;
   photos: PropertyImages[];
-  totalUnits?: number;
+  totalUnits: number;
 }
 
 interface PropertyImages {
@@ -94,11 +92,14 @@ interface PropertyImages {
 
 export interface IPropertyDocument extends IProperty, Document {
   cid: string;
-  pid: string;
+  puid: string;
   createdAt: Date;
   updatedAt: Date;
   _id: Types.ObjectId;
-  apartmentUnits?: IApartmentUnitDocument[];
+  hasVacancy: () => boolean;
+  previousLeases: Types.ObjectId[];
+  activeLease: Types.ObjectId | undefined;
+  apartmentUnits: Types.DocumentArray<IApartmentUnitDocument>;
 }
 
 export interface IApartmentUnit {
@@ -109,15 +110,19 @@ export interface IApartmentUnit {
     maxCapacity: number;
     hasParking: boolean;
   };
-  status: string;
+  status: 'vacant' | 'occupied';
   rentalPrice: {
     amount: number | null;
     currency: string;
   };
+  previousLeases: Types.ObjectId[];
+  activeLease: Types.ObjectId | undefined;
 }
 
-export interface IApartmentUnitDocument extends IApartmentUnit, Document {
-  _id: Types.ObjectId;
+export interface IApartmentUnitDocument extends IApartmentUnit {
+  auid: string;
   createdAt?: Date;
   updatedAt?: Date;
+  _id: Types.ObjectId;
+  deletedAt: Date | null;
 }

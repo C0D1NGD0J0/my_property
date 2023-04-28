@@ -21,6 +21,13 @@ router.post(
   asyncHandler(PropertyController.createProperty)
 );
 
+router.post(
+  '/:puid/add_apartment',
+  PropertyValidations.createApartment,
+  validationRequestHandler,
+  asyncHandler(PropertyController.createApartment)
+);
+
 router.get(
   '/',
   validationRequestHandler,
@@ -28,21 +35,21 @@ router.get(
 );
 
 router.get(
-  '/:pid',
+  '/:puid',
   PropertyValidations.validateParams,
   validationRequestHandler,
   asyncHandler(PropertyController.getProperty)
 );
 
 router.put(
-  '/:pid/archive',
+  '/:puid/archive',
   PropertyValidations.validateParams,
   validationRequestHandler,
   asyncHandler(PropertyController.archiveProperty)
 );
 
 router.put(
-  '/:pid',
+  '/:puid',
   fileUpload.upload,
   PropertyValidations.updateDetails,
   validationRequestHandler,

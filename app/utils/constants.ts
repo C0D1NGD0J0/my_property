@@ -22,9 +22,10 @@ export const httpStatusCodes = {
 };
 
 export const errorTypes = {
-  SERVICE_ERROR: 'serviceError',
-  AUTH_ERROR: 'authError',
   DB_ERROR: 'dbError',
+  AUTH_ERROR: 'authError',
+  SERVICE_ERROR: 'serviceError',
+  BAD_REQUEST_ERROR: 'requestError',
   NO_RESOURCE_ERROR: 'noResourceError',
   VALIDATION_ERROR: 'validationError',
 };

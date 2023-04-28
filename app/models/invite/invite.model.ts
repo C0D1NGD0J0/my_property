@@ -47,7 +47,7 @@ const InviteSchema = new Schema<IInviteDocument>(
     sendNow: { type: Boolean, default: false },
     acceptedInvite: { type: Boolean, default: false },
     cid: { type: String, default: '', required: true },
-    pid: { type: String, default: '', required: true },
+    puid: { type: String, default: '', required: true },
     inviteTokenExpiresAt: { type: Date, default: null },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
     inviteToken: { type: String, default: '', required: true },

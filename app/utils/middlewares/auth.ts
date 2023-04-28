@@ -53,17 +53,17 @@ class AuthMiddlewares {
         const resp = await this.authCache.getCurrentUser(decoded.id);
         if (!resp.data) {
           // no currentuser object in cache,
-          // const user = await this.getUser(decoded.id);
-          // await this.authCache.saveCurrentUser(user);
-          // req.currentuser = user;
-          // return next();
-          await this.authCache.delAuthTokens(decoded.id);
-          res.clearCookie(REFRESH_TOKEN);
-          throw new ErrorResponse(
-            'Access denied.',
-            errorTypes.AUTH_ERROR,
-            httpStatusCodes.UNAUTHORIZED
-          );
+          const user = await this.getUser(decoded.id);
+          await this.authCache.saveCurrentUser(user);
+          req.currentuser = user;
+          return next();
+          // await this.authCache.delAuthTokens(decoded.id);
+          // res.clearCookie(REFRESH_TOKEN);
+          // throw new ErrorResponse(
+          //   'Access denied.',
+          //   errorTypes.AUTH_ERROR,
+          //   httpStatusCodes.UNAUTHORIZED
+          // );
         }
 
         req.currentuser = resp.data as ICurrentUser;
