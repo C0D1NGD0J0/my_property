@@ -14,8 +14,14 @@ import {
   errorTypes,
 } from '@utils/constants';
 import { mapCurrentUserObject } from '@services/user/utils';
-import { IEmailOptions, ISuccessReturnData } from '@interfaces/utils.interface';
-import { createLogger } from '@utils/helperFN';
+import {
+  IEmailOptions,
+  IPaginateResult,
+  IPaginationQuery,
+  IPromiseReturnedData,
+  ISuccessReturnData,
+} from '@interfaces/utils.interface';
+import { createLogger, paginateResult } from '@utils/helperFN';
 
 class UserService {
   private log;
@@ -134,6 +140,52 @@ class UserService {
 
     return { success: true, msg: 'Account has been successfully deleted.' };
   };
+
+  /* ClientUser region */
+  getClientUsers = async (
+    cid: string,
+    usertype: string,
+    data: IPaginationQuery
+  ): IPromiseReturnedData<{
+    users: IUserDocument[];
+    paginate: IPaginateResult;
+  }> => {
+    if (!cid) {
+      const err = 'Client id is missing.';
+      this.log.error(err);
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.BAD_REQUEST
+      );
+    }
+
+    const selectedFields = {
+      firstName: 1,
+      lastName: 1,
+      phoneNumber: 1,
+      email: 1,
+      _id: 1,
+    };
+
+    const { limit, skip, sortBy } = data;
+    const query = {
+      isActive: true,
+      'cids.$.cid': cid,
+      'cids.role': usertype,
+    };
+
+    const users = await User.find(query, selectedFields)
+      .skip(skip!)
+      .limit(limit!)
+      .sort(sortBy);
+
+    const count = await User.countDocuments(query);
+
+    const paginationInfo = paginateResult(count, skip!, limit!);
+    return { success: true, data: { users, paginate: paginationInfo } };
+  };
+  /* end region */
 }
 
 export default UserService;

@@ -5,7 +5,7 @@ import ErrorResponse from '@utils/errorResponse';
 import { validateResourceID } from '@utils/helperFN';
 import { errorTypes, httpStatusCodes } from '@utils/constants';
 
-export const validatePropertyParams = () => {
+const propertyParams = () => {
   return [
     param('puid', 'Property resource identifier missing.')
       .if(param('puid').exists())
@@ -54,7 +54,7 @@ export const validatePropertyParams = () => {
   ];
 };
 
-export const validateClientParams = () => {
+const clientParams = () => {
   return [
     param('cid', 'Client identifier missing.')
       .if(param('cid').exists())
@@ -79,4 +79,9 @@ export const validateClientParams = () => {
         }
       }),
   ];
+};
+
+export default {
+  validatePropertyParams: propertyParams(),
+  validateClientParams: clientParams(),
 };
