@@ -6,6 +6,7 @@ import { PropertyController } from '@controllers/index';
 import AuthMiddleware from '@utils/middlewares/auth';
 import {
   PropertyValidations,
+  UtilsValidations,
   validationRequestHandler,
 } from '@utils/validators';
 import S3FileUpload from '@services/external/s3.service';
@@ -28,10 +29,13 @@ router.post(
   asyncHandler(PropertyController.createApartment)
 );
 
+router.get('/', asyncHandler(PropertyController.getUserProperties));
+
 router.get(
-  '/',
+  '/:cid/client_properties',
+  UtilsValidations.validateClientParams,
   validationRequestHandler,
-  asyncHandler(PropertyController.getUserProperties)
+  asyncHandler(PropertyController.getClientProperties)
 );
 
 router.get(

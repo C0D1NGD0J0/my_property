@@ -3,7 +3,11 @@ import { UserService } from '@services/user';
 import { AuthCache } from '@root/app/caching/index';
 import { ICurrentUser } from '@interfaces/user.interface';
 import { httpStatusCodes, USER_EMAIL_QUEUE } from '@utils/constants';
-import { AppRequest, AppResponse } from '@interfaces/utils.interface';
+import {
+  AppRequest,
+  AppResponse,
+  IPaginationQuery,
+} from '@interfaces/utils.interface';
 
 class UserController {
   private userService: UserService;
@@ -23,6 +27,26 @@ class UserController {
       req.currentuser!.id
     );
     resp.data && (await this.cache.saveCurrentUser(resp.data));
+    res.status(httpStatusCodes.OK).json(resp);
+  };
+
+  getClientUsers = async (req: AppRequest, res: AppResponse) => {
+    const { cid } = req.params;
+    const { page, limit, sortBy, usertype } = req.query;
+    // pagination
+    const paginationQuery: IPaginationQuery = {
+      page: page ? parseInt(page as string, 10) : 1,
+      limit: limit ? parseInt(limit as string, 10) : 10,
+      sortBy: sortBy as string,
+      skip: null,
+    };
+    paginationQuery.skip =
+      paginationQuery && (paginationQuery.page! - 1) * paginationQuery.limit!;
+    const resp = await this.userService.getClientUsers(
+      cid,
+      usertype as string,
+      paginationQuery
+    );
     res.status(httpStatusCodes.OK).json(resp);
   };
 

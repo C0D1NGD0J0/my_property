@@ -4,16 +4,37 @@ const router: Router = express.Router();
 import { asyncHandler } from '@utils/middlewares';
 import { UserController } from '@controllers/index';
 import AuthMiddleware from '@utils/middlewares/auth';
-import { UserValidations, validationRequestHandler } from '@utils/validators';
+import {
+  UserValidations,
+  UtilsValidations,
+  validationRequestHandler,
+} from '@utils/validators';
 
 router.use(AuthMiddleware.isAuthenticated);
 
-router.get('/currentuser', asyncHandler(UserController.getCurrentUser));
+router.get(
+  '/:cid/currentuser',
+  UtilsValidations.validateClientParams,
+  validationRequestHandler,
+  asyncHandler(UserController.getCurrentUser)
+);
 
-router.get('/account_info', asyncHandler(UserController.getAccountInfo));
+router.get(
+  '/:cid/client_users',
+  UtilsValidations.validateClientParams,
+  validationRequestHandler,
+  asyncHandler(UserController.getClientUsers)
+);
+
+router.get(
+  '/:cid/account_info',
+  UtilsValidations.validateClientParams,
+  validationRequestHandler,
+  asyncHandler(UserController.getAccountInfo)
+);
 
 router.put(
-  '/update_account',
+  '/:cid/update_account',
   UserValidations.updateAccount,
   validationRequestHandler,
   asyncHandler(UserController.updateAccount)

@@ -68,6 +68,28 @@ class PropertyController {
     res.status(200).json(data);
   };
 
+  getClientProperties = async (req: AppRequest, res: AppResponse) => {
+    const { page, limit, sortBy } = req.query;
+    const { cid } = req.params;
+
+    // pagination
+    const paginationQuery: IPaginationQuery = {
+      page: page ? parseInt(page as string, 10) : 1,
+      limit: limit ? parseInt(limit as string, 10) : 10,
+      sortBy: sortBy as string,
+      skip: null,
+    };
+
+    paginationQuery.skip =
+      paginationQuery && (paginationQuery.page! - 1) * paginationQuery.limit!;
+
+    const data = await this.propertyService.getClientProperties(
+      cid,
+      paginationQuery
+    );
+    res.status(200).json(data);
+  };
+
   getProperty = async (req: AppRequest, res: AppResponse) => {
     const { puid } = req.params;
     const { cid } = req.currentuser!;

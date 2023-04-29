@@ -433,6 +433,57 @@ class PropertyService {
       data: property.apartmentUnits,
     };
   };
+
+  /* ClientUser region */
+  getClientProperties = async (
+    cid: string,
+    data: IPaginationQuery
+  ): IPromiseReturnedData<{
+    properties: IPropertyDocument[];
+    paginate: IPaginateResult;
+  }> => {
+    if (!cid) {
+      const err = 'Client id is missing.';
+      this.log.error(err);
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.BAD_REQUEST
+      );
+    }
+
+    const selectedFields = {
+      activeLease: 1,
+      status: 1,
+      managedBy: 1,
+      address: 1,
+      apartmentUnits: 1,
+      totalUnits: 1,
+      _id: 1,
+    };
+
+    try {
+      const { limit, skip, sortBy } = data;
+      const query = {
+        deletedAt: null,
+        cid,
+      };
+
+      const properties = await Property.find(query, selectedFields)
+        .skip(skip!)
+        .limit(limit!)
+        .sort(sortBy);
+      const count = await Property.countDocuments(query);
+
+      const paginationInfo = paginateResult(count, skip!, limit!);
+
+      return { success: true, data: { properties, paginate: paginationInfo } };
+    } catch (error: any) {
+      this.log.error(color.bold.red(error));
+      throw error;
+    }
+  };
+  /* end region */
 }
 
 export default PropertyService;
