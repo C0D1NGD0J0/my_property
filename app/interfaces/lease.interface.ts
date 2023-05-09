@@ -49,7 +49,10 @@ export interface ILease extends Document {
   leaseAgreements: ILeaseAgreement[];
   managedBy: Types.ObjectId | IUserDocument;
   property: string | Types.ObjectId | IPropertyDocument;
-  status: 'draft' | 'pending' | 'active' | 'cancelled' | 'expired';
+  status: {
+    value: 'draft' | 'pending' | 'active' | 'cancelled' | 'expired';
+    reason: string;
+  };
 }
 
 export interface ILeaseDocument extends ILease, Document {
@@ -59,5 +62,13 @@ export interface ILeaseDocument extends ILease, Document {
   dateTenantAccepted: Date;
   hasTenantAccepted: boolean;
   tenant?: Types.ObjectId | IUserDocument;
+}
+
+export enum ILeaseStatusEnum {
+  draft = 'draft',
+  pending = 'pending',
+  active = 'active',
+  cancelled = 'cancelled',
+  expired = 'expired',
 }
 // export type ILeasePaymentHistory = IPaymentDocument['_id'];

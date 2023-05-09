@@ -91,6 +91,10 @@ interface PropertyImages {
 }
 
 export interface IPropertyDocument extends IProperty, Document {
+  findApartment(
+    apartmentId?: string,
+    unitNumber?: string
+  ): IApartmentUnitDocument | null;
   cid: string;
   puid: string;
   createdAt: Date;
