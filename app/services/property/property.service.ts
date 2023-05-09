@@ -189,7 +189,7 @@ class PropertyService {
         .skip(skip!)
         .limit(limit!)
         .sort(sortBy);
-      const count = await Property.countDocuments();
+      const count = await Property.countDocuments(query);
 
       const paginationInfo = paginateResult(count, skip!, limit!);
 
@@ -203,7 +203,7 @@ class PropertyService {
   getProperty = async (
     cid: string,
     puid: string
-  ): IPromiseReturnedData<IPropertyDocument> => {
+  ): IPromiseReturnedData<IPropertyDocument | null> => {
     try {
       const property = await Property.findOne({
         deletedAt: { $eq: null },
@@ -215,16 +215,6 @@ class PropertyService {
           },
         },
       });
-
-      if (!property) {
-        const err = 'Property not found for this client.';
-        this.log.error(err);
-        throw new ErrorResponse(
-          err,
-          errorTypes.SERVICE_ERROR,
-          httpStatusCodes.NOT_FOUND
-        );
-      }
 
       return { success: true, data: property };
     } catch (error: any) {

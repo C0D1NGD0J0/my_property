@@ -1,6 +1,7 @@
 import {
   IPaymentFrequencyEnum,
   ILeaseDocument,
+  ILeaseStatusEnum,
 } from '@interfaces/lease.interface';
 import { ObjectId, Schema, Types, model } from 'mongoose';
 import uniqueValidator from 'mongoose-unique-validator';
@@ -54,8 +55,21 @@ const LeaseSchema = new Schema<ILeaseDocument>(
       default: [],
     },
     status: {
-      isActive: { type: Boolean, default: false },
-      reason: { type: String },
+      type: {
+        value: {
+          type: String,
+          enum: Object.values(ILeaseStatusEnum),
+          default: ILeaseStatusEnum.active,
+        },
+        reason: {
+          type: String,
+          default: '',
+        },
+      },
+      default: {
+        value: ILeaseStatusEnum.draft,
+        reason: '',
+      },
     },
     isRenewal: { type: Boolean, default: false },
     cid: { type: String, default: null, index: true },

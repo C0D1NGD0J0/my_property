@@ -160,6 +160,21 @@ PropertySchema.methods.hasVacancy = function () {
   return vacancies > 0;
 };
 
+PropertySchema.methods.findApartment = function (
+  apartmentId: string,
+  unitNumber?: string
+): IApartmentUnitDocument | null {
+  let apartment: IApartmentUnitDocument | null = null;
+  if (apartmentId) {
+    apartment = this.apartmentUnits.id(apartmentId);
+  } else if (unitNumber) {
+    apartment = this.apartmentUnits.find(
+      (a: IApartmentUnitDocument) => a.unitNumber === unitNumber
+    );
+  }
+  return apartment;
+};
+
 PropertySchema.index(
   { address: 1, 'computedLocation.latAndlon': 1 },
   { unique: true }
