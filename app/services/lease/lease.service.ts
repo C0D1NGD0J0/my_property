@@ -1,6 +1,6 @@
 import color from 'colors';
 import { v4 as uuid } from 'uuid';
-import { ObjectId, Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { Lease, Property } from '@models/index';
 
 import {
@@ -8,12 +8,8 @@ import {
   IPaginateResult,
   IPaginationQuery,
   IPromiseReturnedData,
-  ISuccessReturnData,
 } from '@interfaces/utils.interface';
-import {
-  IPropertyTypeEnum,
-  IPropertyDocument,
-} from '@interfaces/property.interface';
+import { IPropertyDocument } from '@interfaces/property.interface';
 import ErrorResponse from '@utils/errorResponse';
 import S3FileUpload from '@services/external/s3.service';
 import { ICurrentUser } from '@interfaces/user.interface';
@@ -160,7 +156,7 @@ class LeaseService {
       endDate: { $gte: new Date() },
     });
 
-    if (activeLease) {
+    if (activeLease?.status.value === 'active') {
       const err = 'Property already has an active lease.';
       this.log.error(color.red(err));
       throw new ErrorResponse(
@@ -192,7 +188,6 @@ class LeaseService {
         billingType: data.paymentInfo?.paymentFrequency,
         managementFees: data.paymentInfo?.managementFees,
       },
-
       managedBy: data.managedBy,
     });
 
@@ -216,13 +211,23 @@ class LeaseService {
 
   updateLease = async (
     cid: string,
-    leaseId: string,
+    leaseId: string | Types.ObjectId | undefined,
     data: Partial<ILease & { s3Files: IAWSFileUploadResponse[] }>
-  ): IPromiseReturnedData<ILeaseDocument> => {
+  ): IPromiseReturnedData<{ lease: ILeaseDocument }> => {
     const property = (await Property.findOne({
       cid,
       _id: new Types.ObjectId(data.property as string),
     })) as IPropertyDocument;
+
+    if (!leaseId) {
+      const err = 'Lease Id is missing.';
+      this.log.error(color.red(err));
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.BAD_REQUEST
+      );
+    }
 
     let lease = (await Lease.findById(leaseId)) as ILeaseDocument;
 
@@ -293,6 +298,7 @@ class LeaseService {
           value: data.status?.value,
           reason: data.status?.reason,
         },
+        tenant: data.tenant ? data.tenant : '',
       };
 
       if (data.apartmentId && data.apartmentId !== lease.apartmentId) {
@@ -333,7 +339,7 @@ class LeaseService {
     }
 
     return {
-      data: lease,
+      data: { lease },
       success: true,
       msg: 'Lease has been updated.',
     };

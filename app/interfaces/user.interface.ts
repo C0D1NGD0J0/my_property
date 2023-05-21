@@ -49,6 +49,23 @@ export interface IUser {
   passwordResetTokenExpiresAt: Date | number | null;
 }
 
+export interface IInviteUserSignup {
+  cid: string;
+  email: string;
+  password: string;
+  lastName: string;
+  firstName: string;
+  location?: string;
+  usertype: IUserRoleType;
+  phoneNumber?: string;
+  emergencyContact?: {
+    name: string;
+    email?: string;
+    phoneNumber: string;
+    relationship: IUserRelationshipsEnum;
+  };
+}
+
 interface IClientUserConnections {
   cid: string;
   role: string;

@@ -60,16 +60,11 @@ router.put(
   asyncHandler(PropertyController.updateDetails)
 );
 
-// router.post("/:propertyId/add_apartment_unit",
-//   PropertyValidation.addApartmentUnit,
-//   validationRequestHandler,
-//   asyncHandler(PropertyController.addApartmentUnit)
-// );
-
-// router.delete("/:propertyId/apartment_units/:unitId",
-//   PropertyValidation.deleteApartmentUnit,
-//   validationRequestHandler,
-//   asyncHandler(PropertyController.deleteApartmentUnit)
-// );
+router.delete(
+  '/:propertyId/apartment_units/:unitId',
+  UtilsValidations.validatePropertyParams,
+  validationRequestHandler,
+  asyncHandler(PropertyController.archiveApartment)
+);
 
 export default router;

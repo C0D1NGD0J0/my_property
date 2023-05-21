@@ -79,9 +79,11 @@ const LeaseSchema = new Schema<ILeaseDocument>(
       ref: 'User',
       validate: {
         validator: function (this: ILeaseDocument, value: ObjectId) {
-          return this.isNew ? true : value != null;
+          return this.isNew ? true : value != undefined;
         },
       },
+      default: undefined,
+      sparse: true,
     },
     managedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     property: { type: Schema.Types.ObjectId, ref: 'Property', required: true },

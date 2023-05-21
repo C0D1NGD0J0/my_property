@@ -10,6 +10,7 @@ export interface IInvite {
   };
   cid: string;
   puid: string;
+  leaseId: Types.ObjectId | undefined;
   sendNow: boolean;
 }
 

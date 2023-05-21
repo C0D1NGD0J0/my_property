@@ -11,11 +11,18 @@ import {
 
 router.use(AuthMiddleware.isAuthenticated);
 
-router.put(
-  '/validate-invite-token/:id',
+router.get(
+  '/validate_invite_token/:id',
   InvitationValidations.validateInviteToken,
   validationRequestHandler,
   asyncHandler(InviteController.validateInvite)
+);
+
+router.post(
+  '/accept_invite/:id',
+  InvitationValidations.acceptInvite,
+  validationRequestHandler,
+  asyncHandler(InviteController.acceptInvite)
 );
 
 router.get('/', asyncHandler(InviteController.allInvites));
