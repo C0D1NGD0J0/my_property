@@ -8,6 +8,7 @@ import {
   ISignupData,
   IAccountType,
   IUserDocument,
+  IInviteUserSignup,
 } from '@interfaces/user.interface';
 import { hashGenerator, jwtGenerator } from '@utils/helperFN';
 import {
@@ -16,6 +17,7 @@ import {
   FORGOT_PASSWORD,
   errorTypes,
   httpStatusCodes,
+  ACCOUNT_SUCCESS_EMAIL,
 } from '@utils/constants';
 import { User, Client } from '@models/index';
 import { IEmailOptions, ISuccessReturnData } from '@interfaces/utils.interface';
@@ -63,6 +65,58 @@ class AuthService {
       success: true,
       data: { emailOptions },
       msg: `Account activation email has been sent to ${emailOptions.to}`,
+    };
+  };
+
+  createInvitedUser = async (
+    cid: string,
+    data: IInviteUserSignup
+  ): Promise<ISuccessReturnData<{ user: IUserDocument }>> => {
+    const { ...userData } = data;
+    const foundEmail = await User.findOne({
+      'cids.cid': cid,
+      email: data.email,
+    });
+
+    if (foundEmail) {
+      const err = 'Account already exists with this email.';
+      throw new ErrorResponse(
+        err,
+        'validationError',
+        httpStatusCodes.UNPROCESSABLE
+      );
+    }
+
+    // create user record
+    const user = (await User.create({
+      ...userData,
+      uid: uuid(),
+      isActive: true,
+      activationToken: '',
+      activationTokenExpiresAt: '',
+      cids: [
+        {
+          cid,
+          role: IUserRole[
+            data.usertype.toUpperCase() as keyof typeof IUserRole
+          ],
+          isConnected: true,
+        },
+      ],
+    })) as IUserDocument;
+
+    const emailOptions: IEmailOptions = {
+      to: user?.email,
+      data: {
+        fullname: user?.fullname,
+      },
+      emailType: ACCOUNT_SUCCESS_EMAIL,
+      subject: 'Account is now active.',
+    };
+
+    return {
+      success: true,
+      data: { user },
     };
   };
 

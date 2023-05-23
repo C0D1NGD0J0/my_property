@@ -42,26 +42,26 @@ export interface ILease extends Document {
   startDate: Date;
   cid: string | null;
   isRenewal: boolean;
-  apartmentId: string;
+  apartmentId?: string;
   paymentInfo: IPaymentInfo;
   leaseHistory: ILeaseHistory[];
   paymentHistory: Types.ObjectId[];
   leaseAgreements: ILeaseAgreement[];
+  tenant?: Types.ObjectId | IUserDocument;
   managedBy: Types.ObjectId | IUserDocument;
   property: string | Types.ObjectId | IPropertyDocument;
   status: {
     value: 'draft' | 'pending' | 'active' | 'cancelled' | 'expired';
     reason: string;
   };
+  dateTenantAccepted?: Date;
+  hasTenantAccepted?: boolean;
 }
 
 export interface ILeaseDocument extends ILease, Document {
   createdAt: Date;
   updatedAt: Date;
   _id: Types.ObjectId;
-  dateTenantAccepted: Date;
-  hasTenantAccepted: boolean;
-  tenant?: Types.ObjectId | IUserDocument;
 }
 
 export enum ILeaseStatusEnum {

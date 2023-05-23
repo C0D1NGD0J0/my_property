@@ -46,8 +46,9 @@ export const dbErrorHandler = (
       httpStatusCodes.UNPROCESSABLE
     );
 
-    if (err.errors.description.kind === 'unique') {
-      const message = `${err.errors.description.path} field value must be unique`;
+    const key = Object.keys(err.errors)[0];
+    if (err.errors[key].kind === 'unique') {
+      const message = `${err.errors[key].path} value must be unique`;
       error = new ErrorResponse(
         message,
         errorTypes.VALIDATION_ERROR,

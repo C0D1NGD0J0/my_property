@@ -1,23 +1,28 @@
-import { Invite, Property } from '@models/index';
-import ErrorResponse from '@utils/errorResponse';
-import { IUserDocument } from '@interfaces/user.interface';
+import dayjs from 'dayjs';
+import color from 'colors';
 import {
   httpStatusCodes,
   errorTypes,
   USER_INVITE_EMAIL,
 } from '@utils/constants';
+import ErrorResponse from '@utils/errorResponse';
+import { Invite, Lease, Property } from '@models/index';
+import { IInviteUserSignup, IUserDocument } from '@interfaces/user.interface';
 import { createLogger, hashGenerator } from '@utils/helperFN';
 import {
   IEmailOptions,
   IPromiseReturnedData,
 } from '@interfaces/utils.interface';
 import { IInvite, IInviteDocument } from '@interfaces/invite.interface';
-import dayjs from 'dayjs';
 import { Types } from 'mongoose';
+import { AuthService } from '@services/auth';
+import { LeaseService } from '@services/lease';
+import { ILeaseDocument } from '@interfaces/lease.interface';
 
 interface IValidateInviteReturnData {
-  puid: string;
-  cid: string;
+  puid?: string;
+  cid?: string;
+  lease?: ILeaseDocument;
   userInfo: IInvite['userInfo'];
   address?: string;
   managedBy: {
@@ -28,8 +33,12 @@ interface IValidateInviteReturnData {
 
 class InviteService {
   private log;
+  protected readonly authService: AuthService;
+  protected readonly leaseService: LeaseService;
 
   constructor() {
+    this.authService = new AuthService();
+    this.leaseService = new LeaseService();
     this.log = createLogger('InviteService', true);
   }
 
@@ -39,10 +48,26 @@ class InviteService {
     emailOptions: IEmailOptions | null;
     invite: IInviteDocument;
   }> => {
+    const lease = await Lease.findById(inviteData.leaseId);
+
+    if (!lease && inviteData.userInfo.userType === 'tenant') {
+      const err = 'Lease not found with identifier provided.';
+      this.log.error(color.red(err));
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.NOT_FOUND
+      );
+    }
+
     let emailOptions = null;
     const invite = new Invite(inviteData);
     invite.inviteToken = hashGenerator();
     invite.inviteTokenExpiresAt = dayjs().add(1, 'day').toDate();
+    invite.leaseId =
+      inviteData.userInfo.userType === 'tenant'
+        ? new Types.ObjectId(inviteData.leaseId)
+        : undefined;
     await invite.save();
 
     const property = await Property.findOne({ puid: invite.puid });
@@ -55,7 +80,7 @@ class InviteService {
           appName: process.env.APP_NAME,
           name: invite.userInfo.firstName,
           propertyAddress: property?.address,
-          inviteUrl: `${process.env.FRONTEND_URL}/validate-invite/${invite._id}?t=${invite.inviteToken}`,
+          inviteUrl: `${process.env.FRONTEND_URL}/validate_invite_token/${invite._id}?t=${invite.inviteToken}`,
         },
         emailType: USER_INVITE_EMAIL,
         subject: 'Account setup',
@@ -75,6 +100,53 @@ class InviteService {
   validateInvite = async (
     inviteId: string,
     data: { token: string }
+  ): IPromiseReturnedData<IValidateInviteReturnData | { msg?: string }> => {
+    const invite = await Invite.findOne({
+      id: new Types.ObjectId(inviteId),
+      inviteToken: data.token,
+      inviteTokenExpiresAt: { $gt: dayjs() },
+    });
+
+    if (!invite) {
+      return {
+        data: {
+          msg: `Invalid/expired invite-token provided, please contact property manager.`,
+        },
+        success: false,
+      };
+    }
+
+    const property = await Property.findOne({
+      puid: new Types.ObjectId(invite.puid),
+    })
+      .populate({
+        path: 'managedBy',
+        model: 'User',
+        select: 'firstName lastName email', // Only return the fullName virtual property
+      })
+      .select('address')
+      .exec();
+
+    const returnData: IValidateInviteReturnData = {
+      puid: invite.puid,
+      cid: invite.cid,
+      userInfo: invite.userInfo,
+      address: property?.address,
+      managedBy: {
+        fullname: (property?.managedBy as IUserDocument).fullname as string,
+        email: (property?.managedBy as IUserDocument).email as string,
+      },
+    };
+
+    return {
+      data: returnData,
+      success: true,
+    };
+  };
+
+  acceptInvite = async (
+    inviteId: string,
+    data: IInviteUserSignup & { token: string }
   ): IPromiseReturnedData<IValidateInviteReturnData> => {
     const invite = await Invite.findOne({
       id: new Types.ObjectId(inviteId),
@@ -101,13 +173,31 @@ class InviteService {
       .select('address')
       .exec();
 
+    invite.inviteToken = '';
     invite.acceptedInvite = true;
     invite.inviteTokenExpiresAt = null;
     await invite.save();
 
-    const returnData: IValidateInviteReturnData = {
-      puid: invite.puid,
-      cid: invite.cid,
+    const { token, ...userData } = data;
+    const resp = await this.authService.createInvitedUser(invite.cid, userData);
+
+    // update lease data
+    const lease = await this.leaseService.updateLease(
+      invite.cid,
+      invite.leaseId,
+      {
+        tenant: resp.data?.user._id,
+        status: {
+          value: 'active',
+          reason: 'tenant has accepted lease',
+        },
+        dateTenantAccepted: new Date(),
+        hasTenantAccepted: true,
+      }
+    );
+
+    const returnData: Omit<IValidateInviteReturnData, 'puid' | 'cid'> = {
+      lease: lease.data?.lease,
       userInfo: invite.userInfo,
       address: property?.address,
       managedBy: {
@@ -156,7 +246,7 @@ class InviteService {
         appName: process.env.APP_NAME,
         name: invite.userInfo.firstName,
         propertyAddress: property?.address,
-        inviteUrl: `${process.env.FRONTEND_URL}/validate-invite/${invite._id}?t=${invite.inviteToken}`,
+        inviteUrl: `${process.env.FRONTEND_URL}/validate_invite_token/${invite._id}?t=${invite.inviteToken}`,
       },
       emailType: USER_INVITE_EMAIL,
       subject: 'Account setup',

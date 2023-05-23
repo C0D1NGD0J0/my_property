@@ -42,6 +42,12 @@ class InviteController {
     res.status(200).json(result);
   };
 
+  acceptInvite = async (req: AppRequest, res: AppResponse) => {
+    const { id } = req.params;
+    const result = await this.inviteService.acceptInvite(id, req.body);
+    res.status(200).json(result);
+  };
+
   resendInvite = async (req: AppRequest, res: AppResponse) => {
     const { id, cid } = req.currentuser!;
     const { data, ...rest } = await this.inviteService.resendInvite(

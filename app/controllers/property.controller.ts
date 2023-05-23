@@ -123,6 +123,14 @@ class PropertyController {
     const data = await this.propertyService.archiveProperty(cid, puid);
     return res.status(204).json(data);
   };
+
+  archiveApartment = async (req: AppRequest, res: AppResponse) => {
+    const { puid, unitId } = req.params;
+    const { cid } = req.currentuser!;
+
+    const data = await this.propertyService.archiveApartment(cid, puid, unitId);
+    return res.status(204).json(data);
+  };
 }
 
 export default new PropertyController();

@@ -1,9 +1,8 @@
 import { Types } from 'mongoose';
 
-import { User, Client } from '@models/index';
+import { User } from '@models/index';
 import ErrorResponse from '@utils/errorResponse';
 import {
-  IAccountType,
   ICurrentUser,
   ISignupData,
   IUserDocument,

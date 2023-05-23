@@ -23,7 +23,12 @@ const ApartmentSchema = new Schema<IApartmentUnitDocument>(
       default: [],
     },
     auid: { type: String, required: true, index: true },
-    activeLease: { type: Schema.Types.ObjectId, ref: 'Lease', default: '' },
+    activeLease: {
+      type: Schema.Types.ObjectId,
+      ref: 'Lease',
+      default: undefined,
+      sparse: true,
+    },
     status: { type: String, default: 'vacant' },
     deletedAt: {
       type: Date,
@@ -134,7 +139,7 @@ const PropertySchema = new Schema<IPropertyDocument>(
     },
     deletedAt: {
       type: Date,
-      default: null,
+      default: undefined,
     },
     totalUnits: {
       min: 1,
@@ -146,7 +151,12 @@ const PropertySchema = new Schema<IPropertyDocument>(
       type: [{ type: Schema.Types.ObjectId, ref: 'Lease' }],
       default: [],
     },
-    activeLease: { type: Schema.Types.ObjectId, ref: 'Lease', default: '' },
+    activeLease: {
+      type: Schema.Types.ObjectId,
+      ref: 'Lease',
+      default: undefined,
+      sparse: true,
+    },
   },
   {
     timestamps: true,
@@ -155,9 +165,16 @@ const PropertySchema = new Schema<IPropertyDocument>(
   }
 );
 
-PropertySchema.methods.hasVacancy = function () {
-  const vacancies = this.totalUnits.allowed - this.totalUnits.occupied;
-  return vacancies > 0;
+PropertySchema.methods.hasApartmentVacancy = function () {
+  if (this.apartmentUnits.length === 0) {
+    return false;
+  }
+  for (const unit of this.apartmentUnits) {
+    if (unit.status === 'vacant') {
+      return true;
+    }
+  }
+  return false;
 };
 
 PropertySchema.methods.findApartment = function (
@@ -173,6 +190,23 @@ PropertySchema.methods.findApartment = function (
     );
   }
   return apartment;
+};
+
+PropertySchema.methods.hasActiveLease = async function (): Promise<boolean> {
+  if (this.activeLease || (this.activeLeases && this.activeLeases.length > 0)) {
+    return true;
+  }
+
+  if (this.apartmentUnits.length > 0) {
+    for (let i = 0; i < this.apartmentUnits.length; i++) {
+      const apartment = this.apartmentUnits[i];
+      if (apartment.activeLease) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 };
 
 PropertySchema.index(

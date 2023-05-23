@@ -95,12 +95,13 @@ export interface IPropertyDocument extends IProperty, Document {
     apartmentId?: string,
     unitNumber?: string
   ): IApartmentUnitDocument | null;
+  hasActiveLease(): Promise<boolean>;
+  hasApartmentVacancy(): Promise<boolean>;
   cid: string;
   puid: string;
   createdAt: Date;
   updatedAt: Date;
   _id: Types.ObjectId;
-  hasVacancy: () => boolean;
   previousLeases: Types.ObjectId[];
   activeLease: Types.ObjectId | undefined;
   apartmentUnits: Types.DocumentArray<IApartmentUnitDocument>;

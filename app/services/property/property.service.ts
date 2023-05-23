@@ -241,7 +241,75 @@ class PropertyService {
         );
       }
 
+      if (await property.hasActiveLease()) {
+        const err = 'Unable to archive Property, due to an active lease.';
+        this.log.error(`Property archive: `, err);
+        throw new ErrorResponse(
+          err,
+          errorTypes.SERVICE_ERROR,
+          httpStatusCodes.NOT_FOUND
+        );
+      }
+
       property.deletedAt = new Date();
+      await property.save();
+      return { success: true, data: { property } };
+    } catch (error: any) {
+      this.log.error(color.bold.red(error.message));
+      throw error;
+    }
+  };
+
+  archiveApartment = async (
+    cid: string,
+    puid: string,
+    unitNumber: string
+  ): IPromiseReturnedData => {
+    try {
+      const property = await Property.findOne({
+        cid,
+        puid,
+      });
+
+      if (!property) {
+        const err = 'Property not found.';
+        this.log.error(`Property archive: `, err);
+        throw new ErrorResponse(
+          err,
+          errorTypes.SERVICE_ERROR,
+          httpStatusCodes.NOT_FOUND
+        );
+      }
+
+      const apartmentUnit = property.apartmentUnits.find(
+        (unit) => unit.unitNumber === unitNumber
+      );
+
+      if (!apartmentUnit) {
+        const err = 'Apartment unit not found.';
+        this.log.error(`Property archive: `, err);
+        throw new ErrorResponse(
+          err,
+          errorTypes.SERVICE_ERROR,
+          httpStatusCodes.NOT_FOUND
+        );
+      }
+
+      if (apartmentUnit.status === 'occupied') {
+        const err = 'Apartment currently has an active lease.';
+        this.log.error(`Property archive: `, err);
+        throw new ErrorResponse(
+          err,
+          errorTypes.BAD_REQUEST_ERROR,
+          httpStatusCodes.BAD_REQUEST
+        );
+      }
+
+      if (apartmentUnit.status === 'vacant') {
+        apartmentUnit.activeLease = undefined;
+        apartmentUnit.deletedAt = new Date();
+      }
+
       await property.save();
       return { success: true, data: { property } };
     } catch (error: any) {
@@ -352,7 +420,7 @@ class PropertyService {
       );
     }
 
-    const unittypes = ['apartments', 'officeUnits', 'others'];
+    const unittypes = ['apartments', 'officeUnits', 'others', 'multiUnits'];
     if (!unittypes.includes(property.propertyType)) {
       const err = "Apartments can't be added to this property type.";
       this.log.error(err);

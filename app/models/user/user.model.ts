@@ -119,7 +119,9 @@ UserSchema.virtual('fullname').get(function () {
   return `${this.firstName} ${this.lastName}`;
 });
 
-UserSchema.plugin(uniqueValidator);
+UserSchema.plugin(uniqueValidator, {
+  message: '{PATH} must be unique.',
+});
 
 const UserModel = model<IUserDocument>('User', UserSchema);
 
