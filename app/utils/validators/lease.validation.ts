@@ -55,6 +55,7 @@ const validateParams = () => {
       }),
   ];
 };
+
 const create = () => {
   return [
     body('startDate')

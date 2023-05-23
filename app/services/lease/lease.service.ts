@@ -1,5 +1,4 @@
 import color from 'colors';
-import { v4 as uuid } from 'uuid';
 import { Types } from 'mongoose';
 import { Lease, Property } from '@models/index';
 
@@ -12,13 +11,8 @@ import {
 import { IPropertyDocument } from '@interfaces/property.interface';
 import ErrorResponse from '@utils/errorResponse';
 import S3FileUpload from '@services/external/s3.service';
-import { ICurrentUser } from '@interfaces/user.interface';
 import { httpStatusCodes, errorTypes } from '@utils/constants';
-import {
-  createLogger,
-  mergeArrayWithLimit,
-  paginateResult,
-} from '@utils/helperFN';
+import { createLogger, paginateResult } from '@utils/helperFN';
 import { ILease, ILeaseDocument } from '@interfaces/lease.interface';
 
 class LeaseService {
@@ -149,14 +143,24 @@ class LeaseService {
       _id: new Types.ObjectId(data.property as string),
     })) as IPropertyDocument;
 
-    // Check if property already has an active lease
-    const activeLease = await Lease.findOne({
+    if (property.deletedAt) {
+      const err = 'This Property is no longer available.';
+      this.log.error(color.red(err));
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.BAD_REQUEST
+      );
+    }
+
+    let lease = await Lease.findOne({
       cid,
       property: data.property,
       endDate: { $gte: new Date() },
+      ...(data.apartmentId ? { apartmentId: data.apartmentId } : null),
     });
 
-    if (activeLease?.status.value === 'active') {
+    if (lease?.status.value === 'active') {
       const err = 'Property already has an active lease.';
       this.log.error(color.red(err));
       throw new ErrorResponse(
@@ -176,11 +180,12 @@ class LeaseService {
       );
     }
 
-    const lease = new Lease({
+    lease = new Lease({
       cid,
       startDate: new Date(data.startDate),
       endDate: new Date(data.endDate),
       property: property._id,
+      ...(data.apartmentId ? { apartmentId: data.apartmentId } : null),
       paymentInfo: {
         rentAmount: data.paymentInfo?.rentAmount,
         securityDeposit: data.paymentInfo?.securityDeposit,
@@ -272,7 +277,7 @@ class LeaseService {
       )) as ILeaseDocument;
     }
 
-    if (lease.status.value === 'draft' || lease.status.value === 'pending') {
+    if (lease.status.value === 'draft') {
       const dataToUpdate = {
         startDate: data.startDate ? data.startDate : lease.startDate,
         endDate: data.endDate ? data.endDate : lease.endDate,
@@ -293,12 +298,12 @@ class LeaseService {
             ? data?.paymentInfo.paymentFrequency
             : lease.paymentInfo.paymentFrequency,
         },
-        apartmentId: '',
+        apartmentId: data?.apartmentId || lease.apartmentId,
         status: {
           value: data.status?.value,
           reason: data.status?.reason,
         },
-        tenant: data.tenant ? data.tenant : '',
+        tenant: data?.tenant || lease.tenant,
       };
 
       if (data.apartmentId && data.apartmentId !== lease.apartmentId) {
@@ -330,6 +335,40 @@ class LeaseService {
           ? data.apartmentId
           : lease.apartmentId;
       }
+
+      lease = (await Lease.findOneAndUpdate(
+        { _id: lease.id },
+        { $set: dataToUpdate },
+        { new: true, runValidators: true }
+      )) as ILeaseDocument;
+    }
+
+    if (lease.status.value === 'pending') {
+      const dataToUpdate = {
+        startDate: data.startDate ? data.startDate : lease.startDate,
+        endDate: data.endDate ? data.endDate : lease.endDate,
+        paymentInfo: {
+          rentAmount: data.paymentInfo?.rentAmount
+            ? data?.paymentInfo.rentAmount
+            : lease.paymentInfo.rentAmount,
+          paymentDueDate: data.paymentInfo?.paymentDueDate
+            ? data?.paymentInfo.paymentDueDate
+            : lease.paymentInfo.paymentDueDate,
+          managementFees: data.paymentInfo?.managementFees
+            ? data?.paymentInfo.managementFees
+            : lease.paymentInfo.managementFees,
+          securityDeposit: data.paymentInfo?.securityDeposit
+            ? data?.paymentInfo.securityDeposit
+            : lease.paymentInfo.securityDeposit,
+          paymentFrequency: data.paymentInfo?.paymentFrequency
+            ? data?.paymentInfo.paymentFrequency
+            : lease.paymentInfo.paymentFrequency,
+        },
+        status: {
+          value: data.status?.value,
+          reason: data.status?.reason,
+        },
+      };
 
       lease = (await Lease.findOneAndUpdate(
         { _id: lease.id },
@@ -393,7 +432,7 @@ class LeaseService {
         { new: true, runValidators: true }
       )) as ILeaseDocument;
 
-      if (lease.apartmentId && property.status === 'occupied') {
+      if (lease.apartmentId && property.propertyType !== 'singleFamily') {
         const apartment = property.findApartment(lease.apartmentId);
         if (apartment) {
           apartment.activeLease = undefined;
@@ -401,10 +440,13 @@ class LeaseService {
 
           await property.save();
         }
-      } else if (!lease.apartmentId && property.status === 'occupied') {
+      } else if (
+        !lease.apartmentId &&
+        property.propertyType === 'singleFamily'
+      ) {
         await Property.findByIdAndUpdate(
           property.id,
-          { $set: { status: 'vacant', activeLease: undefined } },
+          { $set: { ...dataToUpdate, activeLease: undefined } },
           { new: true }
         );
       }

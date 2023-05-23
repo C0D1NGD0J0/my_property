@@ -42,7 +42,7 @@ export interface ILease extends Document {
   startDate: Date;
   cid: string | null;
   isRenewal: boolean;
-  apartmentId: string;
+  apartmentId?: string;
   paymentInfo: IPaymentInfo;
   leaseHistory: ILeaseHistory[];
   paymentHistory: Types.ObjectId[];
