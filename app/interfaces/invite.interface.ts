@@ -22,5 +22,6 @@ export interface IInviteDocument extends IInvite, Document {
   sentAt: Date | null;
   acceptedInvite: boolean;
   inviteTokenExpiresAt: Date | null;
+  acceptedInviteAt: Date | undefined;
   createdBy: Types.ObjectId | string;
 }

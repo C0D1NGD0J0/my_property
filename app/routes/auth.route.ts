@@ -40,7 +40,11 @@ router.delete(
   asyncHandler(AuthController.logout)
 );
 
-router.get('/refresh_token', asyncHandler(AuthController.refreshToken));
+router.get(
+  '/refresh_token',
+  AuthMiddleware.isAuthenticated,
+  asyncHandler(AuthController.refreshToken)
+);
 
 router.post(
   '/forgot_password',

@@ -94,7 +94,7 @@ class PropertyService {
 
   update = async (
     cid: string,
-    data: Partial<IPropertyDocument & { s3Files: IAWSFileUploadResponse[] }>
+    data: Partial<IPropertyDocument & { s3Files?: IAWSFileUploadResponse[] }>
   ): IPromiseReturnedData<{ property: IPropertyDocument }> => {
     try {
       const { s3Files, ...rest } = data;
@@ -152,7 +152,7 @@ class PropertyService {
           rest.address = gCode[0].formattedAddress;
         }
       }
-
+      3;
       property = (await Property.findOneAndUpdate(
         { _id: rest._id, cid: rest.cid },
         { $set: rest },
@@ -342,10 +342,23 @@ class PropertyService {
       );
     }
 
+    if (property.status !== IPropertyStatusEnum.vacant) {
+      const err = 'Property currently has an active lease';
+      this.log.error(err);
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.BAD_REQUEST
+      );
+    }
+
     if (property.status === IPropertyStatusEnum.vacant) {
       property.activeLease = lease._id;
       property.previousLeases.push(lease._id);
-      property.status = IPropertyStatusEnum.occupied;
+      property.status =
+        property.propertyType === IPropertyTypeEnum.singleFamily
+          ? IPropertyStatusEnum.occupied
+          : IPropertyStatusEnum.partiallyOccupied;
     }
 
     await property.save();
@@ -420,8 +433,7 @@ class PropertyService {
       );
     }
 
-    const unittypes = ['apartments', 'officeUnits', 'others', 'multiUnits'];
-    if (!unittypes.includes(property.propertyType)) {
+    if (property.propertyType === 'singleFamily') {
       const err = "Apartments can't be added to this property type.";
       this.log.error(err);
       throw new ErrorResponse(
@@ -432,7 +444,7 @@ class PropertyService {
     }
 
     const { totalUnits, apartmentUnits } = property;
-    if (apartmentUnits && apartmentUnits?.length >= totalUnits) {
+    if (!property.canAddApartmentUnit()) {
       const err = `You have reached the max number of apartments units ${totalUnits} for this property.`;
       this.log.error(err);
       throw new ErrorResponse(

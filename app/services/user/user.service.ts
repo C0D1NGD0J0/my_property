@@ -143,7 +143,7 @@ class UserService {
   /* ClientUser region */
   getClientUsers = async (
     cid: string,
-    usertype: string,
+    userType: string,
     data: IPaginationQuery
   ): IPromiseReturnedData<{
     users: IUserDocument[];
@@ -171,7 +171,7 @@ class UserService {
     const query = {
       isActive: true,
       'cids.$.cid': cid,
-      'cids.role': usertype,
+      'cids.role': userType,
     };
 
     const users = await User.find(query, selectedFields)

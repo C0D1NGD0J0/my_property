@@ -11,12 +11,12 @@ import uniqueValidator from 'mongoose-unique-validator';
 
 const ApartmentSchema = new Schema<IApartmentUnitDocument>(
   {
-    unitNumber: { type: String, required: true },
+    unitNumber: { type: String, required: true, unique: true },
     features: {
+      hasParking: { type: Boolean, default: true },
       bedroom: { type: Number, default: 1, max: 5 },
       bathroom: { type: Number, default: 1, max: 5 },
       maxCapacity: { type: Number, default: 1, max: 15 },
-      hasParking: { type: Boolean, default: true },
     },
     previousLeases: {
       type: [{ type: Schema.Types.ObjectId, ref: 'Lease' }],
@@ -28,6 +28,18 @@ const ApartmentSchema = new Schema<IApartmentUnitDocument>(
       ref: 'Lease',
       default: undefined,
       sparse: true,
+    },
+    rentalPrice: {
+      amount: {
+        default: 0,
+        type: Number,
+        required: true,
+        get: (val: number) => {
+          return (val / 100).toFixed(2);
+        },
+        set: (val: number) => val * 100,
+      },
+      currency: { type: String, required: true, default: 'USD' },
     },
     status: { type: String, default: 'vacant' },
     deletedAt: {
@@ -165,14 +177,12 @@ const PropertySchema = new Schema<IPropertyDocument>(
   }
 );
 
-PropertySchema.methods.hasApartmentVacancy = function () {
-  if (this.apartmentUnits.length === 0) {
-    return false;
-  }
-  for (const unit of this.apartmentUnits) {
-    if (unit.status === 'vacant') {
-      return true;
-    }
+PropertySchema.methods.canAddApartmentUnit = function () {
+  if (
+    this.apartmentUnits.length < this.totalUnits &&
+    this.propertyType !== IPropertyTypeEnum.singleFamily
+  ) {
+    return true;
   }
   return false;
 };
@@ -213,6 +223,23 @@ PropertySchema.index(
   { address: 1, 'computedLocation.latAndlon': 1 },
   { unique: true }
 );
+
+PropertySchema.pre('save', function (next) {
+  const apartments = this.apartmentUnits;
+  if (apartments.length) {
+    const isDuplicate = apartments.some(
+      (apartment, index) =>
+        index !==
+        apartments.findIndex((t) => t.unitNumber === apartment.unitNumber)
+    );
+
+    if (isDuplicate) {
+      next(new Error('Duplicate unit-number are not allowed.'));
+    }
+  }
+
+  next();
+});
 
 PropertySchema.pre<IPropertyDocument>('validate', function (next) {
   // Validation 1: Check if the number of apartment units does not exceed the total units.

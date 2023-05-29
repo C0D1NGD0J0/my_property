@@ -56,7 +56,7 @@ export interface IInviteUserSignup {
   lastName: string;
   firstName: string;
   location?: string;
-  usertype: IUserRoleType;
+  userType: IUserRoleType;
   phoneNumber?: string;
   emergencyContact?: {
     name: string;
@@ -64,6 +64,7 @@ export interface IInviteUserSignup {
     phoneNumber: string;
     relationship: IUserRelationshipsEnum;
   };
+  userId?: Types.ObjectId;
 }
 
 interface IClientUserConnections {

@@ -9,12 +9,11 @@ import {
   validationRequestHandler,
 } from '@utils/validators';
 
-router.use(AuthMiddleware.isAuthenticated);
-
 router.get(
   '/validate_invite_token/:id',
   InvitationValidations.validateInviteToken,
   validationRequestHandler,
+  AuthMiddleware.isAuthenticated,
   asyncHandler(InviteController.validateInvite)
 );
 
@@ -25,12 +24,17 @@ router.post(
   asyncHandler(InviteController.acceptInvite)
 );
 
-router.get('/', asyncHandler(InviteController.allInvites));
+router.get(
+  '/',
+  AuthMiddleware.isAuthenticated,
+  asyncHandler(InviteController.allInvites)
+);
 
 router.put(
   '/resend-invite',
   InvitationValidations.resendInvite,
   validationRequestHandler,
+  AuthMiddleware.isAuthenticated,
   asyncHandler(InviteController.resendInvite)
 );
 
@@ -38,6 +42,7 @@ router.post(
   '/',
   InvitationValidations.createInvite,
   validationRequestHandler,
+  AuthMiddleware.isAuthenticated,
   asyncHandler(InviteController.createInvite)
 );
 

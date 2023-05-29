@@ -49,7 +49,7 @@ export interface ILease extends Document {
   leaseAgreements: ILeaseAgreement[];
   tenant?: Types.ObjectId | IUserDocument;
   managedBy: Types.ObjectId | IUserDocument;
-  property: string | Types.ObjectId | IPropertyDocument;
+  puid: string;
   status: {
     value: 'draft' | 'pending' | 'active' | 'cancelled' | 'expired';
     reason: string;

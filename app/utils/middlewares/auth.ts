@@ -69,12 +69,15 @@ class AuthMiddlewares {
         req.currentuser = resp.data as ICurrentUser;
         next();
       } catch (error: Error | any) {
-        if (error.name === 'TokenExpiredError') {
+        if (
+          error.name === 'TokenExpiredError' ||
+          error.name === 'JsonWebTokenError'
+        ) {
           return next(
             new ErrorResponse(
-              'Access denied due to expired token.',
+              'Access denied, please login.',
               errorTypes.AUTH_ERROR,
-              httpStatusCodes.UNAUTHORIZED
+              httpStatusCodes.FORBIDDEN
             )
           );
         }

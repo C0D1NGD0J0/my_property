@@ -70,6 +70,7 @@ const LeaseSchema = new Schema<ILeaseDocument>(
         value: ILeaseStatusEnum.draft,
         reason: '',
       },
+      _id: false,
     },
     isRenewal: { type: Boolean, default: false },
     cid: { type: String, default: null, index: true },
@@ -86,7 +87,7 @@ const LeaseSchema = new Schema<ILeaseDocument>(
       sparse: true,
     },
     managedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    property: { type: Schema.Types.ObjectId, ref: 'Property', required: true },
+    puid: { type: String, required: true },
   },
   {
     timestamps: true,

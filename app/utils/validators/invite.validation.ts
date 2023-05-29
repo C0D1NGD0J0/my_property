@@ -32,7 +32,7 @@ const createInvite = () => {
 
         const property = await Property.findOne({
           puid,
-          deletedAt: { $eq: null },
+          $and: [{ deletedAt: { $eq: null } }],
         });
         if (!property) {
           throw new ErrorResponse(
