@@ -44,7 +44,12 @@ class InviteController {
 
   acceptInvite = async (req: AppRequest, res: AppResponse) => {
     const { id } = req.params;
-    const result = await this.inviteService.acceptInvite(id, req.body);
+    const { t } = req.query;
+
+    const result = await this.inviteService.acceptInvite(id, {
+      ...req.body,
+      token: t,
+    });
     res.status(200).json(result);
   };
 

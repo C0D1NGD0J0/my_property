@@ -20,7 +20,7 @@ const validateParams = () => {
       .exists()
       .bail()
       .custom(async (puid) => {
-        const { isValid } = validateResourceID(puid);
+        const { isValid, type } = validateResourceID(puid);
         if (!isValid) {
           throw new ErrorResponse(
             `Invalid resource identifier provided <${puid}>.`,
@@ -62,7 +62,8 @@ const create = () => {
     body('features.maxCapacity')
       .if(body('propertyType').equals(IPropertyTypeEnum.singleFamily))
       .optional()
-      .isInt({ min: 0, max: 7 }),
+      .isInt({ min: 0, max: 10 })
+      .withMessage('Max capacity for a single family house is 10'),
     body('features.availableParking')
       .if(body('propertyType').equals(IPropertyTypeEnum.singleFamily))
       .optional()

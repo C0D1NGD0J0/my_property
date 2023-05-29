@@ -46,6 +46,7 @@ const InviteSchema = new Schema<IInviteDocument>(
     },
     sentAt: { type: Date, default: null },
     sendNow: { type: Boolean, default: false },
+    acceptedInviteAt: { type: Date, default: '' },
     acceptedInvite: { type: Boolean, default: false },
     cid: { type: String, default: '', required: true },
     puid: { type: String, default: '', required: true },
@@ -56,7 +57,7 @@ const InviteSchema = new Schema<IInviteDocument>(
       ref: 'User',
       default: undefined,
     },
-    inviteToken: { type: String, default: '', required: true },
+    inviteToken: { type: String, default: '' },
   },
   {
     timestamps: true,

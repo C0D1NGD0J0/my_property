@@ -50,8 +50,10 @@ class InviteService {
   }> => {
     const lease = await Lease.findById(inviteData.leaseId);
 
+    // only require lease when create invite for tenant
     if (!lease && inviteData.userInfo.userType === 'tenant') {
-      const err = 'Lease not found with identifier provided.';
+      const err =
+        'Unable to create invite for tenant, as no valid lease info was provided.';
       this.log.error(color.red(err));
       throw new ErrorResponse(
         err,
@@ -68,11 +70,10 @@ class InviteService {
       inviteData.userInfo.userType === 'tenant'
         ? new Types.ObjectId(inviteData.leaseId)
         : undefined;
-    await invite.save();
 
-    const property = await Property.findOne({ puid: invite.puid });
     let msg = 'Invite successfully created.';
     if (inviteData.sendNow) {
+      const property = await Property.findOne({ puid: invite.puid });
       msg = `Invite was created and sent to ${invite.userInfo.email}`;
       emailOptions = {
         to: invite.userInfo.email,
@@ -85,8 +86,17 @@ class InviteService {
         emailType: USER_INVITE_EMAIL,
         subject: 'Account setup',
       };
+
+      if (lease) {
+        lease.status = {
+          value: 'pending',
+          reason: `invite sent to ${invite.userInfo.userType}`,
+        };
+      }
     }
 
+    await invite.save();
+    await lease?.save();
     return {
       msg,
       data: {
@@ -163,41 +173,57 @@ class InviteService {
     }
 
     const property = await Property.findOne({
-      puid: new Types.ObjectId(invite.puid),
+      cid: invite.cid,
+      puid: invite.puid,
     })
       .populate({
         path: 'managedBy',
         model: 'User',
         select: 'firstName lastName email', // Only return the fullName virtual property
       })
-      .select('address')
-      .exec();
+      .select('address puid cid');
+
+    if (!property) {
+      throw new ErrorResponse(
+        `Invalid invite <Property not found>, please contact property manager.`,
+        errorTypes.NO_RESOURCE_ERROR,
+        httpStatusCodes.NOT_FOUND
+      );
+    }
 
     invite.inviteToken = '';
     invite.acceptedInvite = true;
     invite.inviteTokenExpiresAt = null;
-    await invite.save();
 
     const { token, ...userData } = data;
-    const resp = await this.authService.createInvitedUser(invite.cid, userData);
+    const userDataWithUserId = {
+      ...userData,
+      userId: new Types.ObjectId(),
+    };
 
     // update lease data
-    const lease = await this.leaseService.updateLease(
+    const resp = await this.leaseService.updateLease(
       invite.cid,
       invite.leaseId,
       {
-        tenant: resp.data?.user._id,
+        tenant: userDataWithUserId.userId,
         status: {
           value: 'active',
           reason: 'tenant has accepted lease',
         },
+        puid: property.puid,
         dateTenantAccepted: new Date(),
         hasTenantAccepted: true,
       }
     );
 
+    if (resp.success) {
+      // create invited user account
+      await this.authService.createInvitedUser(invite.cid, userDataWithUserId);
+    }
+
     const returnData: Omit<IValidateInviteReturnData, 'puid' | 'cid'> = {
-      lease: lease.data?.lease,
+      lease: resp.data?.lease,
       userInfo: invite.userInfo,
       address: property?.address,
       managedBy: {
@@ -205,6 +231,9 @@ class InviteService {
         email: (property?.managedBy as IUserDocument).email as string,
       },
     };
+
+    invite.acceptedInviteAt = new Date();
+    await invite.save();
 
     return {
       data: returnData,

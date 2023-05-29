@@ -32,7 +32,7 @@ class UserController {
 
   getClientUsers = async (req: AppRequest, res: AppResponse) => {
     const { cid } = req.params;
-    const { page, limit, sortBy, usertype } = req.query;
+    const { page, limit, sortBy, userType } = req.query;
     // pagination
     const paginationQuery: IPaginationQuery = {
       page: page ? parseInt(page as string, 10) : 1,
@@ -44,7 +44,7 @@ class UserController {
       paginationQuery && (paginationQuery.page! - 1) * paginationQuery.limit!;
     const resp = await this.userService.getClientUsers(
       cid,
-      usertype as string,
+      userType as string,
       paginationQuery
     );
     res.status(httpStatusCodes.OK).json(resp);

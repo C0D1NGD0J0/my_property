@@ -33,8 +33,9 @@ export type IPropertyCategories = 'commercial' | 'residential' | 'others';
 export enum IPropertyStatusEnum {
   vacant = 'vacant',
   occupied = 'occupied',
+  partiallyOccupied = 'partially-occupied',
 }
-export type IPropertyStatus = 'vacant' | 'occupied';
+export type IPropertyStatus = 'vacant' | 'occupied' | 'partially-occupied';
 
 export interface IProperty {
   description?: string;
@@ -96,7 +97,7 @@ export interface IPropertyDocument extends IProperty, Document {
     unitNumber?: string
   ): IApartmentUnitDocument | null;
   hasActiveLease(): Promise<boolean>;
-  hasApartmentVacancy(): Promise<boolean>;
+  canAddApartmentUnit(): boolean;
   cid: string;
   puid: string;
   createdAt: Date;

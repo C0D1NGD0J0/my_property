@@ -90,6 +90,7 @@ class AuthService {
     // create user record
     const user = (await User.create({
       ...userData,
+      _id: userData.userId,
       uid: uuid(),
       isActive: true,
       activationToken: '',
@@ -98,7 +99,7 @@ class AuthService {
         {
           cid,
           role: IUserRole[
-            data.usertype.toUpperCase() as keyof typeof IUserRole
+            data.userType.toUpperCase() as keyof typeof IUserRole
           ],
           isConnected: true,
         },

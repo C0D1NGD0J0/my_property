@@ -8,7 +8,10 @@ import {
   IPaginationQuery,
   IPromiseReturnedData,
 } from '@interfaces/utils.interface';
-import { IPropertyDocument } from '@interfaces/property.interface';
+import {
+  IPropertyDocument,
+  IPropertyTypeEnum,
+} from '@interfaces/property.interface';
 import ErrorResponse from '@utils/errorResponse';
 import S3FileUpload from '@services/external/s3.service';
 import { httpStatusCodes, errorTypes } from '@utils/constants';
@@ -140,7 +143,7 @@ class LeaseService {
   ): IPromiseReturnedData<ILeaseDocument> => {
     const property = (await Property.findOne({
       cid,
-      _id: new Types.ObjectId(data.property as string),
+      puid: data.puid as string,
     })) as IPropertyDocument;
 
     if (property.deletedAt) {
@@ -153,12 +156,39 @@ class LeaseService {
       );
     }
 
+    if (
+      property.propertyType !== IPropertyTypeEnum.singleFamily &&
+      !data.apartmentId
+    ) {
+      const err = 'Apartment id is missing.';
+      this.log.error(color.red(err));
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.UNPROCESSABLE
+      );
+    }
+
     let lease = await Lease.findOne({
       cid,
-      property: data.property,
+      puid: data.puid,
       endDate: { $gte: new Date() },
       ...(data.apartmentId ? { apartmentId: data.apartmentId } : null),
     });
+
+    if (
+      lease &&
+      (lease.apartmentId === data.apartmentId ||
+        (lease.puid === data.puid && !data.apartmentId))
+    ) {
+      const err = 'Error, due to duplicate lease for property.';
+      this.log.error(color.red(err));
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.BAD_REQUEST
+      );
+    }
 
     if (lease?.status.value === 'active') {
       const err = 'Property already has an active lease.';
@@ -184,7 +214,7 @@ class LeaseService {
       cid,
       startDate: new Date(data.startDate),
       endDate: new Date(data.endDate),
-      property: property._id,
+      puid: property.puid,
       ...(data.apartmentId ? { apartmentId: data.apartmentId } : null),
       paymentInfo: {
         rentAmount: data.paymentInfo?.rentAmount,
@@ -219,13 +249,40 @@ class LeaseService {
     leaseId: string | Types.ObjectId | undefined,
     data: Partial<ILease & { s3Files: IAWSFileUploadResponse[] }>
   ): IPromiseReturnedData<{ lease: ILeaseDocument }> => {
-    const property = (await Property.findOne({
-      cid,
-      _id: new Types.ObjectId(data.property as string),
-    })) as IPropertyDocument;
+    let lease = (await Lease.findById(leaseId)) as ILeaseDocument;
 
-    if (!leaseId) {
-      const err = 'Lease Id is missing.';
+    if (!lease) {
+      const err = 'Lease not found..';
+      this.log.error(color.red(err));
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.NOT_FOUND
+      );
+    }
+
+    const property = await Property.findOne({
+      puid: data?.puid || lease.puid,
+      $and: [{ cid }],
+    });
+
+    if (!property) {
+      const err = 'Property not found.';
+      this.log.error(color.red(err));
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.NOT_FOUND
+      );
+    }
+
+    if (
+      property &&
+      property.propertyType !== 'singleFamily' &&
+      lease &&
+      !lease.apartmentId
+    ) {
+      const err = 'Apartment Id is missing.';
       this.log.error(color.red(err));
       throw new ErrorResponse(
         err,
@@ -233,8 +290,6 @@ class LeaseService {
         httpStatusCodes.BAD_REQUEST
       );
     }
-
-    let lease = (await Lease.findById(leaseId)) as ILeaseDocument;
 
     if (data.s3Files && data.s3Files.length) {
       const agreements = data.s3Files.map((fileInfo) => {
@@ -275,9 +330,7 @@ class LeaseService {
         { $set: dataToUpdate },
         { new: true, runValidators: true }
       )) as ILeaseDocument;
-    }
-
-    if (lease.status.value === 'draft') {
+    } else if (lease.status.value === 'draft') {
       const dataToUpdate = {
         startDate: data.startDate ? data.startDate : lease.startDate,
         endDate: data.endDate ? data.endDate : lease.endDate,
@@ -330,10 +383,6 @@ class LeaseService {
         }
 
         dataToUpdate.apartmentId = data.apartmentId;
-      } else {
-        dataToUpdate.apartmentId = data.apartmentId
-          ? data.apartmentId
-          : lease.apartmentId;
       }
 
       lease = (await Lease.findOneAndUpdate(
@@ -341,9 +390,7 @@ class LeaseService {
         { $set: dataToUpdate },
         { new: true, runValidators: true }
       )) as ILeaseDocument;
-    }
-
-    if (lease.status.value === 'pending') {
+    } else if (lease.status.value === 'pending') {
       const dataToUpdate = {
         startDate: data.startDate ? data.startDate : lease.startDate,
         endDate: data.endDate ? data.endDate : lease.endDate,
@@ -368,6 +415,8 @@ class LeaseService {
           value: data.status?.value,
           reason: data.status?.reason,
         },
+        dateTenantAccepted: data.dateTenantAccepted,
+        hasTenantAccepted: data.hasTenantAccepted,
       };
 
       lease = (await Lease.findOneAndUpdate(
@@ -392,7 +441,7 @@ class LeaseService {
 
     const property = (await Property.findOne({
       cid: lease.cid,
-      _id: lease.property as Types.ObjectId,
+      puid: lease.puid,
     })) as IPropertyDocument;
 
     if (

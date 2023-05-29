@@ -4,6 +4,7 @@ import { DoneCallback, Job } from 'bull';
 import Mailer from '@root/app/mailer';
 import { createLogger } from '@utils/helperFN';
 import { Invite } from '@models/index';
+import { ObjectId, Types } from 'mongoose';
 
 export default class EmailWorker {
   mailer: Mailer;
@@ -34,8 +35,8 @@ export default class EmailWorker {
       const inviteId = extractInviteId(data.data.inviteUrl);
       await this.mailer.sendMail(data, data.emailType);
       job.progress(100);
-      Invite.findOneAndUpdate(
-        { id: inviteId },
+      await Invite.findOneAndUpdate(
+        { _id: new Types.ObjectId(inviteId) },
         { $set: { sentAt: new Date() } },
         { new: true }
       );

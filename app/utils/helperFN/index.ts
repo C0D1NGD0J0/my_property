@@ -83,9 +83,9 @@ export const validateResourceID = (id: string) => {
     /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/gi;
 
   if (id.length == 24 && isValidObjectId(id)) {
-    return { isValid: true };
+    return { isValid: true, type: 'mongoID' };
   } else if (id.length > 32 && regexExp.test(id)) {
-    return { isValid: true };
+    return { isValid: true, type: 'uuid' };
   } else {
     return { isValid: false };
   }
