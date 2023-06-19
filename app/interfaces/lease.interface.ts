@@ -8,11 +8,11 @@ interface ILeaseAgreement {
   key?: string;
 }
 
-interface ILeaseHistory {
-  startDate?: Date;
-  endDate?: Date;
-  renewalDate?: Date;
-  previousRentAmount?: string;
+interface ILeaseRenewalHistory {
+  managedBy: string;
+  previousEndDate?: Date;
+  previousStartDate?: Date;
+  previousPaymentInfo?: IPaymentInfo;
 }
 
 interface IPaymentInfo {
@@ -44,7 +44,7 @@ export interface ILease extends Document {
   isRenewal: boolean;
   apartmentId?: string;
   paymentInfo: IPaymentInfo;
-  leaseHistory: ILeaseHistory[];
+  leaseHistory: ILeaseRenewalHistory[];
   paymentHistory: Types.ObjectId[];
   leaseAgreements: ILeaseAgreement[];
   tenant?: Types.ObjectId | IUserDocument;

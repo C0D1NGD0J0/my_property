@@ -40,7 +40,7 @@ router.post(
 );
 
 router.put(
-  '/:cid/:id/update_lease',
+  '/:cid/update_lease/:id',
   fileUpload.upload,
   LeaseValidations.updateLease,
   validationRequestHandler,
@@ -48,10 +48,17 @@ router.put(
 );
 
 router.put(
-  '/:cid/:id/terminate_lease',
+  '/:cid/terminate_lease/:id',
   LeaseValidations.validateParams,
   validationRequestHandler,
   asyncHandler(LeaseController.terminateLease)
+);
+
+router.put(
+  '/:cid/renew_lease/:id',
+  LeaseValidations.leaseRenewal,
+  validationRequestHandler,
+  asyncHandler(LeaseController.leaseRenewal)
 );
 
 export default router;

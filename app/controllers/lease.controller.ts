@@ -123,6 +123,22 @@ class LeaseController {
     );
     res.status(200).json(data);
   };
+
+  leaseRenewal = async (req: AppRequest, res: AppResponse) => {
+    const { id } = req.currentuser!;
+    const { cid, id: leaseId } = req.params;
+    const fileUploadResponse = req.files as {
+      [fieldname: string]: Express.Multer.File[];
+    };
+
+    const leaseData = {
+      ...req.body,
+      s3Files: fileUploadResponse?.leaseContract,
+    };
+
+    const data = await this.leaseService.leaseRenewal(cid, leaseId, leaseData);
+    res.status(200).json(data);
+  };
 }
 
 export default new LeaseController();

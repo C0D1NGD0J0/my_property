@@ -244,8 +244,70 @@ const update = () => {
   ];
 };
 
+const leaseRenewal = () => {
+  return [
+    ...validateParams(),
+    body('startDate')
+      .exists()
+      .withMessage('Start date is required.')
+      .isISO8601()
+      .toDate()
+      .withMessage('Start date should be a valid date in ISO 8601 format.'),
+
+    body('endDate')
+      .exists()
+      .withMessage('End date is required.')
+      .isISO8601()
+      .toDate()
+      .withMessage('End date should be a valid date in ISO 8601 format.'),
+
+    body('apartmentId')
+      .optional()
+      .exists()
+      .withMessage('Apartment ID is required.'),
+
+    body('paymentInfo.rentAmount')
+      .exists()
+      .withMessage('Rent amount is required.')
+      .isNumeric()
+      .withMessage('Rent amount should be a number.')
+      .custom((value: number) => value > 0)
+      .withMessage('Rent amount should be greater than 0.'),
+
+    body('paymentInfo.paymentFrequency')
+      .exists()
+      .withMessage('Payment frequency is required.')
+      .isIn(['monthly', 'quarterly', 'biannually', 'annually'])
+      .withMessage('Invalid payment frequency value provided.'),
+
+    body('isRenewal').optional().isBoolean().toBoolean(),
+
+    body('paymentInfo.paymentDueDate')
+      .exists()
+      .withMessage('Payment due date is required.')
+      .isISO8601()
+      .toDate()
+      .withMessage(
+        'Payment due date should be a valid date in ISO 8601 format.'
+      ),
+
+    body('paymentInfo.securityDeposit')
+      .exists()
+      .withMessage('Security deposit is required.')
+      .isNumeric()
+      .withMessage('Security deposit should be a number.')
+      .custom((value: number) => value >= 0)
+      .withMessage('Security deposit should be greater than or equal to 0.'),
+
+    body('status.value', 'Please provide a status of this lease.')
+      .exists()
+      .isIn(Object.values(ILeaseStatusEnum)),
+  ];
+};
+
 export default {
   createLease: create(),
   updateLease: update(),
+  leaseRenewal: leaseRenewal(),
   validateParams: validateParams(),
 };

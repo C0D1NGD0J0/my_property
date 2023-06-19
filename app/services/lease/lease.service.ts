@@ -1,5 +1,5 @@
 import color from 'colors';
-import { Types } from 'mongoose';
+import { ObjectId, Types } from 'mongoose';
 import { Lease, Property } from '@models/index';
 
 import {
@@ -17,6 +17,7 @@ import S3FileUpload from '@services/external/s3.service';
 import { httpStatusCodes, errorTypes } from '@utils/constants';
 import { createLogger, paginateResult } from '@utils/helperFN';
 import { ILease, ILeaseDocument } from '@interfaces/lease.interface';
+import { IUserDocument } from '@interfaces/user.interface';
 
 class LeaseService {
   private log;
@@ -241,6 +242,108 @@ class LeaseService {
       data: lease,
       success: true,
       msg: 'New lease has been created.',
+    };
+  };
+
+  leaseRenewal = async (
+    cid: string,
+    leaseId: string,
+    data: Partial<ILease & { s3Files: IAWSFileUploadResponse[] }>
+  ): IPromiseReturnedData<ILeaseDocument> => {
+    const property = (await Property.findOne({
+      cid,
+      puid: data.puid as string,
+    })) as IPropertyDocument;
+
+    if (property.deletedAt) {
+      const err = 'This Property is no longer available.';
+      this.log.error(color.red(err));
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.BAD_REQUEST
+      );
+    }
+
+    if (
+      property.propertyType !== IPropertyTypeEnum.singleFamily &&
+      !data.apartmentId
+    ) {
+      const err = 'Apartment id is missing.';
+      this.log.error(color.red(err));
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.UNPROCESSABLE
+      );
+    }
+
+    if (!leaseId) {
+      const err = 'Lease id is missing.';
+      this.log.error(color.red(err));
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.UNPROCESSABLE
+      );
+    }
+
+    const lease = await Lease.findById(leaseId).populate({
+      path: 'managedBy',
+      model: 'User',
+      select: 'firstName lastName', // Only return the fullName virtual property
+    });
+
+    if (!lease) {
+      const err = 'Lease not found.';
+      this.log.error(color.red(err));
+      throw new ErrorResponse(
+        err,
+        errorTypes.NO_RESOURCE_ERROR,
+        httpStatusCodes.NOT_FOUND
+      );
+    }
+
+    if (!data.startDate || !data.endDate) {
+      const err = 'Missing Date value for either startDate/endDate';
+      this.log.error(color.red(err));
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.BAD_REQUEST
+      );
+    }
+
+    if (lease?.status.value === 'active') {
+      lease.leaseHistory.push({
+        previousEndDate: lease.endDate,
+        previousStartDate: lease.startDate,
+        previousPaymentInfo: lease.paymentInfo,
+        managedBy: (lease.managedBy as IUserDocument).fullname as string,
+      });
+
+      lease.isRenewal = true;
+      lease.endDate = data.endDate;
+      lease.startDate = data.startDate;
+      lease.paymentInfo = data?.paymentInfo || lease.paymentInfo;
+
+      if (data.s3Files && data.s3Files.length) {
+        lease.leaseAgreements = data.s3Files.map((fileInfo) => {
+          return {
+            url: fileInfo.location,
+            filename: fileInfo.originalname,
+            key: fileInfo.key,
+          };
+        });
+      }
+
+      await lease.save();
+    }
+
+    return {
+      data: lease,
+      success: true,
+      msg: 'Lease has been renewed.',
     };
   };
 
