@@ -73,6 +73,10 @@ const maintenanceReportSchema = new Schema<IMaintenanceReportDocument>(
       ref: 'User',
       required: true,
     },
+    deletedAt: {
+      type: Date,
+      default: undefined,
+    },
   },
   {
     timestamps: true,

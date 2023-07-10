@@ -15,6 +15,31 @@ class ReportController {
     this.reportService = new ReportService();
   }
 
+  getReports = async (req: AppRequest, res: AppResponse) => {
+    const { puid } = req.params;
+    const { cid } = req.currentuser!;
+    const { page, limit, sortBy } = req.query;
+
+    // pagination
+    const paginationQuery: IPaginationQuery = {
+      page: page ? parseInt(page as string, 10) : 1,
+      limit: limit ? parseInt(limit as string, 10) : 10,
+      sortBy: sortBy as string,
+      skip: null,
+    };
+
+    paginationQuery.skip =
+      paginationQuery && (paginationQuery.page! - 1) * paginationQuery.limit!;
+
+    const data = await this.reportService.allReports(
+      cid,
+      puid,
+      paginationQuery
+    );
+
+    res.status(httpStatusCodes.OK).json(data);
+  };
+
   createReport = async (req: AppRequest, res: AppResponse) => {
     const { id, cid } = req.currentuser!;
     const { puid } = req.params;
@@ -46,6 +71,20 @@ class ReportController {
     };
 
     const data = await this.reportService.update(id, updateData);
+    res.status(httpStatusCodes.OK).json(data);
+  };
+
+  updateStatus = async (req: AppRequest, res: AppResponse) => {
+    const { id } = req.params;
+
+    const data = await this.reportService.updateStatus(id, req.body);
+    res.status(httpStatusCodes.OK).json(data);
+  };
+
+  archiveReport = async (req: AppRequest, res: AppResponse) => {
+    const { id } = req.params;
+
+    const data = await this.reportService.archiveReport(id);
     res.status(httpStatusCodes.OK).json(data);
   };
 }

@@ -47,8 +47,12 @@ const createReport = () => {
     body('description')
       .exists()
       .withMessage('Description is required')
-      .isLength({ max: 1500 })
-      .withMessage('Description cannot exceed 700 characters'),
+      .isLength({ max: 1500 }),
+    body('title')
+      .exists()
+      .withMessage('Title is required')
+      .isLength({ max: 60 })
+      .withMessage('Title cannot exceed 60 characters'),
     body('status')
       .notEmpty()
       .withMessage('Status is required')

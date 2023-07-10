@@ -23,7 +23,7 @@ class ReportService {
     this.log = createLogger('ReportService', true);
   }
 
-  propertyReports = async (
+  allReports = async (
     cid: string,
     puid: string,
     data: IPaginationQuery
@@ -56,7 +56,7 @@ class ReportService {
       );
     }
 
-    const query = { cid, puid };
+    const query = { cid, puid, deletedAt: undefined };
     const reports = await Report.find(query)
       .skip(skip!)
       .limit(limit!)
@@ -271,6 +271,40 @@ class ReportService {
       data: report,
       success: true,
       msg: 'Report has been updated.',
+    };
+  };
+
+  archiveReport = async (
+    reportId: string
+  ): IPromiseReturnedData<IMaintenanceReport> => {
+    if (!reportId) {
+      const err = 'Report identifier is missing.';
+      this.log.error(color.red(err));
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.NOT_FOUND
+      );
+    }
+
+    const report = await Report.findById(reportId);
+    if (!report) {
+      const err = 'Report not found.';
+      this.log.error(color.red(err));
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.NOT_FOUND
+      );
+    }
+
+    report.deletedAt = new Date();
+    await report.save();
+
+    return {
+      data: report,
+      success: true,
+      msg: 'Report has been archived.',
     };
   };
 }

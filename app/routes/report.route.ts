@@ -30,25 +30,25 @@ router.put(
   asyncHandler(ReportController.updateReport)
 );
 
-// router.get(
-//   '/:id',
-//   UtilsValidations.reportParams,
-//   validationRequestHandler,
-//   asyncHandler(ReportController.getReport)
-// );
+router.get(
+  '/:puid',
+  UtilsValidations.reportParams,
+  validationRequestHandler,
+  asyncHandler(ReportController.getReports)
+);
 
-// router.put(
-//   '/:id/update_status',
-//   ReportValidations.updateStatus,
-//   validationRequestHandler,
-//   asyncHandler(ReportController.updateStatus)
-// );
+router.put(
+  '/:id/update_status',
+  ReportValidations.updateStatus,
+  validationRequestHandler,
+  asyncHandler(ReportController.updateStatus)
+);
 
-// router.delete(
-//   '/:id',
-//   UtilsValidations.reportParams,
-//   validationRequestHandler,
-//   asyncHandler(ReportController.archiveReport)
-// );
+router.delete(
+  '/:id',
+  UtilsValidations.reportParams,
+  validationRequestHandler,
+  asyncHandler(ReportController.archiveReport)
+);
 
 export default router;

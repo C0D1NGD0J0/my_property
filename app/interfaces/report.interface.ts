@@ -22,6 +22,7 @@ export interface IMaintenanceReport {
     key?: string;
     mediaType?: string;
   }>;
+  deletedAt?: Date;
   title?: string;
   status: 'open' | 'in-progress' | 'resolved' | 'closed';
   assignedTo?: Types.ObjectId;
