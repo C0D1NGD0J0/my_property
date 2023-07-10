@@ -1,8 +1,8 @@
 import User from '@models/user/user.model';
 import Lease from '@models/lease/lease.model';
-import Tenant from '@models/user/tenant.model';
 import Invite from '@models/invite/invite.model';
 import Client from '@models/client/client.model';
 import Property from '@models/property/property.model';
+import Report from '@models/report/maintenanceReport.model';
 
-export { User, Tenant, Client, Property, Invite, Lease };
+export { User, Report, Client, Property, Invite, Lease };

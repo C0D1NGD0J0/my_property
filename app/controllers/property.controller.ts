@@ -27,7 +27,7 @@ class PropertyController {
     };
 
     const data = await this.propertyService.create(cid, id, newPropertyData);
-    res.status(200).json(data);
+    res.status(httpStatusCodes.OK).json(data);
   };
 
   createApartment = async (req: AppRequest, res: AppResponse) => {
@@ -44,7 +44,7 @@ class PropertyController {
       puid,
       newApartment
     );
-    res.status(200).json(data);
+    res.status(httpStatusCodes.OK).json(data);
   };
 
   getUserProperties = async (req: AppRequest, res: AppResponse) => {
@@ -65,7 +65,7 @@ class PropertyController {
       id,
       paginationQuery
     );
-    res.status(200).json(data);
+    res.status(httpStatusCodes.OK).json(data);
   };
 
   getClientProperties = async (req: AppRequest, res: AppResponse) => {
@@ -87,7 +87,7 @@ class PropertyController {
       cid,
       paginationQuery
     );
-    res.status(200).json(data);
+    res.status(httpStatusCodes.OK).json(data);
   };
 
   getProperty = async (req: AppRequest, res: AppResponse) => {
@@ -95,7 +95,7 @@ class PropertyController {
     const { cid } = req.currentuser!;
 
     const data = await this.propertyService.getProperty(cid, puid);
-    res.status(200).json(data);
+    res.status(httpStatusCodes.OK).json(data);
   };
 
   updateDetails = async (req: AppRequest, res: AppResponse) => {
@@ -121,7 +121,7 @@ class PropertyController {
     const { cid } = req.currentuser!;
 
     const data = await this.propertyService.archiveProperty(cid, puid);
-    return res.status(204).json(data);
+    return res.status(httpStatusCodes.OK).json(data);
   };
 
   archiveApartment = async (req: AppRequest, res: AppResponse) => {
@@ -129,7 +129,7 @@ class PropertyController {
     const { cid } = req.currentuser!;
 
     const data = await this.propertyService.archiveApartment(cid, puid, unitId);
-    return res.status(204).json(data);
+    return res.status(httpStatusCodes.OK).json(data);
   };
 }
 

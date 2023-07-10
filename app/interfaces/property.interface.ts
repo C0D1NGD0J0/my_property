@@ -39,6 +39,7 @@ export type IPropertyStatus = 'vacant' | 'occupied' | 'partially-occupied';
 
 export interface IProperty {
   description?: string;
+  title?: string;
   propertyType: IPropertyType;
   status: IPropertyStatus;
   managedBy: Types.ObjectId | Partial<IUserDocument>;

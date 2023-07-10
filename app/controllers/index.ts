@@ -3,6 +3,7 @@ import UserController from '@controllers/user.controller';
 import InviteController from '@controllers/invite.controller';
 import PropertyController from '@controllers/property.controller';
 import LeaseController from '@controllers/lease.controller';
+import ReportController from '@controllers/report.controller';
 
 export {
   AuthController,
@@ -10,4 +11,5 @@ export {
   PropertyController,
   InviteController,
   LeaseController,
+  ReportController,
 };
