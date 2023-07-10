@@ -90,6 +90,13 @@ const PropertySchema = new Schema<IPropertyDocument>(
       },
       currency: { type: String, required: true, default: 'USD' },
     },
+    title: {
+      index: true,
+      type: String,
+      minlength: 3,
+      maxlength: 40,
+      required: true,
+    },
     extras: {
       has_tv: { type: Boolean, default: false },
       has_kitchen: { type: Boolean, default: false },

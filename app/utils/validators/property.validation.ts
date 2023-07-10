@@ -1,9 +1,4 @@
 import { body, param } from 'express-validator';
-// import { isValidObjectId } from 'mongoose';
-
-// import { User, Property } from '@models/index';
-// import { httpStatusCodes } from '@utils/helperFN';
-// import ErrorResponse from '@utils/errorResponse';
 import { Property } from '@models/index';
 import ErrorResponse from '@utils/errorResponse';
 import { errorTypes, httpStatusCodes } from '@utils/constants';

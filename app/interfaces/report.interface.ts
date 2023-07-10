@@ -14,7 +14,7 @@ export interface IMaintenanceReport {
     | 'Security'
     | 'General Maintenance';
   cid: string;
-  priority: 'Urgent' | 'Normal' | 'Low';
+  priority: 'urgent' | 'normal' | 'low';
   description: string;
   attachments: Array<{
     url: string;
@@ -22,7 +22,8 @@ export interface IMaintenanceReport {
     key?: string;
     mediaType?: string;
   }>;
-  status: 'Open' | 'In-Progress' | 'Resolved' | 'Closed';
+  title?: string;
+  status: 'open' | 'in-progress' | 'resolved' | 'closed';
   assignedTo?: Types.ObjectId;
   creator: Types.ObjectId;
 }

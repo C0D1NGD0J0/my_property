@@ -1,6 +1,6 @@
 import { body, param } from 'express-validator';
 
-import { Client, Property } from '@models/index';
+import { Client, Property, Report } from '@models/index';
 import ErrorResponse from '@utils/errorResponse';
 import { validateResourceID } from '@utils/helperFN';
 import { errorTypes, httpStatusCodes } from '@utils/constants';
@@ -81,7 +81,35 @@ const clientParams = () => {
   ];
 };
 
+const reportParams = () => {
+  return [
+    param('id', 'Report identifier missing.')
+      .if(param('id').exists())
+      .bail()
+      .custom(async (id) => {
+        const { isValid } = validateResourceID(id);
+        if (!isValid) {
+          throw new ErrorResponse(
+            `Invalid identifier provided <${id}>.`,
+            errorTypes.NO_RESOURCE_ERROR,
+            httpStatusCodes.BAD_REQUEST
+          );
+        }
+
+        const client = await Report.findById({ id });
+        if (!client) {
+          throw new ErrorResponse(
+            `Invalid Client resource identifier provided <${id}>.`,
+            errorTypes.NO_RESOURCE_ERROR,
+            httpStatusCodes.NOT_FOUND
+          );
+        }
+      }),
+  ];
+};
+
 export default {
   validatePropertyParams: propertyParams(),
   validateClientParams: clientParams(),
+  reportParams: reportParams(),
 };

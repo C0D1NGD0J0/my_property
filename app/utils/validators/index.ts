@@ -10,6 +10,7 @@ import PropertyValidations from '@utils/validators/property.validation';
 import InvitationValidations from '@utils/validators/invite.validation';
 import LeaseValidations from '@utils/validators/lease.validation';
 import UtilsValidations from '@utils/validators/utils.validation';
+import ReportValidations from '@utils/validators/report.validation';
 
 const validationRequestHandler = (
   req: AppRequest,
@@ -40,6 +41,7 @@ export {
   validationRequestHandler,
   AuthValidations,
   UserValidations,
+  ReportValidations,
   PropertyValidations,
   InvitationValidations,
   LeaseValidations,

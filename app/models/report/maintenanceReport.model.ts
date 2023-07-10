@@ -13,6 +13,13 @@ const maintenanceReportSchema = new Schema<IMaintenanceReportDocument>(
       type: String,
       required: true,
     },
+    title: {
+      index: true,
+      type: String,
+      minlength: 3,
+      maxlength: 40,
+      required: true,
+    },
     category: {
       type: String,
       enum: [
@@ -54,8 +61,8 @@ const maintenanceReportSchema = new Schema<IMaintenanceReportDocument>(
     ],
     status: {
       type: String,
-      enum: ['Open', 'In-Progress', 'Resolved', 'Closed'],
-      default: 'Open',
+      enum: ['open', 'in-progress', 'resolved', 'closed'],
+      default: 'open',
     },
     assignedTo: {
       type: Schema.Types.ObjectId,
