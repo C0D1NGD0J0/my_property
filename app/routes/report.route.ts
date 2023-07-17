@@ -14,6 +14,7 @@ const fileUpload: S3FileUpload = new S3FileUpload();
 
 router.use(AuthMiddleware.isAuthenticated);
 
+// Report routes
 router.post(
   '/:puid/',
   fileUpload.upload,
@@ -49,6 +50,35 @@ router.delete(
   UtilsValidations.reportParams,
   validationRequestHandler,
   asyncHandler(ReportController.archiveReport)
+);
+
+// Comments routes
+router.get(
+  '/:id/comments',
+  UtilsValidations.reportParams,
+  validationRequestHandler,
+  asyncHandler(ReportController.getComments)
+);
+
+router.post(
+  '/:id/comments',
+  ReportValidations.addComment,
+  validationRequestHandler,
+  asyncHandler(ReportController.addComment)
+);
+
+router.put(
+  '/:id/comments/:commentId',
+  ReportValidations.addComment,
+  validationRequestHandler,
+  asyncHandler(ReportController.editComment)
+);
+
+router.post(
+  '/:id/comments/:commentId',
+  ReportValidations.addComment,
+  validationRequestHandler,
+  asyncHandler(ReportController.addComment)
 );
 
 export default router;

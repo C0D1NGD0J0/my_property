@@ -87,6 +87,59 @@ class ReportController {
     const data = await this.reportService.archiveReport(id);
     res.status(httpStatusCodes.OK).json(data);
   };
+
+  // Comments
+  getComments = async (req: AppRequest, res: AppResponse) => {
+    const { id } = req.params;
+    const { page, limit, sortBy } = req.query;
+
+    // pagination
+    const paginationQuery: IPaginationQuery = {
+      page: page ? parseInt(page as string, 10) : 1,
+      limit: limit ? parseInt(limit as string, 10) : 10,
+      sortBy: sortBy as string,
+      skip: null,
+    };
+
+    paginationQuery.skip =
+      paginationQuery && (paginationQuery.page! - 1) * paginationQuery.limit!;
+
+    const data = await this.reportService.getComments(id, paginationQuery);
+    res.status(httpStatusCodes.OK).json(data);
+  };
+
+  addComment = async (req: AppRequest, res: AppResponse) => {
+    const { id } = req.params;
+
+    const commentData = {
+      ...req.body,
+      report: new Types.ObjectId(id),
+      author: new Types.ObjectId(req.currentuser!.id),
+    };
+
+    const data = await this.reportService.addComment(id, commentData);
+    res.status(httpStatusCodes.OK).json(data);
+  };
+
+  editComment = async (req: AppRequest, res: AppResponse) => {
+    const { commentId } = req.params;
+
+    const commentData = {
+      ...req.body,
+      _id: new Types.ObjectId(commentId),
+    };
+
+    const data = await this.reportService.editComment(commentId, commentData);
+    res.status(httpStatusCodes.OK).json(data);
+  };
+
+  archiveComment = async (req: AppRequest, res: AppResponse) => {
+    const { commentId } = req.params;
+    const _comment = req.body;
+
+    const data = await this.reportService.archiveComment(commentId);
+    res.status(httpStatusCodes.OK).json(data);
+  };
 }
 
 export default new ReportController();

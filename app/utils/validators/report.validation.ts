@@ -76,7 +76,19 @@ const updateStatus = () => {
   ];
 };
 
+const addComment = () => {
+  return [
+    ...UtilsValidations.reportParams,
+    body('text')
+      .exists()
+      .withMessage('Text is required')
+      .isLength({ max: 650, min: 2 })
+      .withMessage('Text cannot exceed 650 or be below 2 characters'),
+  ];
+};
+
 export default {
+  addComment: addComment(),
   updateStatus: updateStatus(),
   createReport: createReport(),
 };

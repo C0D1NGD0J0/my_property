@@ -1,5 +1,5 @@
 import color from 'colors';
-import { Lease, Property, Report } from '@models/index';
+import { Lease, Property, Report, ReportComment } from '@models/index';
 
 import {
   IAWSFileUploadResponse,
@@ -13,6 +13,9 @@ import S3FileUpload from '@services/external/s3.service';
 import { httpStatusCodes, errorTypes } from '@utils/constants';
 import { createLogger, paginateResult } from '@utils/helperFN';
 import { IPropertyDocument } from '@interfaces/property.interface';
+import { ICommentDocument } from '@interfaces/comment.interface';
+import { Types } from 'mongoose';
+import dayjs from 'dayjs';
 
 class ReportService {
   private log;
@@ -149,7 +152,6 @@ class ReportService {
   };
 
   update = async (
-    cid: string,
     reportId: string,
     data: Partial<IMaintenanceReport & { s3Files: IAWSFileUploadResponse[] }>
   ): IPromiseReturnedData<IMaintenanceReport> => {
@@ -164,7 +166,6 @@ class ReportService {
     }
 
     const property: IPropertyDocument | null = await Property.findOne({
-      cid,
       puid: data.puid,
     });
 
@@ -305,6 +306,152 @@ class ReportService {
       data: report,
       success: true,
       msg: 'Report has been archived.',
+    };
+  };
+
+  // Comments
+  getComments = async (
+    reportId: string | undefined,
+    data: IPaginationQuery
+  ): IPromiseReturnedData<{
+    comments: ICommentDocument[];
+    paginate: IPaginateResult;
+  }> => {
+    const { limit, skip, sortBy } = data;
+    if (!reportId) {
+      const err = 'Report identifier is missing.';
+      this.log.error(color.red(err));
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.NOT_FOUND
+      );
+    }
+
+    const query = {
+      report: new Types.ObjectId(reportId),
+      deletedAt: undefined,
+    };
+    const report = await Report.findById(reportId);
+    if (!report) {
+      const err = 'Report not found.';
+      this.log.error(color.red(err));
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.NOT_FOUND
+      );
+    }
+
+    const comments = await ReportComment.find(query)
+      .skip(skip!)
+      .limit(limit!)
+      .sort(sortBy);
+
+    const count = await ReportComment.countDocuments(query);
+    const paginationInfo = paginateResult(count, skip!, limit!);
+
+    return {
+      data: { comments, paginate: paginationInfo },
+      success: true,
+    };
+  };
+
+  addComment = async (
+    reportId: string | undefined,
+    data: Partial<ICommentDocument>
+  ): IPromiseReturnedData<ICommentDocument> => {
+    if (!reportId) {
+      const err = 'Report identifier is missing.';
+      this.log.error(color.red(err));
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.NOT_FOUND
+      );
+    }
+
+    const report = await Report.findById(reportId);
+    if (!report) {
+      const err = 'Report not found.';
+      this.log.error(color.red(err));
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.NOT_FOUND
+      );
+    }
+
+    const comment = new ReportComment(data);
+    await comment.save();
+    return {
+      data: comment,
+      success: true,
+    };
+  };
+
+  editComment = async (
+    commentId: string | undefined,
+    data: Pick<ICommentDocument, 'text'>
+  ): IPromiseReturnedData<ICommentDocument> => {
+    if (!commentId) {
+      const err = 'Comment identifier is missing.';
+      this.log.error(color.red(err));
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.NOT_FOUND
+      );
+    }
+
+    const comment = await ReportComment.findById(commentId);
+    if (!comment) {
+      const err = 'Comment not found.';
+      this.log.error(color.red(err));
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.NOT_FOUND
+      );
+    }
+
+    comment.text = data.text;
+    await comment.save();
+    return {
+      data: comment,
+      success: true,
+    };
+  };
+
+  archiveComment = async (
+    commentId: string | undefined
+  ): IPromiseReturnedData => {
+    if (!commentId) {
+      const err = 'Comment identifier is missing.';
+      this.log.error(color.red(err));
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.NOT_FOUND
+      );
+    }
+
+    const comment = await ReportComment.findById(commentId);
+    if (!comment) {
+      const err = 'Comment not found.';
+      this.log.error(color.red(err));
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.NOT_FOUND
+      );
+    }
+
+    comment.deletedAt = new Date();
+    await comment.save();
+
+    return {
+      success: true,
     };
   };
 }
