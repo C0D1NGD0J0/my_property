@@ -59,7 +59,8 @@ export abstract class BaseCache {
 
   setObject = async (
     objName: string,
-    data: object
+    data: object,
+    ttl?: number
   ): Promise<ICacheResponse> => {
     try {
       if (!objName) throw new Error('Error save to cache: objName is required');
@@ -69,7 +70,24 @@ export abstract class BaseCache {
         resp = await this.client.HSET(objName, key, JSON.stringify(value));
       }
 
+      if (ttl) {
+        await this.client.expire(objName, ttl);
+      }
+
       return { success: !!resp };
+    } catch (error) {
+      this.log.error(colors.red.bold(error));
+      throw error;
+    }
+  };
+
+  getObject = async (objName: string): Promise<ICacheResponse> => {
+    try {
+      if (!objName)
+        throw new Error('Error getting cache item: objName is required');
+
+      const resp = await this.client.HGETALL(objName);
+      return { success: !!resp, data: resp };
     } catch (error) {
       this.log.error(colors.red.bold(error));
       throw error;

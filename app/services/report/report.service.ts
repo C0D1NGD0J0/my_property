@@ -7,7 +7,10 @@ import {
   IPaginationQuery,
   IPromiseReturnedData,
 } from '@interfaces/utils.interface';
-import { IMaintenanceReport } from '@interfaces/report.interface';
+import {
+  IMaintenanceReport,
+  IMaintenanceReportDocument,
+} from '@interfaces/report.interface';
 import ErrorResponse from '@utils/errorResponse';
 import S3FileUpload from '@services/external/s3.service';
 import { httpStatusCodes, errorTypes } from '@utils/constants';
@@ -74,11 +77,29 @@ class ReportService {
     };
   };
 
+  getReport = async (
+    reportid: string | undefined
+  ): IPromiseReturnedData<IMaintenanceReportDocument | null> => {
+    if (!reportid) {
+      const err = 'Report Id is missing.';
+      this.log.error(color.red(err));
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.BAD_REQUEST
+      );
+    }
+
+    const report = await Report.findById(new Types.ObjectId(reportid));
+
+    return { success: true, data: report };
+  };
+
   create = async (
     cid: string,
     puid: string,
     data: Partial<IMaintenanceReport & { s3Files: IAWSFileUploadResponse[] }>
-  ): IPromiseReturnedData<IMaintenanceReport> => {
+  ): IPromiseReturnedData<IMaintenanceReportDocument> => {
     if (!puid) {
       const err = 'Property identifier is missing.';
       this.log.error(color.red(err));
@@ -379,6 +400,16 @@ class ReportService {
         err,
         errorTypes.SERVICE_ERROR,
         httpStatusCodes.NOT_FOUND
+      );
+    }
+
+    if (report.status === 'closed') {
+      const err = 'Unable to add comment as report has been marked closed.';
+      this.log.error(color.red(err));
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.UNPROCESSABLE
       );
     }
 

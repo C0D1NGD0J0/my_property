@@ -7,11 +7,14 @@ import {
   IPaginationQuery,
 } from '@interfaces/utils.interface';
 import { httpStatusCodes } from '@utils/constants';
+import { ReportCache } from '@caching/index';
 
 class ReportController {
   private reportService: ReportService;
+  private cache: ReportCache;
 
   constructor() {
+    this.cache = new ReportCache();
     this.reportService = new ReportService();
   }
 
@@ -40,6 +43,19 @@ class ReportController {
     res.status(httpStatusCodes.OK).json(data);
   };
 
+  getReport = async (req: AppRequest, res: AppResponse) => {
+    const { id } = req.params;
+    let data;
+    const resp = await this.cache.getReport(id);
+    if (resp.data) {
+      data = { ...resp };
+    } else {
+      data = await this.reportService.getReport(id);
+    }
+
+    res.status(200).json(data);
+  };
+
   createReport = async (req: AppRequest, res: AppResponse) => {
     const { id, cid } = req.currentuser!;
     const { puid } = req.params;
@@ -55,6 +71,7 @@ class ReportController {
     };
 
     const data = await this.reportService.create(cid, puid, newReportData);
+    data && data.data && this.cache.createReport(data.data);
     res.status(httpStatusCodes.OK).json(data);
   };
 
