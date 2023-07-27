@@ -121,6 +121,15 @@ class ReportController {
     paginationQuery.skip =
       paginationQuery && (paginationQuery.page! - 1) * paginationQuery.limit!;
 
+    const cacheData = await this.cache.getComments(
+      id,
+      paginationQuery.page,
+      paginationQuery.limit
+    );
+    if (cacheData?.data.length > 0) {
+      return res.status(httpStatusCodes.OK).json(cacheData);
+    }
+
     const data = await this.reportService.getComments(id, paginationQuery);
     res.status(httpStatusCodes.OK).json(data);
   };
@@ -135,6 +144,7 @@ class ReportController {
     };
 
     const data = await this.reportService.addComment(id, commentData);
+    data && data.data && (await this.cache.addComment(id, data.data));
     res.status(httpStatusCodes.OK).json(data);
   };
 
