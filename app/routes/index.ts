@@ -4,6 +4,7 @@ import inviteRoutes from './invite.route';
 import propertyRoutes from './property.route';
 import leaseRoutes from './lease.route';
 import reportRoutes from './report.route';
+import notificationRoutes from './notification.route';
 
 export default {
   authRoutes,
@@ -12,4 +13,5 @@ export default {
   inviteRoutes,
   reportRoutes,
   leaseRoutes,
+  notificationRoutes,
 };

@@ -37,7 +37,7 @@ export enum IPaymentFrequencyEnum {
   onetime = 'onetime',
 }
 
-export interface ILease extends Document {
+export interface ILease {
   endDate: Date;
   startDate: Date;
   cid: string | null;

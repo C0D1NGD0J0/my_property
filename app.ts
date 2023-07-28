@@ -70,6 +70,7 @@ export class App {
     app.use(`${BASE_PATH}/leases`, routes.leaseRoutes);
     app.use(`${BASE_PATH}/properties`, routes.propertyRoutes);
     app.use(`${BASE_PATH}/reports`, routes.reportRoutes);
+    app.use(`${BASE_PATH}/notifications`, routes.notificationRoutes);
   }
 
   private appErroHandler(app: Application): void {

@@ -4,6 +4,7 @@ import InviteController from '@controllers/invite.controller';
 import PropertyController from '@controllers/property.controller';
 import LeaseController from '@controllers/lease.controller';
 import ReportController from '@controllers/report.controller';
+import NotificationController from '@controllers/notification.controller';
 
 export {
   AuthController,
@@ -12,4 +13,5 @@ export {
   InviteController,
   LeaseController,
   ReportController,
+  NotificationController,
 };
