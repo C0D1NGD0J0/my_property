@@ -3,7 +3,7 @@ import {
   INotificationDocument,
   INotificationTypeEnum,
 } from '@interfaces/notification.interface';
-import { ObjectId, Schema, model } from 'mongoose';
+import { ObjectId, Schema, Types, model } from 'mongoose';
 import uniqueValidator from 'mongoose-unique-validator';
 
 const NotificationSchema = new Schema<INotificationDocument>(
@@ -18,6 +18,7 @@ const NotificationSchema = new Schema<INotificationDocument>(
       required: true,
       index: true,
     },
+    content: {},
     receiver: {
       type: Schema.Types.ObjectId,
       ref: 'User',
