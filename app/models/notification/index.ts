@@ -18,7 +18,12 @@ const NotificationSchema = new Schema<INotificationDocument>(
       required: true,
       index: true,
     },
-    content: {},
+    content: {
+      actionType: { type: String, default: '' },
+      title: { type: String, default: '' },
+      description: { type: String, default: '' },
+      body: { type: String, default: null },
+    },
     receiver: {
       type: Schema.Types.ObjectId,
       ref: 'User',

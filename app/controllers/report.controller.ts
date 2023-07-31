@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { Types } from 'mongoose';
 import { ReportService } from '@services/report';
 import { ICurrentUser } from '@interfaces/user.interface';
@@ -8,14 +9,20 @@ import {
 } from '@interfaces/utils.interface';
 import { httpStatusCodes } from '@utils/constants';
 import { ReportCache } from '@caching/index';
+import { NotificationService } from '@services/notification';
+import { INotificationTypeEnum } from '@interfaces/notification.interface';
+import { socketIONotificationObject } from '@sockets/notification';
+import { socketIOCommentObject } from '@sockets/comments';
 
 class ReportController {
+  private notificationService: NotificationService;
   private reportService: ReportService;
   private cache: ReportCache;
 
   constructor() {
     this.cache = new ReportCache();
     this.reportService = new ReportService();
+    this.notificationService = new NotificationService();
   }
 
   getReports = async (req: AppRequest, res: AppResponse) => {
@@ -71,6 +78,33 @@ class ReportController {
     };
 
     const data = await this.reportService.create(cid, puid, newReportData);
+    const report = data?.data;
+    // create notification
+    if (
+      report &&
+      report.creator.toString() !== req.currentuser!.id.toString()
+    ) {
+      const notification = await this.notificationService.createNotification(
+        cid,
+        {
+          cid,
+          puid: report?.puid,
+          sender: report?.creator,
+          receiver: report?.assignedTo,
+          content: {
+            body: null,
+            title: report.title,
+            actionType: 'new-report',
+            description: 'A new report has been filed.',
+          },
+          resourceId: String(report?._id),
+          notificationType: INotificationTypeEnum.report,
+        }
+      );
+      // emit socket event
+      socketIONotificationObject.emit('new-report', notification.data);
+    }
+    // save to cache
     data && data.data && this.cache.createReport(data.data);
     res.status(httpStatusCodes.OK).json(data);
   };
@@ -135,14 +169,17 @@ class ReportController {
   };
 
   addComment = async (req: AppRequest, res: AppResponse) => {
+    3;
     const { id } = req.params;
 
     const commentData = {
       ...req.body,
+      createdAt: dayjs(),
       report: new Types.ObjectId(id),
       author: new Types.ObjectId(req.currentuser!.id),
     };
 
+    socketIOCommentObject.emit('add:comment', commentData);
     const data = await this.reportService.addComment(id, commentData);
     data && data.data && (await this.cache.addComment(id, data.data));
     res.status(httpStatusCodes.OK).json(data);

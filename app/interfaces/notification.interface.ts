@@ -13,8 +13,11 @@ export interface INotification {
   puid: string;
   readAt: Date;
   isRead: boolean;
-  content?: {
-    [key: string]: any;
+  content: {
+    actionType?: string;
+    title: string;
+    description: string;
+    body: string | null;
   };
   sender: Types.ObjectId;
   receiver: Types.ObjectId;

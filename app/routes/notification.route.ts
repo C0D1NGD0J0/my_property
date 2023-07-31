@@ -13,11 +13,18 @@ import {
 router.use(AuthMiddleware.isAuthenticated);
 
 // Report routes
-router.post(
-  '/:cid/',
-  NotificationValidations.createNotification,
+router.get(
+  '/:cid',
+  UtilsValidations.notificationParams,
   validationRequestHandler,
-  asyncHandler(NotificationController.createNotification)
+  asyncHandler(NotificationController.getNotifications)
+);
+
+router.put(
+  '/:cid/:id',
+  UtilsValidations.notificationParams,
+  validationRequestHandler,
+  asyncHandler(NotificationController.updateNotification)
 );
 
 export default router;

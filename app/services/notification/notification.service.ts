@@ -1,13 +1,8 @@
 import color from 'colors';
-import { ObjectId, Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { Notification } from '@models/index';
 
-import {
-  IAWSFileUploadResponse,
-  IPaginateResult,
-  IPaginationQuery,
-  IPromiseReturnedData,
-} from '@interfaces/utils.interface';
+import { IPromiseReturnedData } from '@interfaces/utils.interface';
 import ErrorResponse from '@utils/errorResponse';
 import { httpStatusCodes, errorTypes } from '@utils/constants';
 import { createLogger, paginateResult } from '@utils/helperFN';
@@ -113,13 +108,47 @@ class NotificationService {
       cid,
       puid: data.puid,
       sender: data.sender,
+      content: data.content,
       receiver: data.receiver,
       notificationType: data.notificationType,
       resourceId: data.resourceId ? data.resourceId : '',
-      content: Object.keys(data.content || {}).length ? data.content : {},
     });
 
     await notification.save();
+    return { success: true, data: notification };
+  };
+
+  updateNotification = async (
+    nid: string
+  ): IPromiseReturnedData<INotificationDocument> => {
+    if (!nid) {
+      const err = 'Notification Id is missing.';
+      this.log.error(color.red(err));
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.BAD_REQUEST
+      );
+    }
+
+    let notification = await Notification.findById(nid);
+
+    if (!notification) {
+      const err = 'Invalid notification id provided.';
+      this.log.error(color.red(err));
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.BAD_REQUEST
+      );
+    }
+
+    notification = (await Notification.findOneAndUpdate(
+      { _id: new Types.ObjectId(nid) },
+      { $set: { isRead: true } },
+      { new: true }
+    )) as INotificationDocument;
+
     return { success: true, data: notification };
   };
 }
