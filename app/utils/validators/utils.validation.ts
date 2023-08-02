@@ -1,6 +1,6 @@
 import { body, param } from 'express-validator';
 
-import { Client, Property, Report } from '@models/index';
+import { Client, Notification, Property, Report } from '@models/index';
 import ErrorResponse from '@utils/errorResponse';
 import { validateResourceID } from '@utils/helperFN';
 import { errorTypes, httpStatusCodes } from '@utils/constants';
@@ -108,8 +108,36 @@ const reportParams = () => {
   ];
 };
 
+const notificationParams = () => {
+  return [
+    param('id', 'Notification identifier missing.')
+      .if(param('id').exists())
+      .bail()
+      .custom(async (id) => {
+        const { isValid } = validateResourceID(id);
+        if (!isValid) {
+          throw new ErrorResponse(
+            `Invalid identifier provided <${id}>.`,
+            errorTypes.NO_RESOURCE_ERROR,
+            httpStatusCodes.BAD_REQUEST
+          );
+        }
+
+        const notfy = await Notification.findById({ id });
+        if (!notfy) {
+          throw new ErrorResponse(
+            `Invalid Notification resource identifier provided <${id}>.`,
+            errorTypes.NO_RESOURCE_ERROR,
+            httpStatusCodes.NOT_FOUND
+          );
+        }
+      }),
+  ];
+};
+
 export default {
   validatePropertyParams: propertyParams(),
   validateClientParams: clientParams(),
   reportParams: reportParams(),
+  notificationParams: notificationParams(),
 };

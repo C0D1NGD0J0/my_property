@@ -11,6 +11,7 @@ import InvitationValidations from '@utils/validators/invite.validation';
 import LeaseValidations from '@utils/validators/lease.validation';
 import UtilsValidations from '@utils/validators/utils.validation';
 import ReportValidations from '@utils/validators/report.validation';
+import NotificationValidations from '@utils/validators/notification.validation';
 
 const validationRequestHandler = (
   req: AppRequest,
@@ -46,4 +47,5 @@ export {
   InvitationValidations,
   LeaseValidations,
   UtilsValidations,
+  NotificationValidations,
 };
