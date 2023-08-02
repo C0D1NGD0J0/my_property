@@ -169,12 +169,12 @@ class ReportController {
   };
 
   addComment = async (req: AppRequest, res: AppResponse) => {
-    3;
     const { id } = req.params;
 
     const commentData = {
       ...req.body,
       createdAt: dayjs(),
+      _id: new Types.ObjectId(),
       report: new Types.ObjectId(id),
       author: new Types.ObjectId(req.currentuser!.id),
     };
