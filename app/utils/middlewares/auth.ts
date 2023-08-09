@@ -27,12 +27,17 @@ class AuthMiddlewares {
   isAuthenticated = asyncHandler(
     async (req: AppRequest, res: AppResponse, next: NextFunction) => {
       let token = '';
+      const rawAuthToken: string | undefined =
+        req.headers &&
+        ((Array.isArray(req.headers.authorization)
+          ? req.headers.authorization[0]
+          : req.headers.authorization) ||
+          (Array.isArray(req.headers.Authorization)
+            ? req.headers.Authorization[0]
+            : req.headers.Authorization));
 
-      if (
-        req.headers?.authorization &&
-        req.headers.authorization.startsWith('Bearer')
-      ) {
-        token = req.headers.authorization.split(' ')[1];
+      if (rawAuthToken && rawAuthToken.startsWith('Bearer')) {
+        token = rawAuthToken.split(' ')[1];
       }
 
       if (!token) {

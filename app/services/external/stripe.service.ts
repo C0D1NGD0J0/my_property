@@ -1,3 +1,4 @@
+import { ParsedStripePlan } from '@interfaces/subscription.interface';
 import { IPromiseReturnedData } from '@interfaces/utils.interface';
 import { createLogger } from '@utils/helperFN';
 import Stripe from 'stripe';
@@ -47,12 +48,18 @@ class StripeService {
     }
   };
 
-  getPriceList = async (): IPromiseReturnedData<Stripe.Price[] | null> => {
+  getPriceList = async (): IPromiseReturnedData<ParsedStripePlan[] | null> => {
     try {
       const prices = await this.stripe.prices.list({
         limit: 10,
+        expand: ['data.product'],
       });
-      return { success: true, data: prices.data };
+
+      const parsePlans = (plans: Stripe.Price[]): ParsedStripePlan[] => {
+        return plans.map((plan) => this.parsePriceDataObject(plan));
+      };
+
+      return { success: true, data: parsePlans(prices.data) };
     } catch (error) {
       this.log.error(error, 'stripe price list');
       return { success: false, data: null };
@@ -62,7 +69,12 @@ class StripeService {
   subscribeToPlan = async (
     customerid: string,
     planid: string
-  ): IPromiseReturnedData<Stripe.Subscription | null> => {
+  ): IPromiseReturnedData<{
+    subscriptionId: string;
+    type: string;
+    clientSecret: string | null;
+    currentInvoiceId: string | null;
+  } | null> => {
     try {
       if (!customerid) {
         return { success: false, data: null };
@@ -84,8 +96,42 @@ class StripeService {
           payment_settings: { save_default_payment_method: 'on_subscription' },
           expand: ['latest_invoice.payment_intent'],
         });
-      // note: At this point the Subscription is inactive and awaiting payment
-      return { success: true, data: subscription };
+
+      if (subscription.pending_setup_intent !== null) {
+        // note: At this point the stripe Subscription is inactive and awaiting payment
+        return {
+          success: true,
+          data: {
+            subscriptionId: subscription.id,
+            type: 'setup',
+            clientSecret:
+              (subscription.pending_setup_intent as Stripe.SetupIntent)
+                .client_secret || '',
+            currentInvoiceId: (subscription.latest_invoice as Stripe.Invoice)
+              .id,
+          },
+        };
+      } else {
+        let clientSecret: string | null = '';
+        if (
+          subscription.latest_invoice &&
+          typeof subscription.latest_invoice !== 'string'
+        ) {
+          clientSecret = (
+            subscription.latest_invoice.payment_intent as Stripe.PaymentIntent
+          )?.client_secret;
+        }
+        return {
+          success: true,
+          data: {
+            subscriptionId: subscription.id,
+            type: 'payment',
+            clientSecret,
+            currentInvoiceId: (subscription.latest_invoice as Stripe.Invoice)
+              .id,
+          },
+        };
+      }
     } catch (error) {
       this.log.error(error, 'stripe subscription process');
       return { success: false, data: null };
@@ -108,6 +154,37 @@ class StripeService {
       this.log.error(error, 'stripe cancel subscription');
       return { success: false, data: null };
     }
+  };
+
+  getPriceInfo = async (
+    priceid: string
+  ): IPromiseReturnedData<ParsedStripePlan | null> => {
+    try {
+      if (!priceid) {
+        this.log.error('stripe price id missing.');
+        return { success: false, data: null };
+      }
+
+      const price = await this.stripe.prices.retrieve(priceid, {
+        expand: ['data.product'],
+      });
+      const parsePlans = this.parsePriceDataObject(price);
+
+      return { success: true, data: parsePlans };
+    } catch (error) {
+      this.log.error(error, 'stripe price list');
+      return { success: false, data: null };
+    }
+  };
+
+  private parsePriceDataObject = (plan: Stripe.Price): ParsedStripePlan => {
+    return {
+      id: plan.id,
+      currency: plan.currency,
+      recurring: plan.recurring ? plan.recurring.interval : undefined,
+      amount: plan.unit_amount_decimal,
+      name: (plan.product as Stripe.Product).name || '',
+    };
   };
 }
 

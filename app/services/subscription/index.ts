@@ -1,3 +1,3 @@
-import SubscriptionService from '@services/report/subscription.service';
+import SubscriptionService from '@services/subscription/subscription.service';
 
 export { SubscriptionService };

@@ -10,7 +10,7 @@ import {
   IUserDocument,
   IInviteUserSignup,
 } from '@interfaces/user.interface';
-import { hashGenerator, jwtGenerator } from '@utils/helperFN';
+import { createLogger, hashGenerator, jwtGenerator } from '@utils/helperFN';
 import {
   USER_REGISTRATION,
   PASSWORD_RESET_SUCCESS,
@@ -19,11 +19,20 @@ import {
   httpStatusCodes,
   ACCOUNT_SUCCESS_EMAIL,
 } from '@utils/constants';
-import { User, Client } from '@models/index';
+import { User, Client, Subscription } from '@models/index';
 import { IEmailOptions, ISuccessReturnData } from '@interfaces/utils.interface';
 import ErrorResponse from '@utils/errorResponse';
+import SubscriptionService from '@services/subscription/subscription.service';
 
 class AuthService {
+  private log;
+  private subscriptionService: SubscriptionService;
+
+  constructor() {
+    this.log = createLogger('AuthService', true);
+    this.subscriptionService = new SubscriptionService();
+  }
+
   signup = async (
     data: ISignupData
   ): Promise<ISuccessReturnData<{ emailOptions: IEmailOptions }>> => {
@@ -50,7 +59,27 @@ class AuthService {
       activationTokenExpiresAt: dayjs().add(1, 'hour').toDate(),
     })) as IUserDocument;
 
+    if (!user) {
+      const err = 'Signup error, user not created.';
+      this.log.error(err);
+      throw new ErrorResponse(
+        err,
+        'validationError',
+        httpStatusCodes.UNPROCESSABLE
+      );
+    }
     await client.save(); //only save if user is created successfully
+
+    // create a subscription object + stripe account for the user
+    const resp = await this.subscriptionService.newSubscriptionEntry({
+      client: client._id,
+      email: user.email,
+      name: user.fullname,
+    });
+    if (resp.success) {
+      client.subscription = resp.data ? resp.data._id : null;
+    }
+
     const emailOptions: IEmailOptions = {
       to: user?.email,
       data: {
