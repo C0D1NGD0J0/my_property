@@ -6,6 +6,7 @@ import Property from '@models/property/property.model';
 import ReportComment from '@models/comment/comment.model';
 import Report from '@models/report/maintenanceReport.model';
 import Notification from '@models/notification';
+import Subscription from '@models/subscription/subscription.model';
 
 export {
   User,
@@ -16,4 +17,5 @@ export {
   Lease,
   ReportComment,
   Notification,
+  Subscription,
 };

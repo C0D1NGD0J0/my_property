@@ -1,8 +1,9 @@
-import { Types } from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 
-import { User } from '@models/index';
+import { Client, Subscription, User } from '@models/index';
 import ErrorResponse from '@utils/errorResponse';
 import {
+  IClientDocument,
   ICurrentUser,
   ISignupData,
   IUserDocument,
@@ -48,7 +49,14 @@ class UserService {
       );
     }
 
-    const currentuser = mapCurrentUserObject(user, cid);
+    const subscription = await Subscription.findOne({ cid });
+
+    const _user = {
+      ...user,
+      status: subscription?.status || 'inactive',
+    } as IUserDocument & { status: string };
+
+    const currentuser = mapCurrentUserObject(_user, cid);
     return { success: true, data: currentuser };
   };
 
@@ -85,7 +93,9 @@ class UserService {
   > => {
     const { accountType, ...dataToSave } = data;
 
-    let user = (await User.findOne({ id: data.userId })) as IUserDocument;
+    let user = (await User.findOne({
+      id: new Types.ObjectId(data.userId),
+    })) as IUserDocument;
     const isMatch = await user.validatePassword(data.password as string);
 
     if (!isMatch) {
@@ -120,7 +130,7 @@ class UserService {
 
   deleteAccount = async (userdata: { password: string; userId: string }) => {
     const user = (await User.findOne({
-      id: userdata.userId,
+      id: new Types.ObjectId(userdata.userId),
     })) as IUserDocument;
 
     const isMatch = await user.validatePassword(userdata.password);
@@ -140,7 +150,7 @@ class UserService {
     return { success: true, msg: 'Account has been successfully deleted.' };
   };
 
-  /* ClientUser region */
+  /* ClientUser */
   getClientUsers = async (
     cid: string,
     userType: string,
@@ -183,6 +193,41 @@ class UserService {
 
     const paginationInfo = paginateResult(count, skip!, limit!);
     return { success: true, data: { users, paginate: paginationInfo } };
+  };
+
+  updateClient = async (
+    cid: string,
+    data: Partial<IClientDocument>
+  ): IPromiseReturnedData<IClientDocument> => {
+    if (!cid || !mongoose.isValidObjectId(cid)) {
+      const err = 'Client id is missing.';
+      this.log.error(err);
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.BAD_REQUEST
+      );
+    }
+
+    const client = await Client.findOne({ _id: new Types.ObjectId(cid) });
+    if (!client) {
+      const err = 'Client not found.';
+      this.log.error(err);
+      throw new ErrorResponse(
+        err,
+        errorTypes.NO_RESOURCE_ERROR,
+        httpStatusCodes.NOT_FOUND
+      );
+    }
+
+    client.admin = new Types.ObjectId(data.admin);
+    client.enterpriseProfile = data.enterpriseProfile;
+    client.subscription = data.subscription
+      ? new Types.ObjectId(data.subscription)
+      : null;
+
+    await client.save();
+    return { success: true, data: client };
   };
   /* end region */
 }

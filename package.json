@@ -63,6 +63,7 @@
     "redis": "^4.5.1",
     "slugify": "^1.6.5",
     "socket.io": "^4.7.1",
+    "stripe": "^12.16.0",
     "tscpaths": "^0.0.9",
     "ttypescript": "^1.5.15",
     "typescript-transform-paths": "^3.4.6",

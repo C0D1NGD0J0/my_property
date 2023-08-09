@@ -30,6 +30,7 @@ class AuthController {
     const { data, ...rest } = await this.authService.signup(req.body);
     data &&
       this.emailQueue.addEmailToQueue(AUTH_EMAIL_QUEUE, data.emailOptions);
+
     res.status(httpStatusCodes.OK).json(rest);
   };
 

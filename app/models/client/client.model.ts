@@ -15,6 +15,11 @@ const ClientSchema = new Schema<IClientDocument>(
       type: Schema.Types.Mixed,
       default: null,
     },
+    subscription: {
+      type: Schema.Types.Mixed,
+      default: null,
+      index: true,
+    },
   },
   {
     timestamps: true,

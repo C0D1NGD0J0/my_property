@@ -93,6 +93,7 @@ export interface IClientDocument extends Document {
   _id: Types.ObjectId;
   admin: Types.ObjectId;
   accountType: IAccountTypes;
+  subscription: Types.ObjectId | null;
   enterpriseProfile?: IEnterpriseInfo;
 }
 
@@ -152,4 +153,5 @@ export interface ICurrentUser {
   email: string;
   isActive: boolean;
   fullname: string | null;
+  isSubscriptionActive: boolean;
 }

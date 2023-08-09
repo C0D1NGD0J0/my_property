@@ -1,7 +1,9 @@
 import { ICurrentUser, IUserDocument } from '@interfaces/user.interface';
 
+type ICurrentUserDataType = IUserDocument & { status: string };
+
 export const mapCurrentUserObject = (
-  userObject: IUserDocument,
+  userObject: ICurrentUserDataType,
   _cid?: string
 ) => {
   const getCidAndRole = (cid?: string) => {
@@ -21,6 +23,7 @@ export const mapCurrentUserObject = (
     role: data?.role as string,
     isActive: userObject.isActive,
     fullname: userObject.fullname || null,
+    isSubscriptionActive: userObject.status === 'active',
   };
 
   return currentuser;

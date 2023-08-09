@@ -1,6 +1,12 @@
 import { body, param } from 'express-validator';
 
-import { Client, Notification, Property, Report } from '@models/index';
+import {
+  Client,
+  Notification,
+  Property,
+  Report,
+  Subscription,
+} from '@models/index';
 import ErrorResponse from '@utils/errorResponse';
 import { validateResourceID } from '@utils/helperFN';
 import { errorTypes, httpStatusCodes } from '@utils/constants';
@@ -135,9 +141,37 @@ const notificationParams = () => {
   ];
 };
 
+const subscriptionParams = () => {
+  return [
+    param('id', 'Subscription identifier missing.')
+      .if(param('id').exists())
+      .bail()
+      .custom(async (id) => {
+        const { isValid } = validateResourceID(id);
+        if (!isValid) {
+          throw new ErrorResponse(
+            `Invalid identifier provided <${id}>.`,
+            errorTypes.NO_RESOURCE_ERROR,
+            httpStatusCodes.BAD_REQUEST
+          );
+        }
+
+        const subscription = await Subscription.findById(id);
+        if (!subscription) {
+          throw new ErrorResponse(
+            `Invalid Subscription resource identifier provided <${id}>.`,
+            errorTypes.NO_RESOURCE_ERROR,
+            httpStatusCodes.NOT_FOUND
+          );
+        }
+      }),
+  ];
+};
+
 export default {
   validatePropertyParams: propertyParams(),
   validateClientParams: clientParams(),
   reportParams: reportParams(),
+  subscriptionParams: subscriptionParams(),
   notificationParams: notificationParams(),
 };
