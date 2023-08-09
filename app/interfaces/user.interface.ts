@@ -153,4 +153,5 @@ export interface ICurrentUser {
   email: string;
   isActive: boolean;
   fullname: string | null;
+  isSubscriptionActive: boolean;
 }

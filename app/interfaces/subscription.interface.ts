@@ -1,23 +1,26 @@
 import { Document, Types } from 'mongoose';
 
 interface PaymentInfo {
-  cardType: string;
+  paymentType: string;
   cardExpYear: string;
   last4digits: string;
 }
 
 export interface ISubscription {
   client: Types.ObjectId;
-  stripePlanId?: string;
+  cid: string;
   stripeCustomerId: string;
-  stripeSubscriptionId?: string;
-  stripeInvoiceId?: string;
   paymentInfo?: PaymentInfo;
   status: 'active' | 'inactive';
-  planName?: string;
   startDate: Date | null;
   endDate: Date | null;
   canceledAt: Date | null;
+  stripeInfo: {
+    subscriptionId: string | undefined;
+    invoiceId: string | undefined;
+    planName: string | undefined;
+    planId: string | undefined;
+  };
 }
 
 export interface ISubscriptionDocument extends ISubscription, Document {

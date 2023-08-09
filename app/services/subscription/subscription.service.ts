@@ -46,6 +46,7 @@ class SubscriptionService {
 
     const subscription = new Subscription({
       ...data,
+      cid: client.cid,
       client: client._id,
       stripeCustomerId: customer.data?.id,
     });
@@ -105,9 +106,12 @@ class SubscriptionService {
       );
     }
 
-    subscription.stripeSubscriptionId = stripe_resp.data?.subscriptionId;
-    subscription.stripeInvoiceId = stripe_resp.data?.currentInvoiceId || '';
-    subscription.planName = planName;
+    subscription.stripeInfo = {
+      subscriptionId: stripe_resp.data?.subscriptionId,
+      invoiceId: stripe_resp.data?.currentInvoiceId || '',
+      planId: priceId,
+      planName,
+    };
     await subscription.save();
 
     return {

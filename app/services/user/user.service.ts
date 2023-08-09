@@ -1,6 +1,6 @@
 import mongoose, { Types } from 'mongoose';
 
-import { Client, User } from '@models/index';
+import { Client, Subscription, User } from '@models/index';
 import ErrorResponse from '@utils/errorResponse';
 import {
   IClientDocument,
@@ -49,7 +49,14 @@ class UserService {
       );
     }
 
-    const currentuser = mapCurrentUserObject(user, cid);
+    const subscription = await Subscription.findOne({ cid });
+
+    const _user = {
+      ...user,
+      status: subscription?.status || 'inactive',
+    } as IUserDocument & { status: string };
+
+    const currentuser = mapCurrentUserObject(_user, cid);
     return { success: true, data: currentuser };
   };
 
