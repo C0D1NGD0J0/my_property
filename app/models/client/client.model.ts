@@ -5,9 +5,9 @@ import uniqueValidator from 'mongoose-unique-validator';
 const ClientSchema = new Schema<IClientDocument>(
   {
     accountType: {
-      type: String,
-      required: true,
-      default: IAccountType.individual,
+      id: { type: String },
+      isEnterpriseAccount: { type: Boolean, default: false },
+      name: { type: String, default: IAccountType.individual },
     },
     admin: { type: Schema.Types.ObjectId, ref: 'User' },
     cid: { type: String, required: true, index: true },

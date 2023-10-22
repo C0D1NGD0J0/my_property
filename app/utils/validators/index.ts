@@ -26,7 +26,7 @@ const validationRequestHandler = (
   }
 
   console.log(
-    colors.bold.red(JSON.stringify(errors)),
+    colors.bold.red(JSON.stringify(errors, null, 2)),
     '-----Validation errors----'
   );
 

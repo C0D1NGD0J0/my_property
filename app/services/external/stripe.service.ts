@@ -184,6 +184,7 @@ class StripeService {
       recurring: plan.recurring ? plan.recurring.interval : undefined,
       amount: plan.unit_amount_decimal,
       name: (plan.product as Stripe.Product).name || '',
+      features: [],
     };
   };
 }

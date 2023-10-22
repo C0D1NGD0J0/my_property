@@ -27,8 +27,8 @@ export class App {
 
   setupConfig = (): void => {
     this.databaseConnection();
-    this.standardMiddleware(this.app);
     this.securityMiddleware(this.app);
+    this.standardMiddleware(this.app);
     this.routes(this.app);
     this.appErroHandler(this.app);
   };
@@ -44,7 +44,7 @@ export class App {
     app.use(helmet());
     app.use(
       cors({
-        origin: ['*', process.env.FRONTEND_URL as string],
+        origin: '*',
         optionsSuccessStatus: 200,
         credentials: true,
       })

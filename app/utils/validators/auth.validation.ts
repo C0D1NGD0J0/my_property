@@ -63,7 +63,13 @@ const signup = () => {
       .exists()
       .bail()
       .custom(async (utype) => {
-        if (!Object.values(IAccountType).includes(utype)) {
+        const parsedUtype = JSON.parse(utype);
+        if (
+          !Object.values(IAccountType).includes(
+            parsedUtype.name.toLowerCase()
+          ) ||
+          !parsedUtype.id
+        ) {
           throw new ErrorResponse(
             `Invalid account type provided.`,
             'validationError',
@@ -206,20 +212,20 @@ const resetPassword = () => {
   ];
 };
 
-const accountActivation = () => {
+const resendActivationToken = () => {
   return [
-    body('email')
+    body('token')
       .exists({ checkFalsy: true })
       .withMessage('Email address must be provided.')
       .bail()
-      .custom(async (email) => {
+      .custom(async (token) => {
         const user = await User.findOne({
-          email,
+          activationToken: token,
         });
 
         if (!user) {
           throw new ErrorResponse(
-            'No account matching the provided email.',
+            'No account found with provide token.',
             'validationError',
             httpStatusCodes.UNPROCESSABLE
           );
@@ -233,19 +239,37 @@ const accountActivation = () => {
           );
         }
       }),
-    body('password')
-      .isLength({ min: 6, max: 15 })
-      .exists({ checkFalsy: true })
-      .withMessage("Password field can't be blank"),
+    body('cid', 'Client resource identifier missing.')
+      .exists()
+      .bail()
+      .custom(async (cid) => {
+        const { isValid } = validateResourceID(cid);
+        if (!isValid) {
+          throw new ErrorResponse(
+            `Invalid resource identifier provided <${cid}>.`,
+            errorTypes.NO_RESOURCE_ERROR,
+            httpStatusCodes.NOT_FOUND
+          );
+        }
+
+        const client = await Client.findOne({ cid });
+        if (!client) {
+          throw new ErrorResponse(
+            `No resource available with the identifier provided <${cid}>.`,
+            errorTypes.NO_RESOURCE_ERROR,
+            httpStatusCodes.NOT_FOUND
+          );
+        }
+      }),
   ];
 };
 
 const tokenValidation = () => {
   return [
     ...validateCIDParams(),
-    query('t')
+    body('accountCode')
       .exists({ checkFalsy: true })
-      .withMessage('Account activation is required.')
+      .withMessage('Account activation token is required.')
       .isHash('sha256')
       .withMessage('Invalid account activation token provided'),
   ];
@@ -256,6 +280,6 @@ export default {
   resetPassword: resetPassword(),
   forgotPassword: forgotPassword(),
   signup: validateUserSignup(),
-  accountActivation: accountActivation(),
+  resendActivationToken: resendActivationToken(),
   tokenValidation: tokenValidation(),
 };

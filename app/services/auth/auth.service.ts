@@ -42,7 +42,7 @@ class AuthService {
       cid: uuid(),
       admin: _userId,
       accountType: data.accountType,
-      ...(data.accountType === IAccountType.enterprise
+      ...(data.accountType.name === IAccountType.enterprise
         ? { enterpriseProfile: data.enterpriseProfile }
         : {}),
     });
@@ -158,11 +158,22 @@ class AuthService {
       const user = (await User.findOne({
         isActive: false,
         activationToken: { $eq: token.trim() },
-        activationTokenExpiresAt: { $gt: dayjs() },
       })) as IUserDocument;
 
       if (!user) {
-        const msg = 'Activation code has exipred.';
+        const msg = 'Invalid activation token provided.';
+        throw new ErrorResponse(
+          msg,
+          errorTypes.SERVICE_ERROR,
+          httpStatusCodes.UNPROCESSABLE
+        );
+      }
+
+      const tokenExpirationDate = dayjs(user.activationTokenExpiresAt);
+      const currentDate = dayjs();
+
+      if (!tokenExpirationDate.isAfter(currentDate)) {
+        const msg = 'Activation token has expired.';
         throw new ErrorResponse(
           msg,
           errorTypes.SERVICE_ERROR,
@@ -189,15 +200,30 @@ class AuthService {
   };
 
   resendActivationLink = async (
-    email: string
+    cid: string,
+    token: string
   ): Promise<ISuccessReturnData<{ emailOptions: IEmailOptions }>> => {
     try {
-      const user = (await User.findOne({ email })) as IUserDocument;
+      const user = await User.findOne({
+        isActive: false,
+        'cids.cid': cid,
+        activationToken: token,
+      });
+
+      if (!user) {
+        const msg = 'No record found with token provided.';
+        throw new ErrorResponse(
+          msg,
+          errorTypes.SERVICE_ERROR,
+          httpStatusCodes.UNPROCESSABLE
+        );
+      }
+
       const emailOptions = {
         to: user?.email,
         data: {
           fullname: user?.fullname,
-          activationUrl: `${process.env.FRONTEND_URL}/account_activation/${user.activationToken}`,
+          activationUrl: `${process.env.FRONTEND_URL}/account_activation/${cid}?t=${user.activationToken}`,
         },
         emailType: USER_REGISTRATION,
         subject: 'Activate your account',

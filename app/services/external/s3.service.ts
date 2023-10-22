@@ -37,6 +37,12 @@ class S3FileUpload {
     return _upload(req, res, next);
   };
 
+  textOnlyData = (req: Request, res: Response, next: NextFunction) => {
+    const _upload = multer().none();
+
+    return _upload(req, res, next);
+  };
+
   deleteFile = (s3Key: string) => {
     const s3Params: { Bucket: string; Key: string } = {
       Bucket: this.bucket,

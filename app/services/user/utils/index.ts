@@ -1,6 +1,6 @@
 import { ICurrentUser, IUserDocument } from '@interfaces/user.interface';
 
-type ICurrentUserDataType = IUserDocument & { status: string };
+type ICurrentUserDataType = IUserDocument & { status?: string };
 
 export const mapCurrentUserObject = (
   userObject: ICurrentUserDataType,

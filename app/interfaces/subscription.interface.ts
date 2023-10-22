@@ -32,6 +32,7 @@ export interface ISubscriptionDocument extends ISubscription, Document {
 export interface ParsedStripePlan {
   id: string;
   currency: string;
+  features: string[];
   recurring?: string;
   amount: string | null;
   name: string | undefined;

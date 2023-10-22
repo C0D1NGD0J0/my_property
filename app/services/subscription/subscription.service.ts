@@ -28,18 +28,19 @@ class SubscriptionService {
       this.log.error('newSubscriptionEntry: email not provided');
       return { success: false, data: null };
     }
-    const customer = await this.stripe.createCustomer(data.email, data.name);
-    if (!customer.success) {
-      this.log.error(
-        'SubscriptionService: Unable to create stripe customer account'
-      );
-      return { success: false, data: null };
-    }
 
     const client = await Client.findById(data.client);
     if (!client) {
       this.log.error(
         'newSubscriptionEntry: client not found, invalid client-id'
+      );
+      return { success: false, data: null };
+    }
+
+    const customer = await this.stripe.createCustomer(data.email, data.name);
+    if (!customer.success) {
+      this.log.error(
+        'SubscriptionService: Unable to create stripe customer account'
       );
       return { success: false, data: null };
     }
@@ -61,9 +62,37 @@ class SubscriptionService {
 
   getSubscriptionPlans = async () => {
     const plans = await this.stripe.getPriceList();
+    if (plans.data) {
+      plans.data = plans.data.map((item) => {
+        return {
+          id: item.id,
+          name:
+            item.name && item.name.includes('Corporate')
+              ? 'Enterprise'
+              : 'Individual',
+          amount: (parseInt(item.amount || '0') / 100).toString(),
+          currency: item.currency,
+          recurring: item.recurring,
+          features:
+            item.name && item.name.includes('Corporate')
+              ? [
+                  'Individual plan +',
+                  'User Access Roles',
+                  'Customizable Dashboards',
+                ]
+              : [
+                  'CRM for Prospects',
+                  'Online Payments',
+                  'Email & Chat Support',
+                  'Tenant Portal',
+                ],
+        };
+      });
+    }
+
     return {
       success: true,
-      plans: plans.data,
+      plans: plans.data?.reverse(),
     };
   };
 

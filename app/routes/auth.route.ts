@@ -3,17 +3,20 @@ const router: Router = express.Router();
 
 import { asyncHandler } from '@utils/middlewares';
 import { AuthController } from '@controllers/index';
-import { AuthValidations, validationRequestHandler } from '@utils/validators';
 import AuthMiddleware from '@utils/middlewares/auth';
+import S3FileUpload from '@services/external/s3.service';
+import { AuthValidations, validationRequestHandler } from '@utils/validators';
+const fileUpload: S3FileUpload = new S3FileUpload();
 
 router.post(
   '/signup',
+  fileUpload.textOnlyData,
   AuthValidations.signup,
   validationRequestHandler,
   asyncHandler(AuthController.signup)
 );
 
-router.get(
+router.post(
   '/account_activation/:cid',
   AuthValidations.tokenValidation,
   validationRequestHandler,
@@ -22,7 +25,7 @@ router.get(
 
 router.post(
   '/resend_activation_link',
-  AuthValidations.accountActivation,
+  AuthValidations.resendActivationToken,
   validationRequestHandler,
   asyncHandler(AuthController.resendActivationLink)
 );

@@ -5,7 +5,7 @@ export enum IAccountType {
   individual = 'individual',
   enterprise = 'enterprise',
 }
-export type IAccountTypes = 'individual' | 'enterprise';
+// export type IAccountTypes = 'individual' | 'enterprise';
 
 export enum IUserRelationshipsEnum {
   parents = 'parents',
@@ -92,7 +92,11 @@ export interface IClientDocument extends Document {
   updatedAt: Date;
   _id: Types.ObjectId;
   admin: Types.ObjectId;
-  accountType: IAccountTypes;
+  accountType: {
+    id: string;
+    name: string;
+    isEnterpriseAccount: boolean;
+  };
   subscription: Types.ObjectId | null;
   enterpriseProfile?: IEnterpriseInfo;
 }

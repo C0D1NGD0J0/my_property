@@ -80,15 +80,17 @@ export const parseJSON = (value: string) => {
 
 export const validateResourceID = (id: string) => {
   const regexExp =
-    /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/gi;
+    /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}[0-9a-fA-F]?$/i;
+  let obj;
 
-  if (id.length == 24 && isValidObjectId(id)) {
-    return { isValid: true, type: 'mongoID' };
+  if (id.length === 24 && isValidObjectId(id)) {
+    obj = { isValid: true, type: 'mongoID' };
   } else if (id.length > 32 && regexExp.test(id)) {
-    return { isValid: true, type: 'uuid' };
+    obj = { isValid: true, type: 'uuid' };
   } else {
-    return { isValid: false };
+    obj = { isValid: false };
   }
+  return obj;
 };
 
 export const mergeArrayWithLimit = (

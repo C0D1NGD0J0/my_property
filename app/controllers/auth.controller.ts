@@ -36,14 +36,19 @@ class AuthController {
 
   accountActivation = async (req: Request, res: Response) => {
     const { cid } = req.params;
-    const { t } = req.query;
-    const data = await this.authService.accountActivation(cid, t as string);
+    const reqData = req.body;
+    const data = await this.authService.accountActivation(
+      cid,
+      reqData.accountCode
+    );
     res.status(httpStatusCodes.OK).json(data);
   };
 
   resendActivationLink = async (req: Request, res: Response) => {
+    const { cid, token } = req.body;
     const { data, ...rest } = await this.authService.resendActivationLink(
-      req.body.email
+      cid,
+      token
     );
     data &&
       this.emailQueue.addEmailToQueue(AUTH_EMAIL_QUEUE, data.emailOptions);
