@@ -93,7 +93,7 @@ export interface IClientDocument extends Document {
   _id: Types.ObjectId;
   admin: Types.ObjectId;
   accountType: {
-    id: string;
+    planId: string;
     name: string;
     isEnterpriseAccount: boolean;
   };

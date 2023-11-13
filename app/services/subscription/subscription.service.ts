@@ -21,15 +21,19 @@ class SubscriptionService {
     this.log = createLogger('SubscriptionService', true);
   }
 
-  newSubscriptionEntry = async (
-    data: Partial<ISubscription> & { email?: string; name?: string }
-  ): IPromiseReturnedData<ISubscriptionDocument | null> => {
+  newSubscriptionEntry = async (data: {
+    clientId: string;
+    name: string | undefined;
+    email: string;
+    planName: string;
+    planId: string;
+  }): IPromiseReturnedData<ISubscriptionDocument | null> => {
     if (!data.email) {
       this.log.error('newSubscriptionEntry: email not provided');
       return { success: false, data: null };
     }
 
-    const client = await Client.findById(data.client);
+    const client = await Client.findById(data.clientId);
     if (!client) {
       this.log.error(
         'newSubscriptionEntry: client not found, invalid client-id'
@@ -46,10 +50,13 @@ class SubscriptionService {
     }
 
     const subscription = new Subscription({
-      ...data,
       cid: client.cid,
       client: client._id,
       stripeCustomerId: customer.data?.id,
+      stripeInfo: {
+        planId: data.planId,
+        planName: data.planName,
+      },
     });
 
     client.subscription = subscription._id;

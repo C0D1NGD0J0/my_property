@@ -72,10 +72,13 @@ class AuthService {
 
     // create a subscription object + stripe account for the user
     const resp = await this.subscriptionService.newSubscriptionEntry({
-      client: client._id,
+      clientId: client._id.toString(),
       email: user.email,
       name: user.fullname,
+      planName: data.accountType.name,
+      planId: data.accountType.planId,
     });
+
     if (resp.success) {
       client.subscription = resp.data ? resp.data._id : null;
     }
@@ -219,6 +222,10 @@ class AuthService {
         );
       }
 
+      user.activationToken = hashGenerator();
+      user.activationTokenExpiresAt = dayjs().add(1, 'hour').toDate();
+      await user.save();
+
       const emailOptions = {
         to: user?.email,
         data: {
@@ -228,11 +235,6 @@ class AuthService {
         emailType: USER_REGISTRATION,
         subject: 'Activate your account',
       };
-
-      user.activationToken = hashGenerator();
-      user.activationTokenExpiresAt = dayjs().add(1, 'hour').toDate();
-
-      await user.save();
 
       return {
         success: true,
@@ -300,6 +302,10 @@ class AuthService {
       const user = (await User.findOne({ email })) as IUserDocument;
       const oneHour = dayjs().add(1, 'hour').toDate();
 
+      user.passwordResetToken = hashGenerator();
+      user.passwordResetTokenExpiresAt = oneHour;
+      await user.save();
+
       // SEND EMAIL
       const emailOptions = {
         subject: 'Account Password Reset',
@@ -310,10 +316,6 @@ class AuthService {
         },
         emailType: FORGOT_PASSWORD,
       };
-
-      user.passwordResetToken = hashGenerator();
-      user.passwordResetTokenExpiresAt = oneHour;
-      await user.save();
 
       return {
         success: true,
@@ -326,12 +328,12 @@ class AuthService {
   };
 
   resetPassword = async (data: {
-    passwordResetToken: string;
+    resetToken: string;
     password: string;
   }): Promise<ISuccessReturnData<{ emailOptions: IEmailOptions }>> => {
     try {
       const user = (await User.findOne({
-        passwordResetToken: data.passwordResetToken,
+        passwordResetToken: data.resetToken,
       })) as IUserDocument;
 
       // SEND EMAIL
@@ -345,8 +347,8 @@ class AuthService {
         emailType: PASSWORD_RESET_SUCCESS,
       };
 
-      user.password = data.password;
       user.passwordResetToken = '';
+      user.password = data.password;
       user.passwordResetTokenExpiresAt = null;
       await user.save();
 

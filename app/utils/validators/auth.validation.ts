@@ -59,7 +59,7 @@ const signup = () => {
     body('phoneNumber').exists().withMessage("Phone number can't be blank"),
     // .isMobilePhone('any', { strictMode: true })
     // .withMessage('Phone number is invalid')
-    body('accountType', 'Account type must be provided.')
+    body('accountType', 'Subscription plan must be provided.')
       .exists()
       .bail()
       .custom(async (utype) => {
@@ -68,7 +68,7 @@ const signup = () => {
           !Object.values(IAccountType).includes(
             parsedUtype.name.toLowerCase()
           ) ||
-          !parsedUtype.id
+          !parsedUtype.planId
         ) {
           throw new ErrorResponse(
             `Invalid account type provided.`,
@@ -206,9 +206,9 @@ const resetPassword = () => {
         }
       }),
     body('password')
-      .isLength({ min: 6, max: 15 })
       .exists({ checkFalsy: true })
-      .withMessage("Password field can't be blank"),
+      .withMessage("Password field can't be blank")
+      .isLength({ min: 6, max: 15 }),
   ];
 };
 

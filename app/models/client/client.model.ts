@@ -5,7 +5,7 @@ import uniqueValidator from 'mongoose-unique-validator';
 const ClientSchema = new Schema<IClientDocument>(
   {
     accountType: {
-      id: { type: String },
+      planId: { type: String },
       isEnterpriseAccount: { type: Boolean, default: false },
       name: { type: String, default: IAccountType.individual },
     },
