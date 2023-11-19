@@ -13,6 +13,7 @@ import {
   AUTH_EMAIL_QUEUE,
   errorTypes,
   REFRESH_TOKEN,
+  ACCESS_TOKEN,
 } from '@utils/constants';
 
 class AuthController {
@@ -65,15 +66,17 @@ class AuthController {
       email,
       password,
     });
-    data && setCookieAuth(data.refreshToken, res);
+    const rez = setCookieAuth({ atoken: data?.accessToken || '' }, res);
+
     data &&
       this.cache.saveAuthTokens(data.userid, [
         data.accessToken,
         data.refreshToken,
       ]);
-    res
+
+    rez
       .status(httpStatusCodes.OK)
-      .json({ ...rest, accessToken: data?.accessToken });
+      .json({ ...rest, linkedAccounts: data?.linkedAccounts });
   };
 
   logout = async (req: AppRequest, res: Response) => {
@@ -110,7 +113,7 @@ class AuthController {
     next: NextFunction
   ) => {
     const cookies = req.cookies;
-    if (!cookies[REFRESH_TOKEN]) {
+    if (!cookies[ACCESS_TOKEN]) {
       return next(
         new ErrorResponse(
           'Access denied, please login again.',
@@ -120,11 +123,11 @@ class AuthController {
       );
     }
 
-    const token = cookies[REFRESH_TOKEN].split(' ')[1];
+    const token = cookies[ACCESS_TOKEN].split(' ')[1];
     const _decoded: any = jwt_decode(token);
     const resp = jwt.verify(
       token,
-      process.env.JWT_REFRESH_SECRET as string,
+      process.env.JWT_ACCESS_SECRET as string,
       async (err: any, _: any) => {
         if (err) {
           await this.cache.delAuthTokens(_decoded.id);
@@ -139,12 +142,12 @@ class AuthController {
         }
 
         const { accessToken, refreshToken } = jwtGenerator(_decoded.id);
-        setCookieAuth(refreshToken, res);
+        setCookieAuth({ atoken: accessToken }, res);
         await this.cache.saveAuthTokens(_decoded.id, [
           accessToken,
           refreshToken,
         ]);
-        return { success: true, accessToken };
+        return { success: true };
       }
     );
     return resp;

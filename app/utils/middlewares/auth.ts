@@ -7,37 +7,29 @@ import { NextFunction } from 'express';
 import { asyncHandler } from '.';
 import ErrorResponse from '../errorResponse';
 import { AuthCache } from '@root/app/caching';
-import User from '../../models/user/user.model';
+
+import { UserService } from '@services/user';
 import { AuthController } from '@controllers/index';
 import { ICurrentUser } from '@interfaces/user.interface';
 import { IUserDocument } from '@interfaces/user.interface';
-import { mapCurrentUserObject } from '@services/user/utils';
 import { errorTypes, httpStatusCodes, REFRESH_TOKEN } from '@utils/constants';
 import { AppRequest, AppResponse } from '../../interfaces/utils.interface';
 
 class AuthMiddlewares {
   private authCache: AuthCache;
-  private authCntrl: typeof AuthController;
+  private userService: UserService;
 
-  constructor(authController: typeof AuthController) {
+  constructor() {
     this.authCache = new AuthCache();
-    this.authCntrl = authController;
+    this.userService = new UserService();
   }
 
   isAuthenticated = asyncHandler(
     async (req: AppRequest, res: AppResponse, next: NextFunction) => {
-      let token = '';
-      const rawAuthToken: string | undefined =
-        req.headers &&
-        ((Array.isArray(req.headers.authorization)
-          ? req.headers.authorization[0]
-          : req.headers.authorization) ||
-          (Array.isArray(req.headers.Authorization)
-            ? req.headers.Authorization[0]
-            : req.headers.Authorization));
-
-      if (rawAuthToken && rawAuthToken.startsWith('Bearer')) {
-        token = rawAuthToken.split(' ')[1];
+      let token = req.cookies.accessToken;
+      const cid = req.params.cid || req.cookies.clientId;
+      if (token && token.startsWith('Bearer')) {
+        token = token.split(' ')[1];
       }
 
       if (!token) {
@@ -58,29 +50,31 @@ class AuthMiddlewares {
         const resp = await this.authCache.getCurrentUser(decoded.id);
         if (!resp.data) {
           // no currentuser object in cache,
-          const user = await this.getUser(decoded.id);
-          await this.authCache.saveCurrentUser(user);
-          req.currentuser = user;
+          const { data: _cuser } = await this.userService.getCurrentUser(
+            cid,
+            decoded.id
+          );
+
+          _cuser && (await this.authCache.saveCurrentUser(_cuser));
+          req.currentuser = _cuser;
           return next();
-          // await this.authCache.delAuthTokens(decoded.id);
-          // res.clearCookie(REFRESH_TOKEN);
-          // throw new ErrorResponse(
-          //   'Access denied.',
-          //   errorTypes.AUTH_ERROR,
-          //   httpStatusCodes.UNAUTHORIZED
-          // );
         }
 
         req.currentuser = resp.data as ICurrentUser;
         next();
       } catch (error: Error | any) {
-        if (
-          error.name === 'TokenExpiredError' ||
-          error.name === 'JsonWebTokenError'
-        ) {
+        if (error instanceof jwt.TokenExpiredError) {
           return next(
             new ErrorResponse(
-              'Access denied, please login.',
+              'Token expired, please login again.',
+              errorTypes.AUTH_ERROR,
+              httpStatusCodes.UNAUTHORIZED
+            )
+          );
+        } else if (error instanceof jwt.JsonWebTokenError) {
+          return next(
+            new ErrorResponse(
+              'Invalid token, please login.',
               errorTypes.AUTH_ERROR,
               httpStatusCodes.FORBIDDEN
             )
@@ -90,22 +84,6 @@ class AuthMiddlewares {
       }
     }
   );
-
-  private getUser = async (id: string) => {
-    const user = (await User.findOne({
-      isActive: true,
-      _id: new Types.ObjectId(id),
-    })) as IUserDocument;
-
-    if (!user) {
-      throw new ErrorResponse(
-        'Please validate your email by clicking the link emailed during regitration process.',
-        errorTypes.NO_RESOURCE_ERROR,
-        httpStatusCodes.NOT_FOUND
-      );
-    }
-    return mapCurrentUserObject(user);
-  };
 }
 
-export default new AuthMiddlewares(AuthController);
+export default new AuthMiddlewares();

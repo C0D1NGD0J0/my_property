@@ -69,7 +69,7 @@ export interface IInviteUserSignup {
 
 interface IClientUserConnections {
   cid: string;
-  role: string;
+  role: 'admin' | 'tenant' | 'landlord';
   isConnected: boolean;
 }
 export interface IUserDocument extends IUser, Document {
@@ -153,9 +153,9 @@ export interface ICurrentUser {
   id: string;
   uid: string;
   cid: string;
-  role: string;
+  role: IClientUserConnections['role'];
   email: string;
   isActive: boolean;
   fullname: string | null;
-  isSubscriptionActive: boolean;
+  isSubscriptionActive?: boolean;
 }

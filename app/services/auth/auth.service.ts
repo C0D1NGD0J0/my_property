@@ -253,7 +253,11 @@ class AuthService {
       refreshToken: string;
       accessToken: string;
       userid: string;
-      clientId: string;
+      linkedAccounts: {
+        _id: string;
+        cid: string;
+        name: string;
+      }[];
     }>
   > => {
     try {
@@ -282,6 +286,40 @@ class AuthService {
 
       const { accessToken, refreshToken } = jwtGenerator(user.id);
 
+      // Extract the cids from the user's cids array
+      const cids = user.cids.map((connection) => connection.cid);
+      // Use aggregation to fetch clients and admin names
+      const clients = await Client.aggregate([
+        { $match: { cid: { $in: cids } } },
+        {
+          $lookup: {
+            from: 'users', // The collection to join
+            localField: 'admin', // Field from the clients collection
+            foreignField: '_id', // Field from the users collection
+            as: 'adminDetails', // Alias for the joined data
+          },
+        },
+        { $unwind: '$adminDetails' },
+        {
+          $project: {
+            cid: 1,
+            name: {
+              $cond: {
+                if: '$accountType.isEnterpriseAccount',
+                then: '$enterpriseProfile.companyName',
+                else: {
+                  $concat: [
+                    '$adminDetails.firstName',
+                    ' ',
+                    '$adminDetails.lastName',
+                  ],
+                },
+              },
+            },
+          },
+        },
+      ]);
+
       return {
         success: true,
         msg: 'Login was successful.',
@@ -289,7 +327,7 @@ class AuthService {
           accessToken,
           refreshToken,
           userid: user.id,
-          clientId: user.cids[0].cid,
+          linkedAccounts: clients,
         },
       };
     } catch (error) {

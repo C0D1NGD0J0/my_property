@@ -13,7 +13,10 @@ import {
   ACCOUNT_UPDATE_NOTIFICATION,
   errorTypes,
 } from '@utils/constants';
-import { mapCurrentUserObject } from '@services/user/utils';
+import {
+  ICurrentUserDataType,
+  mapCurrentUserObject,
+} from '@services/user/utils';
 import {
   IEmailOptions,
   IPaginateResult,
@@ -34,10 +37,10 @@ class UserService {
     cid: string,
     userId: string
   ): Promise<ISuccessReturnData<ICurrentUser>> => {
-    const user = (await User.findOne({
+    const user: IUserDocument | null = await User.findOne({
       _id: new Types.ObjectId(userId),
       isActive: true,
-    })) as IUserDocument;
+    });
 
     if (!user) {
       const err = 'Something went wrong, please try again.';
@@ -50,11 +53,13 @@ class UserService {
     }
 
     const subscription = await Subscription.findOne({ cid });
-
+    const matchingCid = user.cids.find((connection) => connection.cid === cid);
     const _user = {
-      ...user,
-      status: subscription?.status || 'inactive',
-    } as IUserDocument & { status: string };
+      ...user.toObject(),
+      ...(matchingCid?.role !== 'tenant'
+        ? { hasAccess: subscription?.status === 'active' || false }
+        : null),
+    } as any;
 
     const currentuser = mapCurrentUserObject(_user, cid);
     return { success: true, data: currentuser };

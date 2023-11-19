@@ -29,7 +29,7 @@
       "@queues/*": ["app/queues/*"],
       "@mailer/*": ["app/mailer/*"],
       "@workers/*": ["app/workers/*"],
-      "@tests/*": ["app/tests/*"],
+      "@tests/*": ["tests/*"],
       "@utils/*": ["app/utils/*"],
       "@root/*": ["*"]
     }
@@ -44,8 +44,14 @@
     "./app/**/*.js",
     "./server.ts",
     "./app/**/*.ejs",
-    "app/tests/configs/teardown.test.ts",
+    "./tests/configs/teardown.test.ts",
     "types/custom.d.ts"
   ],
-  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.*", "**/mocks/*"]
+  "exclude": [
+    "node_modules",
+    "**/*.spec.ts",
+    "**/*.test.*",
+    "**/mocks/*",
+    "./tests/**/*"
+  ]
 }

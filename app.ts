@@ -44,7 +44,7 @@ export class App {
     app.use(helmet());
     app.use(
       cors({
-        origin: '*',
+        origin: ['localhost', 'http://localhost:3000'],
         optionsSuccessStatus: 200,
         credentials: true,
       })

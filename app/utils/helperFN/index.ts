@@ -4,7 +4,7 @@ import { Response } from 'express';
 import bunyan from 'bunyan';
 import { IPaginateResult } from '@interfaces/utils.interface';
 import { isValidObjectId } from 'mongoose';
-import { REFRESH_TOKEN } from '@utils/constants';
+import { ACCESS_TOKEN, REFRESH_TOKEN } from '@utils/constants';
 
 export const hashGenerator = (): string => {
   const token = crypto.randomBytes(10).toString('hex');
@@ -18,25 +18,43 @@ export const jwtGenerator = (id: string) => {
     process.env.JWT_REFRESH_SECRET as string,
   ];
 
+  const atoken = jwt.sign({ id }, secrets[0], {
+    expiresIn: process.env.JWT_EXPIREIN,
+  });
+
+  const rtoken = jwt.sign({ id }, secrets[1], {
+    expiresIn: process.env.JWT_REFRESH_EXPIRESIN,
+  });
+
   return {
-    refreshToken: `Bearer ${jwt.sign({ id }, secrets[1], {
-      expiresIn: process.env.JWT_REFRESH_EXPIRESIN,
-    })}`,
-    accessToken: `Bearer ${jwt.sign({ id }, secrets[0], {
-      expiresIn: process.env.JWT_EXPIREIN,
-    })}`,
+    refreshToken: `Bearer ${rtoken}`,
+    accessToken: `Bearer ${atoken}`,
   };
 };
 
-export const setCookieAuth = (token: string, res: Response) => {
+export const setCookieAuth = (
+  tokens: { rtoken?: string; atoken: string },
+  res: Response
+) => {
   const options = {
     httpOnly: true,
-    maxAge: 7200, // Expires after 2hr
+    expire: 7200, // Expires after 2hr
     path: '/',
+    sameSite: true,
     secure: process.env.NODE_ENV === 'production', //only works with https
   };
 
-  res.cookie(REFRESH_TOKEN, token, options);
+  if (!tokens || (!tokens.rtoken && !tokens.atoken)) {
+    throw new Error('Error setting cookies.');
+  }
+
+  if (tokens?.rtoken) {
+    res.cookie(REFRESH_TOKEN, tokens.rtoken, options);
+  }
+
+  if (tokens.atoken) {
+    res.cookie(ACCESS_TOKEN, tokens.atoken, options);
+  }
   return res;
 };
 

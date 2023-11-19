@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: './.env.test' });
-import { createLogger } from '../../utils/helperFN';
+import { createLogger } from '../../app/utils/helperFN';
 import { connectDB, disconnectDB, clearDB } from './db';
 import { UserFactory } from './db/factory';
 const log = createLogger('TesetSetup');

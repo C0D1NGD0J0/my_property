@@ -1,4 +1,5 @@
-export const REFRESH_TOKEN = 'refresh-token';
+export const REFRESH_TOKEN = 'refreshToken';
+export const ACCESS_TOKEN = 'accessToken';
 export const FORGOT_PASSWORD = 'FORGOT_PASSWORD';
 export const AUTH_EMAIL_QUEUE = 'AUTH_EMAIL_QUEUE';
 export const USER_EMAIL_QUEUE = 'USER_EMAIL_QUEUE';

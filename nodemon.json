@@ -10,5 +10,5 @@
     "app/tests/*"
   ],
   "env": { "NODE_ENV": "development" },
-  "exec": "ts-node -r tsconfig-paths/register -- server.ts"
+  "exec": "ts-node -r tsconfig-paths/register -- server.ts clear"
 }
