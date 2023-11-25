@@ -21,6 +21,7 @@ export const httpStatusCodes = {
   UNAUTHORIZED: 401,
   INTERNAL_SERVER: 500,
   SERVICE_UNAVAILABLE: 503,
+  CUSTOM_UNAUTHORIZED: 419,
 };
 
 export const errorTypes = {

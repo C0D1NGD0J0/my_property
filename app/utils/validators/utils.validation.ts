@@ -34,6 +34,8 @@ const propertyParams = () => {
             httpStatusCodes.NOT_FOUND
           );
         }
+
+        return puid;
       }),
     param('cid', 'Client identifier missing.')
       .if(param('cid').exists())
@@ -56,6 +58,8 @@ const propertyParams = () => {
             httpStatusCodes.NOT_FOUND
           );
         }
+
+        return cid;
       }),
   ];
 };
@@ -83,6 +87,8 @@ const clientParams = () => {
             httpStatusCodes.NOT_FOUND
           );
         }
+
+        return cid;
       }),
   ];
 };
@@ -110,6 +116,7 @@ const reportParams = () => {
             httpStatusCodes.NOT_FOUND
           );
         }
+        return id;
       }),
   ];
 };
@@ -137,6 +144,7 @@ const notificationParams = () => {
             httpStatusCodes.NOT_FOUND
           );
         }
+        return id;
       }),
   ];
 };
@@ -164,6 +172,7 @@ const subscriptionParams = () => {
             httpStatusCodes.NOT_FOUND
           );
         }
+        return id;
       }),
   ];
 };

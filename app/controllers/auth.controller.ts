@@ -1,6 +1,9 @@
-import jwt from 'jsonwebtoken';
-import jwt_decode from 'jwt-decode';
 import { Request, Response, NextFunction } from 'express';
+import jwt, {
+  JsonWebTokenError,
+  TokenExpiredError,
+  NotBeforeError,
+} from 'jsonwebtoken';
 
 import { EmailQueue } from '@queues/index';
 import { AuthService } from '@services/auth';
@@ -16,6 +19,11 @@ import {
   ACCESS_TOKEN,
 } from '@utils/constants';
 
+type JwtErrorTypes =
+  | JsonWebTokenError
+  | TokenExpiredError
+  | NotBeforeError
+  | null;
 class AuthController {
   private authService: AuthService;
   private emailQueue: EmailQueue;
@@ -80,7 +88,7 @@ class AuthController {
   };
 
   logout = async (req: AppRequest, res: Response) => {
-    res.clearCookie('refreshToken');
+    res.clearCookie(ACCESS_TOKEN);
     await this.cache.logoutUser(req.currentuser!.id);
     res
       .status(httpStatusCodes.OK)
@@ -88,8 +96,10 @@ class AuthController {
   };
 
   refreshToken = async (req: Request, res: Response, next: NextFunction) => {
-    const resp = await this.generateRrefreshToken(req, res, next);
-    res.status(httpStatusCodes.OK).json(resp);
+    const resp = await this.generateRefreshToken(req.cookies, res, next);
+
+    resp && setCookieAuth({ atoken: resp.accessToken }, res);
+    res.status(httpStatusCodes.OK).json({ data: { success: !!resp } });
   };
 
   forgotPassword = async (req: Request, res: Response) => {
@@ -107,12 +117,11 @@ class AuthController {
     res.status(httpStatusCodes.OK).json(rest);
   };
 
-  private generateRrefreshToken = async (
-    req: Request,
+  private generateRefreshToken = async (
+    cookies: { [key: string]: any },
     res: Response,
     next: NextFunction
   ) => {
-    const cookies = req.cookies;
     if (!cookies[ACCESS_TOKEN]) {
       return next(
         new ErrorResponse(
@@ -123,34 +132,55 @@ class AuthController {
       );
     }
 
-    const token = cookies[ACCESS_TOKEN].split(' ')[1];
-    const _decoded: any = jwt_decode(token);
-    const resp = jwt.verify(
-      token,
-      process.env.JWT_ACCESS_SECRET as string,
-      async (err: any, _: any) => {
-        if (err) {
-          await this.cache.delAuthTokens(_decoded.id);
-          res.clearCookie(REFRESH_TOKEN);
+    const accessToken = cookies[ACCESS_TOKEN].split(' ')[1];
+    // Attempt to decode the access token to get userId
+    const decoded = jwt.decode(accessToken) as {
+      id: string;
+      iat: number;
+      exp: number;
+    };
+    try {
+      if (decoded && decoded.id) {
+        const cacheTokens = await this.cache.getAuthTokens(decoded.id);
+        if (!cacheTokens.data) {
+          console.log('No saved tokens found for user');
           return next(
             new ErrorResponse(
               'Access denied, please login again.',
-              errorTypes.AUTH_ERROR,
+              'authServiceError',
               httpStatusCodes.UNAUTHORIZED
             )
           );
         }
 
-        const { accessToken, refreshToken } = jwtGenerator(_decoded.id);
-        setCookieAuth({ atoken: accessToken }, res);
-        await this.cache.saveAuthTokens(_decoded.id, [
-          accessToken,
+        const refreshToken = cacheTokens?.data[1].split(' ')[1];
+        jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET as string);
+        const { accessToken: newAccessToken } = jwtGenerator(decoded.id);
+        await this.cache.saveAuthTokens(decoded.id, [
+          newAccessToken,
           refreshToken,
         ]);
-        return { success: true };
+        return { success: true, accessToken: newAccessToken };
       }
-    );
-    return resp;
+      return next(
+        new ErrorResponse(
+          'Access denied, please login.',
+          'authServiceError',
+          httpStatusCodes.UNAUTHORIZED
+        )
+      );
+    } catch (refreshTokenErr) {
+      // Refresh token is also invalid
+      await this.cache.delAuthTokens(decoded.id);
+      res.clearCookie(ACCESS_TOKEN);
+      return next(
+        new ErrorResponse(
+          'Access denied, please login.',
+          'authServiceError',
+          httpStatusCodes.UNAUTHORIZED
+        )
+      );
+    }
   };
 }
 

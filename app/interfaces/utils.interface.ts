@@ -2,6 +2,7 @@ import express from 'express';
 import { ICurrentUser } from '@interfaces/user.interface';
 
 export interface AppRequest extends express.Request {
+  session?: Record<string, any>;
   currentuser?: ICurrentUser;
 }
 

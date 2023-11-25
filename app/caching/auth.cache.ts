@@ -10,7 +10,7 @@ export default class AuthCache extends BaseCache {
 
   saveAuthTokens = async (
     userid: string,
-    tokens: [string, string]
+    tokens: string[]
   ): Promise<ICacheResponse> => {
     try {
       if (!this.client.isOpen) {
@@ -36,9 +36,7 @@ export default class AuthCache extends BaseCache {
     }
   };
 
-  getAuthTokens = async (
-    userid: string
-  ): Promise<ICacheResponse<[string, string]>> => {
+  getAuthTokens = async (userid: string): Promise<ICacheResponse<string[]>> => {
     try {
       if (!this.client.isOpen) {
         await this.client.connect();

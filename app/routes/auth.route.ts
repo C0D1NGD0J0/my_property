@@ -45,7 +45,7 @@ router.delete(
 
 router.get(
   '/refresh_token',
-  AuthMiddleware.isAuthenticated,
+  AuthMiddleware.initiateTokenRefresh,
   asyncHandler(AuthController.refreshToken)
 );
 
