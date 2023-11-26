@@ -52,6 +52,40 @@ class UserService {
       );
     }
 
+    // Extract the cids from the user's cids array
+    const cids = user.cids.map((connection) => connection.cid);
+    // Use aggregation to fetch clients and admin names
+    const clients = await Client.aggregate([
+      { $match: { cid: { $in: cids } } },
+      {
+        $lookup: {
+          from: 'users', // The collection to join
+          localField: 'admin', // Field from the clients collection
+          foreignField: '_id', // Field from the users collection
+          as: 'adminDetails', // Alias for the joined data
+        },
+      },
+      { $unwind: '$adminDetails' },
+      {
+        $project: {
+          cid: 1,
+          name: {
+            $cond: {
+              if: '$accountType.isEnterpriseAccount',
+              then: '$enterpriseProfile.companyName',
+              else: {
+                $concat: [
+                  '$adminDetails.firstName',
+                  ' ',
+                  '$adminDetails.lastName',
+                ],
+              },
+            },
+          },
+        },
+      },
+    ]);
+
     const subscription = await Subscription.findOne({ cid });
     const matchingCid = user.cids.find((connection) => connection.cid === cid);
     const _user = {
@@ -59,6 +93,7 @@ class UserService {
       ...(matchingCid?.role !== 'tenant'
         ? { hasAccess: subscription?.status === 'active' || false }
         : null),
+      linkedAccounts: clients,
     } as any;
 
     const currentuser = mapCurrentUserObject(_user, cid);
@@ -125,7 +160,49 @@ class UserService {
       subject: 'Account has been updated.',
     };
 
-    const currentuser = mapCurrentUserObject(user, cid);
+    const subscription = await Subscription.findOne({ cid });
+    // Extract the cids from the user's cids array
+    const cids = user.cids.map((connection) => connection.cid);
+    const matchingCid = user.cids.find((connection) => connection.cid === cid);
+    // Use aggregation to fetch clients and admin names
+    const clients = await Client.aggregate([
+      { $match: { cid: { $in: cids } } },
+      {
+        $lookup: {
+          from: 'users', // The collection to join
+          localField: 'admin', // Field from the clients collection
+          foreignField: '_id', // Field from the users collection
+          as: 'adminDetails', // Alias for the joined data
+        },
+      },
+      { $unwind: '$adminDetails' },
+      {
+        $project: {
+          cid: 1,
+          name: {
+            $cond: {
+              if: '$accountType.isEnterpriseAccount',
+              then: '$enterpriseProfile.companyName',
+              else: {
+                $concat: [
+                  '$adminDetails.firstName',
+                  ' ',
+                  '$adminDetails.lastName',
+                ],
+              },
+            },
+          },
+        },
+      },
+    ]);
+    const _user = {
+      ...user.toObject(),
+      ...(matchingCid?.role !== 'tenant'
+        ? { hasAccess: subscription?.status === 'active' || false }
+        : null),
+      linkedAccounts: clients,
+    } as any;
+    const currentuser = mapCurrentUserObject(_user, cid);
     return {
       success: true,
       data: { emailOptions, user: currentuser },

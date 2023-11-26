@@ -303,6 +303,7 @@ class AuthService {
         {
           $project: {
             cid: 1,
+            role: 1,
             name: {
               $cond: {
                 if: '$accountType.isEnterpriseAccount',
