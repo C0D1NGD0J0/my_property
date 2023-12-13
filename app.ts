@@ -47,7 +47,7 @@ export class App {
         origin: [
           'localhost',
           'http://localhost:3000',
-          'https://my-property-fe-w49m.vercel.app',
+          'https://my-property-fe.vercel.app',
         ],
         optionsSuccessStatus: 200,
         credentials: true,
