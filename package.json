@@ -50,6 +50,7 @@
     "hpp": "^0.2.3",
     "jsonwebtoken": "^8.5.1",
     "jwt-decode": "^3.1.2",
+    "mongodb": "^6.3.0",
     "mongodb-memory-server": "^8.11.4",
     "mongoose": "^6.6.5",
     "mongoose-unique-validator": "^3.1.0",

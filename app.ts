@@ -44,7 +44,11 @@ export class App {
     app.use(helmet());
     app.use(
       cors({
-        origin: ['localhost', 'http://localhost:3000'],
+        origin: [
+          'localhost',
+          'http://localhost:3000',
+          'https://my-property-fe-w49m.vercel.app',
+        ],
         optionsSuccessStatus: 200,
         credentials: true,
       })
