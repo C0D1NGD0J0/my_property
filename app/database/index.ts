@@ -26,7 +26,7 @@ class ConnectDB {
 
     try {
       mongoose.set('strictQuery', true);
-      !isProduction
+      isProduction
         ? mongoose.connect(process.env.MONGODB_URI as string)
         : await mongoose.connect(process.env.LOCALDB_URI as string);
       this.connected = true;
