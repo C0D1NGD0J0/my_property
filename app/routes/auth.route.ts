@@ -38,7 +38,7 @@ router.post(
 );
 
 router.delete(
-  '/logout',
+  '/:cid/logout',
   AuthMiddleware.isAuthenticated,
   asyncHandler(AuthController.logout)
 );

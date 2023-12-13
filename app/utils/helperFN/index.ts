@@ -128,3 +128,20 @@ export const mergeArrayWithLimit = (
   // Return the removed items
   return { data: originalArray, removedItems };
 };
+
+export const isValidPhoneNumber = (phoneNumber: string): boolean => {
+  if (!phoneNumber) {
+    return false;
+  }
+  // Regular expressions for various phone number formats
+  const usCanadaRegex =
+    /^(\+\d{1,2}\s?)?1?\.?\s?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/;
+  const europeRegex = /^(\+3[0-9]|4[0-46-9]|5[1-8]|7[1-79])?\d{6,14}$/; // General Europe
+  const africaRegex = /^(\+2[0-46-8])?\d{6,14}$/; // General Africa
+
+  return (
+    usCanadaRegex.test(phoneNumber.trim()) ||
+    europeRegex.test(phoneNumber.trim()) ||
+    africaRegex.test(phoneNumber.trim())
+  );
+};

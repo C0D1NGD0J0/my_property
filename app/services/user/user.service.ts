@@ -4,7 +4,9 @@ import { Client, Subscription, User } from '@models/index';
 import ErrorResponse from '@utils/errorResponse';
 import {
   IClientDocument,
+  IClientUpdateData,
   ICurrentUser,
+  IPopulatedClientDocument,
   ISignupData,
   IUserDocument,
 } from '@interfaces/user.interface';
@@ -131,12 +133,12 @@ class UserService {
   ): Promise<
     ISuccessReturnData<{ emailOptions: IEmailOptions; user: ICurrentUser }>
   > => {
-    const { accountType, ...dataToSave } = data;
+    const { accountType, password, ...dataToSave } = data;
 
     let user = (await User.findOne({
       id: new Types.ObjectId(data.userId),
     })) as IUserDocument;
-    const isMatch = await user.validatePassword(data.password as string);
+    const isMatch = await user.validatePassword(password as string);
 
     if (!isMatch) {
       const err = 'Valid account password must be provided to update account.';
@@ -203,6 +205,7 @@ class UserService {
       linkedAccounts: clients,
     } as any;
     const currentuser = mapCurrentUserObject(_user, cid);
+
     return {
       success: true,
       data: { emailOptions, user: currentuser },
@@ -232,7 +235,60 @@ class UserService {
     return { success: true, msg: 'Account has been successfully deleted.' };
   };
 
+  getUserEditInfo = async (
+    userId: string
+  ): Promise<ISuccessReturnData<IUserDocument>> => {
+    const excludeFields = {
+      activationToken: 0,
+      passwordResetToken: 0,
+      deletedAt: 0,
+      password: 0,
+      id: 0,
+      updatedAt: 0,
+      createdAt: 0,
+      cids: 0,
+      isActive: 0,
+      _id: 0,
+      activationTokenExpiresAt: 0,
+      passwordResetTokenExpiresAt: 0,
+    };
+
+    const user = (await User.findOne(
+      { id: userId },
+      excludeFields
+    ).exec()) as IUserDocument;
+
+    if (!user) {
+      const err = 'Something went wrong, please try again.';
+      this.log.error('getUserEditInfo: ', err);
+      throw new ErrorResponse(
+        err,
+        'serviceError',
+        httpStatusCodes.UNPROCESSABLE
+      );
+    }
+
+    return { success: true, data: user };
+  };
+
   /* ClientUser */
+  getClientInfo = async (cid: string) => {
+    if (!cid) {
+      const err = 'Client id is missing.';
+      this.log.error(err);
+      throw new ErrorResponse(
+        err,
+        errorTypes.SERVICE_ERROR,
+        httpStatusCodes.BAD_REQUEST
+      );
+    }
+
+    const clientInfo = await Client.findOne({ cid }).select(
+      'accountType.isEnterpriseAccount enterpriseProfile'
+    );
+    return { success: true, data: { clientInfo } };
+  };
+
   getClientUsers = async (
     cid: string,
     userType: string,
@@ -277,12 +333,17 @@ class UserService {
     return { success: true, data: { users, paginate: paginationInfo } };
   };
 
-  updateClient = async (
+  updateClientAccount = async (
     cid: string,
-    data: Partial<IClientDocument>
-  ): IPromiseReturnedData<IClientDocument> => {
-    if (!cid || !mongoose.isValidObjectId(cid)) {
-      const err = 'Client id is missing.';
+    data: IClientUpdateData
+  ): Promise<
+    ISuccessReturnData<{
+      emailOptions: IEmailOptions;
+      clientInfo: IClientUpdateData | undefined;
+    }>
+  > => {
+    if (!cid) {
+      const err = 'Invalid Client cid provided.';
       this.log.error(err);
       throw new ErrorResponse(
         err,
@@ -291,7 +352,11 @@ class UserService {
       );
     }
 
-    const client = await Client.findOne({ _id: new Types.ObjectId(cid) });
+    const client = (await Client.findOne({ cid }).populate(
+      'admin',
+      'email fullname'
+    )) as IPopulatedClientDocument;
+
     if (!client) {
       const err = 'Client not found.';
       this.log.error(err);
@@ -302,14 +367,35 @@ class UserService {
       );
     }
 
-    client.admin = new Types.ObjectId(data.admin);
-    client.enterpriseProfile = data.enterpriseProfile;
-    client.subscription = data.subscription
-      ? new Types.ObjectId(data.subscription)
-      : null;
+    if (data.admin) {
+      client.admin = new Types.ObjectId(data.admin);
+    }
 
-    await client.save();
-    return { success: true, data: client };
+    if (data.subscription) {
+      client.subscription = data.subscription
+        ? new Types.ObjectId(data.subscription)
+        : null;
+    }
+
+    const updatedClient = await Client.findOneAndUpdate(
+      { _id: client._id },
+      { $set: { enterpriseProfile: data } },
+      { new: true }
+    );
+
+    const emailOptions: IEmailOptions = {
+      to: (client.admin as IUserDocument).email,
+      data: {
+        fullname: (client.admin as IUserDocument).fullname,
+        updatedAt: new Date(),
+      },
+      emailType: ACCOUNT_UPDATE_NOTIFICATION,
+      subject: 'Account has been updated.',
+    };
+    return {
+      success: true,
+      data: { clientInfo: updatedClient?.enterpriseProfile, emailOptions },
+    };
   };
   /* end region */
 }

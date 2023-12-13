@@ -101,6 +101,48 @@ export interface IClientDocument extends Document {
   enterpriseProfile?: IEnterpriseInfo;
 }
 
+export type IPopulatedClientDocument = Omit<IClientDocument, 'admin'> & {
+  admin: IUserDocument | Types.ObjectId;
+};
+
+type IdentificationType = {
+  idType:
+    | 'passport'
+    | 'national-id'
+    | 'drivers-license'
+    | 'corporation-license';
+  idNumber: string;
+  authority: string;
+  issueDate: Date | string; // or Date if you prefer Date objects
+  expiryDate: Date | string; // or Date if you prefer Date objects
+  issuingState: string;
+};
+type ContactInfoType = {
+  email: string;
+  address: string;
+  phoneNumber: string;
+  contactPerson: string;
+};
+
+interface IEnterpriseInfo {
+  companyName: string;
+  legalEntityName: string;
+  contactInfo?: ContactInfoType;
+  businessRegistrationNumber: string;
+  identification?: IdentificationType;
+}
+
+export interface IClientUpdateData {
+  companyName: string;
+  legalEntityName: string;
+  contactInfo?: ContactInfoType;
+  businessRegistrationNumber: string;
+  identification?: IdentificationType;
+  userId?: string;
+  admin?: string;
+  subscription?: string;
+}
+
 export enum IUserRole {
   ADMIN = 'admin',
   TENANT = 'tenant',
@@ -108,18 +150,6 @@ export enum IUserRole {
   EMPLOYEE = 'employee',
 }
 export type IUserRoleType = 'admin' | 'tenant' | 'manager' | 'employee';
-
-interface IEnterpriseInfo {
-  contactInfo: {
-    email: string;
-    address: string;
-    phoneNumber: string;
-    contactPerson: string;
-  };
-  companyName: string;
-  legaEntityName: string;
-  businessRegistrationNumber: string;
-}
 
 // TENANT INTERFACE
 export interface ITenant extends IUser {

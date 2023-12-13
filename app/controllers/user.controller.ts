@@ -52,10 +52,13 @@ class UserController {
 
   getAccountInfo = async (req: AppRequest, res: AppResponse) => {
     const { cid } = req.params;
-    const resp = await this.userService.getAccountInfo(
-      cid,
-      req.currentuser!.id
-    );
+    const resp = await this.userService.getUserEditInfo(req.currentuser!.id);
+    res.status(httpStatusCodes.OK).json(resp);
+  };
+
+  getClientInfo = async (req: AppRequest, res: AppResponse) => {
+    const { cid } = req.params;
+    const resp = await this.userService.getClientInfo(cid);
     res.status(httpStatusCodes.OK).json(resp);
   };
 
@@ -72,6 +75,22 @@ class UserController {
     }
 
     res.status(httpStatusCodes.OK).json(rest);
+  };
+
+  updateClientAccount = async (req: AppRequest, res: AppResponse) => {
+    const { cid } = req.params;
+    const { data, ...rest } = await this.userService.updateClientAccount(cid, {
+      ...req.body,
+      userId: req.currentuser!.id,
+    });
+
+    if (data?.emailOptions) {
+      this.emailQueue.addEmailToQueue(USER_EMAIL_QUEUE, data.emailOptions);
+    }
+
+    res
+      .status(httpStatusCodes.OK)
+      .json({ success: true, data: { clientInfo: data?.clientInfo } });
   };
 
   deleteAccount = async (req: AppRequest, res: AppResponse) => {

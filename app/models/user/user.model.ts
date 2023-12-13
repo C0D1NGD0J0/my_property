@@ -1,8 +1,9 @@
 import {
+  IUser,
   IUserDocument,
   IUserRelationshipsEnum,
 } from '@interfaces/user.interface';
-import { Schema, model } from 'mongoose';
+import { Query, Schema, model } from 'mongoose';
 import uniqueValidator from 'mongoose-unique-validator';
 import bcrypt from 'bcryptjs';
 
@@ -11,7 +12,6 @@ const UserSchema = new Schema<IUserDocument>(
     firstName: {
       type: String,
       required: true,
-      lowercase: true,
       maxlength: 25,
       minlength: 2,
       trim: true,
@@ -19,14 +19,12 @@ const UserSchema = new Schema<IUserDocument>(
     lastName: {
       type: String,
       required: true,
-      lowercase: true,
       maxlength: 25,
       minlength: 2,
       trim: true,
     },
     location: {
       type: String,
-      lowercase: true,
       maxlength: 35,
       trim: true,
     },
@@ -52,7 +50,6 @@ const UserSchema = new Schema<IUserDocument>(
         name: {
           type: String,
           required: true,
-          lowercase: true,
           maxlength: 35,
           minlength: 2,
           trim: true,
@@ -100,13 +97,23 @@ const UserSchema = new Schema<IUserDocument>(
 );
 
 UserSchema.pre('save', async function (this: IUserDocument, next) {
-  if (!this.isModified('password')) {
-    next();
+  if (this.isModified('password')) {
+    // Hashing Password
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+  }
+  next();
+});
+
+UserSchema.pre<Query<any, IUser>>('findOneAndUpdate', async function (next) {
+  const update = this.getUpdate() as IUser;
+  // Check if password is being updated
+  if (update.password) {
+    const salt = await bcrypt.genSalt(10);
+    update.password = await bcrypt.hash(update.password, salt);
   }
 
-  // Hashing Password
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+  next();
 });
 
 UserSchema.methods.validatePassword = async function (

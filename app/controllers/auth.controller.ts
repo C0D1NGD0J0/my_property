@@ -97,9 +97,13 @@ class AuthController {
 
   refreshToken = async (req: Request, res: Response, next: NextFunction) => {
     const resp = await this.generateRefreshToken(req.cookies, res, next);
-
-    resp && setCookieAuth({ atoken: resp.accessToken }, res);
-    res.status(httpStatusCodes.OK).json({ data: { success: !!resp } });
+    if (resp && resp.success) {
+      setCookieAuth({ atoken: resp.accessToken }, res);
+      return res
+        .status(httpStatusCodes.OK)
+        .json({ data: { success: resp.success } });
+    }
+    res.status(httpStatusCodes.UNAUTHORIZED).json({ data: { success: false } });
   };
 
   forgotPassword = async (req: Request, res: Response) => {

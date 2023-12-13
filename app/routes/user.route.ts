@@ -33,11 +33,25 @@ router.get(
   asyncHandler(UserController.getAccountInfo)
 );
 
+router.get(
+  '/:cid/client_account_info',
+  UtilsValidations.validateClientParams,
+  validationRequestHandler,
+  asyncHandler(UserController.getClientInfo)
+);
+
 router.put(
   '/:cid/update_account',
   UserValidations.updateAccount,
   validationRequestHandler,
   asyncHandler(UserController.updateAccount)
+);
+
+router.put(
+  '/:cid/update_client_account',
+  UserValidations.updateClientAccount,
+  validationRequestHandler,
+  asyncHandler(UserController.updateClientAccount)
 );
 
 router.post(
