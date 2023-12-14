@@ -1,4 +1,7 @@
 {
   "extends": "./tsconfig.json",
-  "exclude": ["./app/tests/**/*"]
+  "exclude": ["./tests/**/*"],
+  "compilerOptions": {
+    "types": ["node"] // Removed "jest"
+  }
 }

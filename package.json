@@ -9,7 +9,7 @@
     "eslint:fix": "eslint app/**/*.ts --fix",
     "dev": "nodemon | ./node_modules/.bin/bunyan",
     "start": "npm run build && node -r tsconfig-paths/register dist/server.js",
-    "build": "rimraf ./dist && tsc && tsc-alias",
+    "build": "rimraf ./dist && tsc -p tsconfig.build.json && tsc-alias",
     "test": "NODE_ENV=test jest --detectOpenHandles",
     "prepare": "husky install"
   },
