@@ -83,6 +83,7 @@ export class App {
     app.use(dbErrorHandler);
 
     process.on('uncaughtException', (err: any) => {
+      console.log(err);
       this.log.error('There was an uncaught error exception: ', err.message);
       this.serverShutdown(1);
       // const PORT = process.env.PORT || 5000;
