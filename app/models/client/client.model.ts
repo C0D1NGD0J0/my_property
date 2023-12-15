@@ -20,7 +20,7 @@ const ClientSchema = new Schema<IClientDocument>(
       },
       identification: {
         idType: {
-          default: '',
+          default: 'passport',
           type: String,
           enum: [
             'passport',
@@ -56,7 +56,11 @@ ClientSchema.plugin(uniqueValidator);
 
 ClientSchema.path('enterpriseProfile.identification.expiryDate').validate(
   function (expiryDate) {
-    if (this.enterpriseProfile?.identification?.issueDate && expiryDate) {
+    if (
+      this.accountType.isEnterpriseAccount &&
+      this.enterpriseProfile?.identification?.issueDate &&
+      expiryDate
+    ) {
       return expiryDate > this.enterpriseProfile.identification.issueDate;
     }
     return true; // If either date is not set, skip this validation
