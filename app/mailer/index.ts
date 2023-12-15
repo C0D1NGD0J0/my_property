@@ -20,6 +20,7 @@ interface IMailer {
 interface CustomMailOption extends Mail.Options {
   data: any;
 }
+const isProduction = process.env.NODE_ENV === 'production';
 
 export default class Mailer implements IMailer {
   protected readonly transporter: nodemailer.Transporter;
@@ -61,14 +62,31 @@ export default class Mailer implements IMailer {
   };
 
   private buildMailTransporter() {
-    return nodemailer.createTransport({
+    const gmail = {
+      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: {
+        type: 'login',
+        user: process.env.GMAIL_USERNAME,
+        pass: process.env.GMAIL_PASSWORD,
+      },
+    };
+
+    const mailtrap = {
       auth: {
         user: process.env.MAILTRAP_SMTP_USERNAME,
         pass: process.env.MAILTRAP_SMTP_PASSWORD,
       },
       host: 'smtp.mailtrap.io',
       port: process.env.EMAIL_PROVIDER_PORT,
-    } as nodemailer.TransportOptions);
+    };
+
+    const transportSettings = isProduction ? gmail : mailtrap;
+    return nodemailer.createTransport(
+      transportSettings as nodemailer.TransportOptions
+    );
   }
 
   private async getEmailTemplate(emailData: any, type: string) {
