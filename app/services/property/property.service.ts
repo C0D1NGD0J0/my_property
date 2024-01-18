@@ -1,6 +1,6 @@
 import color from 'colors';
 import { v4 as uuid } from 'uuid';
-import { Types } from 'mongoose';
+import { ObjectId, Types } from 'mongoose';
 import { Lease, Property } from '@models/index';
 
 import {
@@ -46,7 +46,10 @@ class PropertyService {
     try {
       const { s3Files, ...dataToSave } = data;
 
-      const property = new Property(dataToSave) as IPropertyDocument;
+      const property = new Property({
+        ...dataToSave,
+        apartmentUnits: [],
+      }) as IPropertyDocument;
 
       if (s3Files && s3Files.length) {
         property.photos = s3Files.map((fileInfo) => {
@@ -78,7 +81,9 @@ class PropertyService {
 
       property.cid = cid;
       property.puid = uuid();
-      property.managedBy = new Types.ObjectId(userId);
+      property.managedBy = data.managedBy
+        ? new Types.ObjectId(data.managedBy as Types.ObjectId)
+        : new Types.ObjectId(userId);
 
       await property.save();
       return {

@@ -15,7 +15,7 @@ const fileUpload: S3FileUpload = new S3FileUpload();
 router.use(AuthMiddleware.isAuthenticated);
 
 router.post(
-  '/',
+  '/:cid/',
   fileUpload.upload,
   PropertyValidations.createProperty,
   validationRequestHandler,
@@ -61,7 +61,7 @@ router.put(
 );
 
 router.delete(
-  '/:propertyId/apartment_units/:unitId',
+  '/:puid/apartments/:unitId',
   UtilsValidations.validatePropertyParams,
   validationRequestHandler,
   asyncHandler(PropertyController.archiveApartment)

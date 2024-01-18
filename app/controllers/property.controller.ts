@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import sanitizeHtml from 'sanitize-html';
 import { PropertyService } from '@services/property';
 import { ICurrentUser } from '@interfaces/user.interface';
 import {
@@ -23,7 +23,11 @@ class PropertyController {
 
     const newPropertyData = {
       ...req.body,
-      s3Files: fileUploadResponse?.propertyImgs,
+      description: {
+        text: sanitizeHtml(req.body.description.text),
+        html: sanitizeHtml(req.body.description.html),
+      },
+      s3Files: fileUploadResponse?.photos,
     };
 
     const data = await this.propertyService.create(cid, id, newPropertyData);

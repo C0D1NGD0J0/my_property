@@ -13,7 +13,7 @@ export default class ErrorResponse extends Error {
     this.type = type;
     this.statusCode = statusCode ? statusCode : 500;
 
-    if (process.env.NODE_ENV == 'production') {
+    if (process.env.NODE_ENV === 'production') {
       console.log('----fuck');
       console.error(this);
     }

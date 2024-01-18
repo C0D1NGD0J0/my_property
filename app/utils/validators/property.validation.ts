@@ -4,6 +4,7 @@ import ErrorResponse from '@utils/errorResponse';
 import { errorTypes, httpStatusCodes } from '@utils/constants';
 import { validateResourceID } from '@utils/helperFN';
 import {
+  IProperty,
   IPropertyTypeEnum,
   IPropertyCategoryEnum,
   IPropertyStatusEnum,
@@ -38,33 +39,44 @@ const validateParams = () => {
 
 const create = () => {
   return [
+    // Validate features based on the property type
     body('features.bedroom')
       .if(body('propertyType').equals(IPropertyTypeEnum.singleFamily))
       .optional()
-      .isInt({ min: 0, max: 6 }),
+      .isInt({ min: 0, max: 10 }) // Adjust max as per IProperty constraints
+      .withMessage(
+        'Bedrooms for a single-family property must be between 0 and 10'
+      ),
+
     body('features.bathroom')
       .if(body('propertyType').equals(IPropertyTypeEnum.singleFamily))
       .optional()
-      .isInt({ min: 0, max: 6 }),
+      .isInt({ min: 0, max: 10 }) // Adjust max as per IProperty constraints
+      .withMessage(
+        'Bathrooms for a single-family property must be between 0 and 10'
+      ),
+
     body('features.floors')
       .if(body('propertyType').equals(IPropertyTypeEnum.singleFamily))
       .optional()
-      .isInt({ min: 0, max: 6 }),
+      .isInt({ min: 0, max: 5 }) // Adjust max as per IProperty constraints
+      .withMessage(
+        'Floors for a single-family property must be between 0 and 5'
+      ),
+
     body('features.parking')
       .if(body('propertyType').equals(IPropertyTypeEnum.singleFamily))
       .optional()
-      .isInt({ min: 0, max: 6 }),
+      .isInt({ min: 0, max: 5 }) // Adjust max as per IProperty constraints
+      .withMessage(
+        'Parking spaces for a single-family property must be between 0 and 5'
+      ),
+
     body('features.maxCapacity')
       .if(body('propertyType').equals(IPropertyTypeEnum.singleFamily))
       .optional()
-      .isInt({ min: 0, max: 10 })
-      .withMessage('Max capacity for a single family house is 10'),
-    body('features.availableParking')
-      .if(body('propertyType').equals(IPropertyTypeEnum.singleFamily))
-      .optional()
-      .if(body('extras.has_parking').equals('true'))
-      .isInt({ min: 0, max: 6 })
-      .withMessage('Value missing for parking availability'),
+      .isInt({ min: 0, max: 20 }) // Adjust max as per IProperty constraints
+      .withMessage('Max capacity for a single-family house is 20'),
 
     body('extras.has_tv').optional().isBoolean().toBoolean(),
     body('extras.has_ac').optional().isBoolean().toBoolean(),
@@ -77,43 +89,69 @@ const create = () => {
     body('extras.has_internet').optional().isBoolean().toBoolean(),
     body('extras.has_swimmingpool').optional().isBoolean().toBoolean(),
 
+    // Validate address
     body('address')
       .exists({ checkFalsy: true })
       .withMessage('Valid property address is required')
       .trim()
       .escape(),
+
+    // Validate propertyType
     body('propertyType', 'Please select a valid property type')
       .exists()
       .isIn(Object.values(IPropertyTypeEnum)),
+
+    // Validate category
     body('category', 'Please select a valid property category')
       .exists()
       .isIn(Object.values(IPropertyCategoryEnum)),
-    body('description', 'Please provide a description of the property type')
+
+    // Validate description
+    body(
+      'description.text',
+      'Please provide a text description for the property'
+    )
       .if(body('propertyType').equals(IPropertyTypeEnum.others))
       .exists()
-      .isLength({ min: 5, max: 200 })
+      .isLength({ min: 5, max: 500 })
       .trim()
       .escape(),
-    body('managementFees.amount', 'Invalid amount provided.')
+
+    // Validate fees and currency
+    body('fees.currency', 'Please provide a currency for fees')
       .exists()
-      .isCurrency({ allow_negatives: false, allow_decimal: false })
-      .escape(),
-    body(
-      'managementFees.currency',
-      'Please provide a currency for collecting payments.'
-    )
-      .if(body('managementFees.amount').exists())
-      .exists()
-      .isIn(['USD', 'CAD', 'EUR', 'GBP'])
-      .withMessage('Invalid currency provided.'),
+      .isIn(['USD', 'CAD', 'EUR', 'GBP']),
+    body('fees.rentalAmount', 'Invalid rental amount provided.')
+      .optional()
+      .isNumeric(),
+    body('fees.managementFees', 'Invalid management fee provided.')
+      .optional()
+      .isNumeric(),
+    body('fees.includeTax')
+      .optional()
+      .isBoolean()
+      .withMessage('includeTax must be a boolean')
+      .custom((value) => {
+        // Convert the string 'true' or 'false' to a boolean
+        const boolValue = value === 'true';
+        // Check if the boolean value is true
+        return boolValue === true;
+      })
+      .withMessage('includeTax must be true'),
+
+    // Validate totalUnits
     body('totalUnits', 'Value for total units in the building is missing')
       .if(body('propertyType').not().equals(IPropertyTypeEnum.singleFamily))
       .exists()
-      .isInt({ min: 1, max: 150 })
-      .withMessage('Max amount of units for an apartment is 150.'),
+      .isInt({ min: 1 }),
+
+    // Validate status
     body('status', 'Please provide the current status of the property.')
       .exists()
       .isIn(Object.values(IPropertyStatusEnum)),
+
+    // Validate property size
+    body('propertySize', 'Property size is required').exists().isNumeric(),
   ];
 };
 

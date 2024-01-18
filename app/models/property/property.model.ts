@@ -6,12 +6,12 @@ import {
   IApartmentUnit,
   IApartmentUnitDocument,
 } from '@interfaces/property.interface';
-import { Schema, Types, model } from 'mongoose';
+import { Schema, model } from 'mongoose';
 import uniqueValidator from 'mongoose-unique-validator';
 
 const ApartmentSchema = new Schema<IApartmentUnitDocument>(
   {
-    unitNumber: { type: String, required: true, unique: true },
+    unitNumber: { type: String, required: true, unique: true, sparse: true },
     features: {
       hasParking: { type: Boolean, default: true },
       bedroom: { type: Number, default: 1, max: 5 },
@@ -78,17 +78,33 @@ const PropertySchema = new Schema<IPropertyDocument>(
       floors: { type: Number, default: 0 },
       availableParking: { type: Number, default: 0 },
     },
-    managementFees: {
-      amount: {
+    fees: {
+      currency: { type: String, required: true, default: 'USD' },
+      taxAmount: {
         default: 0,
         type: Number,
-        required: true,
         get: (val: number) => {
           return (val / 100).toFixed(2);
         },
         set: (val: number) => val * 100,
       },
-      currency: { type: String, required: true, default: 'USD' },
+      includeTax: { type: Boolean },
+      rentalAmount: {
+        default: 0,
+        type: Number,
+        get: (val: number) => {
+          return (val / 100).toFixed(2);
+        },
+        set: (val: number) => val * 100,
+      },
+      managementFees: {
+        default: 0,
+        type: Number,
+        get: (val: number) => {
+          return (val / 100).toFixed(2);
+        },
+        set: (val: number) => val * 100,
+      },
     },
     title: {
       index: true,
@@ -131,10 +147,14 @@ const PropertySchema = new Schema<IPropertyDocument>(
       },
     },
     description: {
-      trim: true,
-      type: String,
-      minlenght: 5,
-      maxlength: 250,
+      text: {
+        trim: true,
+        type: String,
+      },
+      html: {
+        trim: true,
+        type: String,
+      },
     },
     category: {
       type: String,
@@ -156,14 +176,18 @@ const PropertySchema = new Schema<IPropertyDocument>(
       type: [ApartmentSchema],
       default: [],
     },
+    propertySize: {
+      type: Number,
+      required: true,
+      min: [1, 'Property size cannot be greater than 1'],
+    },
     deletedAt: {
       type: Date,
       default: undefined,
     },
     totalUnits: {
-      min: 1,
+      min: 0,
       max: 1000,
-      default: 0,
       type: Number,
     },
     previousLeases: {

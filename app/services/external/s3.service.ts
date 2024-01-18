@@ -5,36 +5,43 @@ import {
   DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
 import multer, { FileFilterCallback } from 'multer';
+import { NextFunction, Request, Response } from 'express';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { Express, NextFunction, Request, Response } from 'express';
+import S3CustomStorage from '@services/external/customStorage';
 
 class S3FileUpload {
   private s3: S3Client;
   private bucket: string;
+  private customStorage: S3CustomStorage;
 
   constructor(bucket = process.env.AWS_BUCKET_NAME as string) {
     this.s3 = new S3Client({
-      region: process.env.AWS_DEFAULT_REGION,
+      region: process.env.AWS_REGION,
       credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
+        accessKeyId: process.env.AWS_ACCESS_KEY as string,
+        secretAccessKey: process.env.AWS_SECRET_KEY as string,
       },
     });
     this.bucket = bucket;
+    this.customStorage = new S3CustomStorage(this.s3, this.bucket);
   }
 
   upload = (req: Request, res: Response, next: NextFunction) => {
-    const _upload = multer({
-      storage: multerS3({ ...this.multerS3Config() }),
-      fileFilter: this.fileFilter,
-      limits: { fileSize: 1024 * 1024 * 5 },
-    }).fields([
-      { name: 'avatar', maxCount: 1 },
-      { name: 'propertyImgs', maxCount: 3 },
-      { name: 'leaseContract', maxCount: 3 },
-    ]);
+    try {
+      const _upload = multer({
+        storage: this.customStorage,
+        fileFilter: this.fileFilter,
+        limits: { fileSize: 1024 * 1024 * 5 },
+      }).fields([
+        { name: 'avatar', maxCount: 1 },
+        { name: 'photos', maxCount: 6 },
+        { name: 'leaseContract', maxCount: 3 },
+      ]);
 
-    return _upload(req, res, next);
+      return _upload(req, res, next);
+    } catch (error) {
+      console.log(error, 'S3Service Error');
+    }
   };
 
   textOnlyData = (req: Request, res: Response, next: NextFunction) => {

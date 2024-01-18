@@ -27,7 +27,8 @@ const validationRequestHandler = (
 
   console.log(
     colors.bold.red(JSON.stringify(errors, null, 2)),
-    '-----Validation errors----'
+    '-----Validation errors----',
+    req.body
   );
 
   const extractedErrors: any = [];

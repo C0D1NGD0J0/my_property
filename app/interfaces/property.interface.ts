@@ -9,6 +9,12 @@ export enum IPaymentTypeEnum {
 }
 export type IPaymentTypes = 'yearly' | 'monthly' | 'weekly' | 'daily';
 
+export enum ICurrenciesEnum {
+  USD = 'USD',
+  GBP = 'GBP',
+  EUR = 'EUR',
+}
+
 export enum IPropertyTypeEnum {
   others = 'others',
   multiUnits = 'multiUnits',
@@ -38,17 +44,21 @@ export enum IPropertyStatusEnum {
 export type IPropertyStatus = 'vacant' | 'occupied' | 'partially-occupied';
 
 export interface IProperty {
-  description?: string;
-  title?: string;
-  propertyType: IPropertyType;
-  status: IPropertyStatus;
-  managedBy: Types.ObjectId | Partial<IUserDocument>;
+  title: string;
+  description?: {
+    text: string;
+    html: string;
+  };
+  propertyType: IPropertyType | string;
+  status: IPropertyStatus | string;
+  managedBy: Types.ObjectId | string | Partial<IUserDocument>;
+  propertySize: number;
   features: {
     floors: number;
     bedroom: number;
     bathroom: number;
     maxCapacity: number;
-    availableParking?: number;
+    availableParking: number;
   };
   extras: {
     has_tv: boolean;
@@ -62,7 +72,7 @@ export interface IProperty {
     has_laundry: boolean;
     petsAllowed: boolean;
   };
-  category: IPropertyCategoryEnum;
+  category: IPropertyCategories | string;
   computedLocation?: {
     type: string;
     coordinates: [number, number];
@@ -77,22 +87,26 @@ export interface IProperty {
     latAndlon?: string;
   };
   address: string;
-  managementFees: {
-    amount: number | string;
-    currency: string;
+  fees: {
+    taxAmount: number;
+    includeTax: boolean;
+    rentalAmount: number | string;
+    currency: ICurrenciesEnum;
+    managementFees: number | string;
   };
-  deletedAt: Date | null;
-  photos: PropertyImages[];
+  photos: IPropertyImages[] | [];
   totalUnits: number;
+  deletedAt: Date | null;
 }
 
-interface PropertyImages {
+interface IPropertyImages {
   url: string;
   filename: string;
   key: string;
 }
 
 export interface IPropertyDocument extends IProperty, Document {
+  property: never[];
   findApartment(
     apartmentId?: string,
     unitNumber?: string
