@@ -103,7 +103,7 @@ export class App {
     });
 
     process.on('unhandledRejection', (err: Error) => {
-      this.log.error('There was an unhandled rejection error: ', err.message);
+      this.log.error('There was an unhandled rejection error: ', err);
       this.serverShutdown(2);
     });
 
