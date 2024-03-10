@@ -25,9 +25,9 @@ type JwtErrorTypes =
   | NotBeforeError
   | null;
 class AuthController {
-  private authService: AuthService;
-  private emailQueue: EmailQueue;
-  private cache: AuthCache;
+  private readonly authService: AuthService;
+  private readonly emailQueue: EmailQueue;
+  private readonly cache: AuthCache;
 
   constructor() {
     this.cache = new AuthCache();

@@ -15,11 +15,18 @@ const fileUpload: S3FileUpload = new S3FileUpload();
 router.use(AuthMiddleware.isAuthenticated);
 
 router.post(
-  '/:cid/',
+  '/:cid/add_property',
   fileUpload.upload,
   PropertyValidations.createProperty,
   validationRequestHandler,
   asyncHandler(PropertyController.createProperty)
+);
+
+router.post(
+  '/:cid/create_properties',
+  PropertyValidations.createProperties,
+  validationRequestHandler,
+  asyncHandler(PropertyController.createProperties)
 );
 
 router.post(
@@ -29,7 +36,10 @@ router.post(
   asyncHandler(PropertyController.createApartment)
 );
 
-router.get('/', asyncHandler(PropertyController.getUserProperties));
+router.get(
+  '/:cid/user_properties',
+  asyncHandler(PropertyController.getUserProperties)
+);
 
 router.get(
   '/:cid/client_properties',

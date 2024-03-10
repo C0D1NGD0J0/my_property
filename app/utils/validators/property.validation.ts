@@ -116,7 +116,12 @@ const create = () => {
       .isLength({ min: 5, max: 500 })
       .trim()
       .escape(),
-
+    body(
+      'leaseType',
+      'Please provide a value for rental type for this property.'
+    )
+      .exists()
+      .isIn(['short-term', 'long-term', 'daily']),
     // Validate fees and currency
     body('fees.currency', 'Please provide a currency for fees')
       .exists()
@@ -152,6 +157,154 @@ const create = () => {
 
     // Validate property size
     body('propertySize', 'Property size is required').exists().isNumeric(),
+  ];
+};
+
+const createProperties = () => {
+  return [
+    // Validate features based on the property type
+    body('properties.*.features.bedroom')
+      .if(
+        body('properties.*.propertyType').equals(IPropertyTypeEnum.singleFamily)
+      )
+      .optional()
+      .isInt({ min: 0, max: 10 }) // Adjust max as per IProperty constraints
+      .withMessage(
+        'Bedrooms for a single-family property must be between 0 and 10'
+      ),
+
+    body('properties.*.features.bathroom')
+      .if(
+        body('properties.*.propertyType').equals(IPropertyTypeEnum.singleFamily)
+      )
+      .optional()
+      .isInt({ min: 0, max: 10 }) // Adjust max as per IProperty constraints
+      .withMessage(
+        'Bathrooms for a single-family property must be between 0 and 10'
+      ),
+
+    body('properties.*.features.floors')
+      .if(
+        body('properties.*.propertyType').equals(IPropertyTypeEnum.singleFamily)
+      )
+      .optional()
+      .isInt({ min: 0, max: 5 }) // Adjust max as per IProperty constraints
+      .withMessage(
+        'Floors for a single-family property must be between 0 and 5'
+      ),
+
+    body('properties.*.features.parking')
+      .if(
+        body('properties.*.propertyType').equals(IPropertyTypeEnum.singleFamily)
+      )
+      .optional()
+      .isInt({ min: 0, max: 5 }) // Adjust max as per IProperty constraints
+      .withMessage(
+        'Parking spaces for a single-family property must be between 0 and 5'
+      ),
+
+    body('properties.*.features.maxCapacity')
+      .if(
+        body('properties.*.propertyType').equals(IPropertyTypeEnum.singleFamily)
+      )
+      .optional()
+      .isInt({ min: 0, max: 20 }) // Adjust max as per IProperty constraints
+      .withMessage('Max capacity for a single-family house is 20'),
+
+    body('properties.*.extras.has_tv').optional().isBoolean().toBoolean(),
+    body('properties.*.extras.has_ac').optional().isBoolean().toBoolean(),
+    body('properties.*.extras.has_gym').optional().isBoolean().toBoolean(),
+    body('properties.*.extras.has_heating').optional().isBoolean().toBoolean(),
+    body('properties.*.extras.has_laundry').optional().isBoolean().toBoolean(),
+    body('properties.*.extras.has_kitchen').optional().isBoolean().toBoolean(),
+    body('properties.*.extras.has_parking').optional().isBoolean().toBoolean(),
+    body('properties.*.extras.petsAllowed').optional().isBoolean().toBoolean(),
+    body('properties.*.extras.has_internet').optional().isBoolean().toBoolean(),
+    body('properties.*.extras.has_swimmingpool')
+      .optional()
+      .isBoolean()
+      .toBoolean(),
+
+    // Validate address
+    body('properties.*.address')
+      .exists({ checkFalsy: true })
+      .withMessage('Valid property address is required')
+      .trim()
+      .escape(),
+
+    // Validate propertyType
+    body('properties.*.propertyType', 'Please select a valid property type')
+      .exists()
+      .isIn(Object.values(IPropertyTypeEnum)),
+
+    // Validate category
+    body('properties.*.category', 'Please select a valid property category')
+      .exists()
+      .isIn(Object.values(IPropertyCategoryEnum)),
+
+    // Validate description
+    body(
+      'description.text',
+      'Please provide a text description for the property'
+    )
+      .if(body('properties.*.propertyType').equals(IPropertyTypeEnum.others))
+      .exists()
+      .isLength({ min: 5, max: 500 })
+      .trim()
+      .escape(),
+    body(
+      'leaseType',
+      'Please provide a value for rental type for this property.'
+    )
+      .exists()
+      .isIn(['short-term', 'long-term', 'daily']),
+    // Validate fees and currency
+    body('properties.*.fees.currency', 'Please provide a currency for fees')
+      .exists()
+      .isIn(['USD', 'CAD', 'EUR', 'GBP']),
+    body('properties.*.fees.rentalAmount', 'Invalid rental amount provided.')
+      .optional()
+      .isNumeric(),
+    body('properties.*.fees.managementFees', 'Invalid management fee provided.')
+      .optional()
+      .isNumeric(),
+    body('properties.*.fees.includeTax')
+      .optional()
+      .isBoolean()
+      .withMessage('includeTax must be a boolean')
+      .custom((value) => {
+        // Convert the string 'true' or 'false' to a boolean
+        const boolValue = value === 'true';
+        // Check if the boolean value is true
+        return boolValue === true;
+      })
+      .withMessage('includeTax must be true'),
+
+    // Validate totalUnits
+    body(
+      'properties.*.totalUnits',
+      'Value for total units in the building is missing'
+    )
+      .if(
+        body('properties.*.propertyType')
+          .not()
+          .equals(IPropertyTypeEnum.singleFamily)
+      )
+      .exists()
+      .isInt({ min: 1 }),
+
+    // Validate status
+    body(
+      'properties.*.status',
+      'Please provide the current status of the property.'
+    )
+      .exists()
+      .isIn(Object.values(IPropertyStatusEnum)),
+
+    // Validate property size
+    body('properties.*.propertySize', 'Property size is required')
+      .exists()
+      .isNumeric(),
   ];
 };
 
@@ -202,4 +355,5 @@ export default {
   updateDetails: updateDetails(),
   validateParams: validateParams(),
   createApartment: createApartment(),
+  createProperties: createProperties(),
 };

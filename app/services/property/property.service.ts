@@ -193,7 +193,8 @@ class PropertyService {
       const properties = await Property.find(query)
         .skip(skip!)
         .limit(limit!)
-        .sort(sortBy);
+        .sort(sortBy)
+        .select('-id -_id');
       const count = await Property.countDocuments(query);
 
       const paginationInfo = paginateResult(count, skip!, limit!);

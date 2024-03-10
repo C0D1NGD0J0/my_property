@@ -49,8 +49,9 @@ export interface IProperty {
     text: string;
     html: string;
   };
-  propertyType: IPropertyType | string;
   status: IPropertyStatus | string;
+  leaseTypes: 'short-term' | 'long-term' | 'daily';
+  propertyType: IPropertyType | string;
   managedBy: Types.ObjectId | string | Partial<IUserDocument>;
   propertySize: number;
   features: {

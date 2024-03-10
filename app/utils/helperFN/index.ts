@@ -61,13 +61,13 @@ export const setCookieAuth = (
 export const paginateResult = (count: number, skip: number, limit: number) => {
   const result: IPaginateResult = {
     total: count,
-    per_page: limit,
-    current_page: Math.floor(skip / limit) + 1,
-    total_pages: Math.ceil(count / limit),
+    perPage: limit,
+    currentPage: Math.floor(skip / limit) + 1,
+    totalPages: Math.ceil(count / limit),
     hasMoreResource: false,
   };
 
-  result.hasMoreResource = count - result.current_page * limit > 0;
+  result.hasMoreResource = count - result.currentPage * limit > 0;
   return result;
 };
 

@@ -9,7 +9,7 @@ import {
 import { httpStatusCodes } from '@utils/constants';
 
 class PropertyController {
-  private propertyService: PropertyService;
+  private readonly propertyService: PropertyService;
 
   constructor() {
     this.propertyService = new PropertyService();
@@ -32,6 +32,25 @@ class PropertyController {
 
     const data = await this.propertyService.create(cid, id, newPropertyData);
     res.status(httpStatusCodes.OK).json(data);
+  };
+
+  createProperties = async (req: AppRequest, res: AppResponse) => {
+    const { id, cid } = req.currentuser!;
+
+    // const newPropertyData = {
+    //   ...req.body,
+    //   description: {
+    //     text: sanitizeHtml(req.body.description.text),
+    //     html: sanitizeHtml(req.body.description.html),
+    //   },
+    // };
+
+    // const data = await this.propertyService.createProperties(
+    //   cid,
+    //   id,
+    //   newPropertyData
+    // );
+    res.status(httpStatusCodes.OK).json({ success: true });
   };
 
   createApartment = async (req: AppRequest, res: AppResponse) => {

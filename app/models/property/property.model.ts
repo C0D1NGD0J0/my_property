@@ -92,7 +92,7 @@ const PropertySchema = new Schema<IPropertyDocument>(
       rentalAmount: {
         default: 0,
         type: Number,
-        get: (val: number) => {
+        get: function (val: number) {
           return (val / 100).toFixed(2);
         },
         set: (val: number) => val * 100,
@@ -203,8 +203,8 @@ const PropertySchema = new Schema<IPropertyDocument>(
   },
   {
     timestamps: true,
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
+    toJSON: { virtuals: true, getters: true },
+    toObject: { virtuals: true, getters: true },
   }
 );
 
