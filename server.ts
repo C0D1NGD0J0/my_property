@@ -15,6 +15,7 @@ class Server {
   private PORT = process.env.PORT || 5000;
 
   constructor() {
+    (global as any).rootDir = __dirname;
     this.expApp = express();
     this.app = new AppSetup(this.expApp);
   }

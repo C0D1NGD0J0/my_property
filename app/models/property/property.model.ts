@@ -113,6 +113,12 @@ const PropertySchema = new Schema<IPropertyDocument>(
       maxlength: 40,
       required: true,
     },
+    leaseType: {
+      type: String,
+      required: true,
+      default: 'short-term',
+      enum: ['short-term', 'long-term', 'daily'],
+    },
     extras: {
       has_tv: { type: Boolean, default: false },
       has_kitchen: { type: Boolean, default: false },

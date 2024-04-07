@@ -1,5 +1,5 @@
 import User from '../../models/user/user.model';
-import ErrorResponse from '../../utils/errorResponse';
+import ErrorResponse from '@utils/errorResponse';
 import { body, param, query } from 'express-validator';
 import { IAccountType } from '@interfaces/user.interface';
 import { errorTypes, httpStatusCodes } from '@utils/constants';

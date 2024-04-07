@@ -59,3 +59,9 @@ export interface IPaginateResult {
   totalPages: number;
   hasMoreResource: boolean;
 }
+
+export interface IInvalidCsvProperties {
+  address: string;
+  rowNumber: number;
+  errors: string[];
+}

@@ -10,14 +10,14 @@ import {
   validationRequestHandler,
 } from '@utils/validators';
 import S3FileUpload from '@services/external/s3.service';
-const fileUpload: S3FileUpload = new S3FileUpload();
+const s3FileUpload: S3FileUpload = new S3FileUpload();
 
 router.use(AuthMiddleware.isAuthenticated);
 
 // Report routes
 router.post(
   '/:puid/',
-  fileUpload.upload,
+  s3FileUpload.s3Upload,
   ReportValidations.createReport,
   validationRequestHandler,
   asyncHandler(ReportController.createReport)
@@ -25,7 +25,7 @@ router.post(
 
 router.put(
   '/:id',
-  fileUpload.upload,
+  s3FileUpload.s3Upload,
   ReportValidations.createReport,
   validationRequestHandler,
   asyncHandler(ReportController.updateReport)

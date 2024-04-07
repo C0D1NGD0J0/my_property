@@ -7,7 +7,11 @@ import {
   IPaginationQuery,
 } from '@interfaces/utils.interface';
 import { httpStatusCodes } from '@utils/constants';
+import { parseAndValidatePropertiesCsv } from '@utils/helperFN';
+import FileUpload from '@services/fileUpload';
 
+const saveDir = `${process.cwd()}/uploads/csv`;
+const fileUploadService = new FileUpload(saveDir);
 class PropertyController {
   private readonly propertyService: PropertyService;
 
@@ -34,23 +38,48 @@ class PropertyController {
     res.status(httpStatusCodes.OK).json(data);
   };
 
-  createProperties = async (req: AppRequest, res: AppResponse) => {
+  processCsvUpload = async (req: AppRequest, res: AppResponse) => {
     const { id, cid } = req.currentuser!;
+    const data = await parseAndValidatePropertiesCsv(req.file?.path || '');
 
-    // const newPropertyData = {
-    //   ...req.body,
-    //   description: {
-    //     text: sanitizeHtml(req.body.description.text),
-    //     html: sanitizeHtml(req.body.description.html),
-    //   },
-    // };
+    res.status(httpStatusCodes.OK).json({
+      success: !!data.errors,
+      fileName: req.file?.filename,
+      validProperties: data.validProperties.length,
+      errors: data.errors,
+    });
+  };
 
-    // const data = await this.propertyService.createProperties(
-    //   cid,
-    //   id,
-    //   newPropertyData
-    // );
-    res.status(httpStatusCodes.OK).json({ success: true });
+  saveProcessedCsvUpload = async (req: AppRequest, res: AppResponse) => {
+    const { id: currentuserId, cid } = req.currentuser!;
+    const filename = req.body.fileName;
+
+    if (!filename) {
+      console.log('filename not provided');
+      return res.status(httpStatusCodes.OK).json({ success: false });
+    }
+
+    if (!req.body.saveAsIs) {
+      //  if user cancels the csv process fromt he frontend by closing the modal or clicking the cancel btn
+      const isDeleted = await fileUploadService.deleteFile(req.body.fileName);
+      return res.status(httpStatusCodes.OK).json({
+        success: isDeleted,
+        msg: 'CSV upload has been cancelled.',
+        action: 'insertionCancelled',
+      });
+    }
+
+    const parsedData = await parseAndValidatePropertiesCsv(
+      `${saveDir}/${req.body.fileName}`
+    );
+    const data = await this.propertyService.bulkInsertion(
+      cid,
+      currentuserId,
+      parsedData.validProperties
+    );
+    // delete csv file after succesafully saving data to db
+    fileUploadService.deleteFile(req.body.fileName);
+    res.status(httpStatusCodes.OK).json(data);
   };
 
   createApartment = async (req: AppRequest, res: AppResponse) => {

@@ -10,23 +10,29 @@ import {
   validationRequestHandler,
 } from '@utils/validators';
 import S3FileUpload from '@services/external/s3.service';
-const fileUpload: S3FileUpload = new S3FileUpload();
+import FileUpload from '@services/fileUpload';
+const s3UploadService: S3FileUpload = new S3FileUpload();
+const fileUploadService: FileUpload = new FileUpload('uploads/csv/', 7);
 
 router.use(AuthMiddleware.isAuthenticated);
 
 router.post(
   '/:cid/add_property',
-  fileUpload.upload,
+  s3UploadService.s3Upload,
   PropertyValidations.createProperty,
   validationRequestHandler,
   asyncHandler(PropertyController.createProperty)
 );
 
 router.post(
-  '/:cid/create_properties',
-  PropertyValidations.createProperties,
-  validationRequestHandler,
-  asyncHandler(PropertyController.createProperties)
+  '/:cid/validate_csv',
+  fileUploadService.saveCsvToDisk,
+  asyncHandler(PropertyController.processCsvUpload)
+);
+
+router.post(
+  '/:cid/insert_csv',
+  asyncHandler(PropertyController.saveProcessedCsvUpload)
 );
 
 router.post(
@@ -64,7 +70,7 @@ router.put(
 
 router.put(
   '/:puid',
-  fileUpload.upload,
+  s3UploadService.s3Upload,
   PropertyValidations.updateDetails,
   validationRequestHandler,
   asyncHandler(PropertyController.updateDetails)

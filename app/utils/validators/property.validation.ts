@@ -9,7 +9,6 @@ import {
   IPropertyCategoryEnum,
   IPropertyStatusEnum,
 } from '@interfaces/property.interface';
-
 const validateParams = () => {
   return [
     param('puid', 'Property resource identifier missing.')

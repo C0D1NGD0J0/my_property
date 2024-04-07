@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import { body, param } from 'express-validator';
 import User from '../../models/user/user.model';
-import ErrorResponse from '../../utils/errorResponse';
+import ErrorResponse from '../errorResponse';
 import {
   errorTypes,
   httpStatusCodes,
