@@ -33,7 +33,7 @@ router.get(
 
 router.post(
   '/:cid/',
-  fileUpload.upload,
+  fileUpload.s3Upload,
   LeaseValidations.createLease,
   validationRequestHandler,
   asyncHandler(LeaseController.createLease)
@@ -41,7 +41,7 @@ router.post(
 
 router.put(
   '/:cid/update_lease/:id',
-  fileUpload.upload,
+  fileUpload.s3Upload,
   LeaseValidations.updateLease,
   validationRequestHandler,
   asyncHandler(LeaseController.updateLease)

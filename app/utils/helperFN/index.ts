@@ -1,10 +1,22 @@
+import fs from 'fs';
 import crypto from 'crypto';
+import csv from 'csv-parser';
 import jwt from 'jsonwebtoken';
 import { Response } from 'express';
+import sanitizeHtml from 'sanitize-html';
 import bunyan from 'bunyan';
-import { IPaginateResult } from '@interfaces/utils.interface';
+import {
+  IInvalidCsvProperties,
+  IPaginateResult,
+} from '@interfaces/utils.interface';
 import { isValidObjectId } from 'mongoose';
 import { ACCESS_TOKEN, REFRESH_TOKEN } from '@utils/constants';
+import {
+  IProperty,
+  IPropertyCategoryEnum,
+  IPropertyStatusEnum,
+  IPropertyTypeEnum,
+} from '@interfaces/property.interface';
 
 export const hashGenerator = (): string => {
   const token = crypto.randomBytes(10).toString('hex');
@@ -144,4 +156,202 @@ export const isValidPhoneNumber = (phoneNumber: string): boolean => {
     europeRegex.test(phoneNumber.trim()) ||
     africaRegex.test(phoneNumber.trim())
   );
+};
+
+export const parseAndValidatePropertiesCsv = async (
+  filePath: string
+): Promise<{
+  validProperties: IProperty[];
+  errors: null | IInvalidCsvProperties[];
+}> => {
+  const results: IProperty[] = [];
+  const invalidProperties: IInvalidCsvProperties[] = [];
+  let rowNumber = 1;
+
+  const validateProperty = (
+    property: IProperty
+  ): { isValid: boolean; errors: string[] } => {
+    const errors: string[] = [];
+
+    // Validate propertyType
+    if (
+      !Object.values(IPropertyTypeEnum).includes(
+        property.propertyType as IPropertyTypeEnum
+      )
+    ) {
+      errors.push(`Invalid propertyType: ${property.propertyType}`);
+    }
+
+    // Validate category
+    if (
+      !Object.values(IPropertyCategoryEnum).includes(
+        property.category as IPropertyCategoryEnum
+      )
+    ) {
+      errors.push(`Invalid category: ${property.category}`);
+    }
+
+    // Validate status
+    if (
+      !Object.values(IPropertyStatusEnum).includes(
+        property.status as IPropertyStatusEnum
+      )
+    ) {
+      errors.push(`Invalid status: ${property.status}`);
+    }
+
+    // Validate leaseType
+    if (!['short-term', 'long-term', 'daily'].includes(property.leaseType)) {
+      errors.push(`Invalid leaseType: ${property.leaseType}`);
+    }
+
+    // Validate fees.currency
+    if (!['USD', 'CAD', 'EUR', 'GBP'].includes(property.fees.currency)) {
+      errors.push(`Invalid currency: ${property.fees.currency}`);
+    }
+
+    // Validate property size
+    if (
+      typeof property.propertySize !== 'number' ||
+      property.propertySize <= 0
+    ) {
+      errors.push(`Invalid property size: ${property.propertySize}`);
+    }
+
+    if (property.propertyType === IPropertyTypeEnum.singleFamily) {
+      if (property.features.bedroom < 0 || property.features.bedroom > 10) {
+        errors.push(
+          `Bedrooms for a single-family property must be between 0 and 10`
+        );
+      }
+
+      if (property.features.bathroom < 0 || property.features.bathroom > 10) {
+        errors.push(
+          `Bathrooms for a single-family property must be between 0 and 10`
+        );
+      }
+
+      if (property.features.floors < 0 || property.features.floors > 5) {
+        errors.push(
+          `Floors for a single-family property must be between 0 and 5`
+        );
+      }
+
+      // Assuming parking is part of features and should be validated similarly
+      if (
+        property.features.availableParking < 0 ||
+        property.features.availableParking > 5
+      ) {
+        errors.push(
+          `Parking spaces for a single-family property must be between 0 and 5`
+        );
+      }
+
+      if (
+        property.features.maxCapacity < 1 ||
+        property.features.maxCapacity > 20
+      ) {
+        errors.push(
+          `Max capacity for a single-family house must be between 1 and 20`
+        );
+      }
+    }
+
+    // Validate extras properties
+    Object.entries(property.extras).forEach(([key, value]) => {
+      if (typeof value !== 'boolean') {
+        errors.push(`'${key}' must be true or false`);
+      }
+    });
+
+    return { isValid: errors.length === 0, errors };
+  };
+
+  if (!filePath) {
+    throw new Error('Csv file path missing');
+  }
+
+  await new Promise((res, rej) => {
+    fs.createReadStream(filePath)
+      .pipe(csv({ mapHeaders: ({ header }) => header.replace(/_/, '.') }))
+      .on('data', (data: any) => {
+        const transformedData: IProperty = {
+          title: data.title,
+          description: {
+            text: sanitizeHtml(data['description.text']),
+            html: sanitizeHtml(data['description.html']),
+          },
+          propertyType: data.propertyType,
+          status: data.status,
+          managedBy: data.managedBy,
+          propertySize: parseInt(data.propertySize, 10),
+          features: {
+            floors: data['features.floors'],
+            bedroom: data['features.bedroom'],
+            bathroom: data['features.bathroom'],
+            maxCapacity: data['features.maxCapacity'],
+            availableParking: data['features.availableParking'],
+          },
+          extras: {
+            has_tv: data['extras.has_tv'].toLowerCase() === 'true',
+            has_kitchen: data['extras.has_kitchen'].toLowerCase() === 'true',
+            has_ac: data['extras.has_ac'].toLowerCase() === 'true',
+            has_heating: data['extras.has_heating'].toLowerCase() === 'true',
+            has_internet: data['extras.has_internet'].toLowerCase() === 'true',
+            has_gym: data['extras.has_gym'].toLowerCase() === 'true',
+            has_parking: data['extras.has_parking'].toLowerCase() === 'true',
+            has_swimmingpool:
+              data['extras.has_swimmingpool'].toLowerCase() === 'true',
+            has_laundry: data['extras.has_laundry'].toLowerCase() === 'true',
+            petsAllowed: data['extras.petsAllowed'].toLowerCase() === 'true',
+          },
+          category: data.category,
+          address: data.address,
+          fees: {
+            taxAmount: parseInt(data['fees.taxAmount'], 10),
+            includeTax: data['fees.includeTax'].toLowerCase() === 'true',
+            rentalAmount: data['fees.rentalAmount'],
+            currency: data['fees.currency'],
+            managementFees: data['fees.managementFees'],
+          },
+          leaseType: data.leaseType,
+          photos: data.photos
+            ? [{ url: data.photos, filename: '', key: '' }]
+            : [],
+          totalUnits: data.totalUnits,
+        };
+
+        const { isValid, errors } = validateProperty(transformedData);
+
+        if (isValid) {
+          results.push(transformedData);
+        } else {
+          invalidProperties.push({
+            address: transformedData.address,
+            rowNumber,
+            errors,
+          });
+        }
+
+        rowNumber++;
+      })
+      .on('end', () => {
+        console.log(`Successfully parsed ${results.length} valid properties.`);
+        if (invalidProperties.length > 0) {
+          console.log(
+            `Invalid properties: ${invalidProperties.length} were not processed due to errors.`
+          );
+        }
+        res(true);
+      })
+      .on('error', (error) => {
+        console.error('Error parsing CSV:', error);
+        rej(error);
+      });
+  });
+
+  return {
+    validProperties: results,
+    errors: invalidProperties.length ? invalidProperties : null,
+  };
 };

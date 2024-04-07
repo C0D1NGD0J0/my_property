@@ -1,6 +1,6 @@
 import color from 'colors';
 import { v4 as uuid } from 'uuid';
-import { ObjectId, Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { Lease, Property } from '@models/index';
 
 import {
@@ -170,6 +170,75 @@ class PropertyService {
       return { success: true, data: { property } };
     } catch (error: any) {
       this.log.error(color.bold.red(error.message));
+      throw error;
+    }
+  };
+
+  bulkInsertion = async (
+    cid: string,
+    userId: string,
+    properties: Partial<IProperty & { s3Files: IAWSFileUploadResponse[] }>[]
+  ) => {
+    try {
+      const batchSize = 5; // Set a reasonable batch size
+      let totalInserted = 0;
+      for (let i = 0; i < properties.length; i += batchSize) {
+        const batch = properties.slice(i, i + batchSize);
+        const processedBatch = await Promise.all(
+          batch.map(async (data) => {
+            const propertyData = {
+              ...data,
+              apartmentUnits: [],
+              cid,
+              puid: uuid(),
+              leaseType: data.leaseType,
+            } as unknown as IPropertyDocument;
+
+            if (data.address) {
+              const gCode = await new GeoCoder().parseLocation(data.address);
+              propertyData.computedLocation = {
+                type: 'Point',
+                coordinates: [
+                  gCode[0]?.longitude || 200,
+                  gCode[0]?.latitude || 201,
+                ],
+                address: {
+                  city: gCode[0].city,
+                  state: gCode[0].state,
+                  country: gCode[0].country,
+                  postCode: gCode[0].zipcode,
+                  street: gCode[0].streetName,
+                  streetNumber: gCode[0].streetNumber,
+                },
+                latAndlon: `${gCode[0].longitude || 200} ${
+                  gCode[0].latitude || 201
+                }`,
+              };
+              propertyData.address = gCode[0]?.formattedAddress || '';
+            }
+
+            propertyData.managedBy =
+              data.managedBy && Types.ObjectId.isValid(data.managedBy as string)
+                ? new Types.ObjectId(data.managedBy as Types.ObjectId)
+                : new Types.ObjectId(userId);
+
+            return propertyData;
+          })
+        );
+        // ordered opt: if true, will fail fast on the first error encountered. If false, will insert all the documents it can and report errors later.
+        const insertedBatch = await Property.insertMany(processedBatch, {
+          ordered: false,
+        });
+
+        totalInserted += insertedBatch.length;
+      }
+
+      return {
+        success: true,
+        totalInserted,
+      };
+    } catch (error: any) {
+      // this.log.error(color.bold.red(error));
       throw error;
     }
   };

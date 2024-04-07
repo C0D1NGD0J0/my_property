@@ -43,14 +43,14 @@ export enum IPropertyStatusEnum {
 }
 export type IPropertyStatus = 'vacant' | 'occupied' | 'partially-occupied';
 
-export interface IProperty {
+export type IProperty = {
   title: string;
   description?: {
     text: string;
     html: string;
   };
   status: IPropertyStatus | string;
-  leaseTypes: 'short-term' | 'long-term' | 'daily';
+  leaseType: 'short-term' | 'long-term' | 'daily';
   propertyType: IPropertyType | string;
   managedBy: Types.ObjectId | string | Partial<IUserDocument>;
   propertySize: number;
@@ -97,8 +97,8 @@ export interface IProperty {
   };
   photos: IPropertyImages[] | [];
   totalUnits: number;
-  deletedAt: Date | null;
-}
+  deletedAt?: Date | null;
+};
 
 interface IPropertyImages {
   url: string;
@@ -107,7 +107,6 @@ interface IPropertyImages {
 }
 
 export interface IPropertyDocument extends IProperty, Document {
-  property: never[];
   findApartment(
     apartmentId?: string,
     unitNumber?: string
